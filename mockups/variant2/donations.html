@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donations - Ambedkarite Buddhist Community Canada</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-top">
+            <div class="container">
+                <div>📧 ambedkaritecanada@outlook.com | 📞 +1 000 000 0000</div>
+                <div>Jai Bhim | Namo Buddhaya 🙏</div>
+            </div>
+        </div>
+        <div class="header-main">
+            <div class="container">
+                <div class="logo">
+                    <span class="logo-icon">☸</span>
+                    <div>
+                        <div>Ambedkarite Buddhist</div>
+                        <div style="font-size: 0.8rem; font-weight: 400; color: white;">Community Canada</div>
+                    </div>
+                </div>
+                <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+                <nav>
+                    <ul id="mainMenu">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="donations.html" class="active">Donations</a></li>
+                        <li><a href="membership.html">Membership</a></li>
+                        <li><a href="students.html">Students</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="signin.html" class="btn btn-primary" style="margin-left: 1rem; white-space: nowrap;">Sign In</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="hero" style="padding: 3rem 0;">
+        <div class="hero-content">
+            <h1>Support Our Community</h1>
+            <p>Your generosity helps us build a stronger, more compassionate community</p>
+        </div>
+    </section>
+
+    <!-- Impact Statement -->
+    <section class="bg-light">
+        <div class="container">
+            <div class="decorative-border">
+                <p style="text-align: center; font-size: 1.2rem; max-width: 800px; margin: 0 auto; color: var(--secondary);">
+                    Every donation, no matter the size, helps us preserve Buddhist teachings, support students,
+                    and build a permanent home for our community. Together, we create lasting change.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Donation Goals -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <h2><span class="decoration">🎯</span> Our Community Goals <span class="decoration">🎯</span></h2>
+                <p>Choose a goal that resonates with you</p>
+            </div>
+
+            <!-- Goal 1: Vihara -->
+            <div class="card mb-lg">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+                    <img src="https://picsum.photos/600/400?random=70" alt="Vihara" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="card-content" style="padding: 2rem;">
+                        <div class="badge">Featured Goal</div>
+                        <h2 class="card-title">Build a Permanent Vihara</h2>
+                        <p style="margin-bottom: 1.5rem; line-height: 1.8;">
+                            Our dream is to establish a permanent Buddhist temple and community center in the Greater Toronto Area.
+                            This sacred space will serve as a hub for dharma practice, cultural celebrations, student support,
+                            and community gatherings for generations to come.
+                        </p>
+                        <div class="progress-bar-container mb-sm">
+                            <div class="progress-bar" style="width: 45%;">45%</div>
+                        </div>
+                        <div class="progress-text mb-md">$225,000 raised of $500,000 goal</div>
+                        <ul style="list-style: none; padding: 0; margin-bottom: 1.5rem;">
+                            <li style="padding: 0.5rem 0;">✓ Meditation hall and prayer room</li>
+                            <li style="padding: 0.5rem 0;">✓ Community kitchen and dining hall</li>
+                            <li style="padding: 0.5rem 0;">✓ Library and study rooms</li>
+                            <li style="padding: 0.5rem 0;">✓ Meeting spaces for events</li>
+                        </ul>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="selectGoal('vihara')">
+                            Donate to This Goal
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goals Grid -->
+            <div class="grid grid-2">
+                <!-- Goal 2: Scholarship -->
+                <div class="card">
+                    <img src="https://picsum.photos/600/300?random=71" alt="Scholarship" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">Student Scholarship Fund</h3>
+                        <p style="margin-bottom: 1rem;">
+                            Supporting Ambedkarite students pursuing higher education in Canada with financial assistance,
+                            reducing barriers to academic success.
+                        </p>
+                        <div class="progress-bar-container mb-sm">
+                            <div class="progress-bar" style="width: 68%;">68%</div>
+                        </div>
+                        <div class="progress-text mb-md">$34,000 raised of $50,000 goal</div>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="selectGoal('scholarship')">
+                            Donate to This Goal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Goal 3: Events -->
+                <div class="card">
+                    <img src="https://picsum.photos/600/300?random=72" alt="Events" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">Community Events Fund</h3>
+                        <p style="margin-bottom: 1rem;">
+                            Organizing festivals, dharma talks, cultural programs, and social gatherings that bring
+                            our community together throughout the year.
+                        </p>
+                        <div class="progress-bar-container mb-sm">
+                            <div class="progress-bar" style="width: 82%;">82%</div>
+                        </div>
+                        <div class="progress-text mb-md">$24,600 raised of $30,000 goal</div>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="selectGoal('events')">
+                            Donate to This Goal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Donation Form -->
+    <section class="bg-light" id="donationForm">
+        <div class="container">
+            <div class="section-header">
+                <h2><span class="decoration">💝</span> Make Your Donation <span class="decoration">💝</span></h2>
+            </div>
+
+            <div style="max-width: 700px; margin: 0 auto;">
+                <div class="card">
+                    <div class="card-content" style="padding: 2rem;">
+                        <form onsubmit="handleDonation(event)">
+                            <div class="form-group">
+                                <label>Select Goal *</label>
+                                <select id="goalSelect" required>
+                                    <option value="">Choose where your donation goes...</option>
+                                    <option value="vihara">Build a Permanent Vihara ($500,000 goal)</option>
+                                    <option value="scholarship">Student Scholarship Fund ($50,000 goal)</option>
+                                    <option value="events">Community Events Fund ($30,000 goal)</option>
+                                    <option value="general">General Fund (Where most needed)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Donation Type *</label>
+                                <div style="display: flex; gap: 1rem;">
+                                    <label style="flex: 1; font-weight: normal;">
+                                        <input type="radio" name="donationType" value="one-time" checked onchange="toggleRecurring()">
+                                        <span style="display: inline-block; padding: 1rem; border: 2px solid var(--border-light); border-radius: 8px; width: 100%; text-align: center; cursor: pointer;">
+                                            One-Time
+                                        </span>
+                                    </label>
+                                    <label style="flex: 1; font-weight: normal;">
+                                        <input type="radio" name="donationType" value="recurring" onchange="toggleRecurring()">
+                                        <span style="display: inline-block; padding: 1rem; border: 2px solid var(--border-light); border-radius: 8px; width: 100%; text-align: center; cursor: pointer;">
+                                            Monthly
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Donation Amount (CAD) *</label>
+                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+                                    <button type="button" class="btn btn-outline" onclick="setAmount(25)">$25</button>
+                                    <button type="button" class="btn btn-outline" onclick="setAmount(50)">$50</button>
+                                    <button type="button" class="btn btn-outline" onclick="setAmount(100)">$100</button>
+                                    <button type="button" class="btn btn-outline" onclick="setAmount(250)">$250</button>
+                                </div>
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--text-secondary);">$</span>
+                                    <input type="number" id="amountInput" required min="1" placeholder="Enter custom amount" style="padding-left: 2.5rem;">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Full Name *</label>
+                                <input type="text" required placeholder="Enter your name">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email Address *</label>
+                                <input type="email" required placeholder="your@email.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" placeholder="+1 (123) 456-7890">
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+                                    <input type="checkbox">
+                                    I would like to receive a tax receipt
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+                                    <input type="checkbox">
+                                    Make my donation anonymous
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Message (Optional)</label>
+                                <textarea rows="3" placeholder="Share why you're donating or leave a message for the community..."></textarea>
+                            </div>
+
+                            <div style="background: var(--background-light); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 2px solid var(--border-light);">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+                                    🔒 Your donation is secure and encrypted. As a registered Canadian nonprofit,
+                                    we provide tax receipts for all donations. Questions? Contact us at
+                                    <a href="mailto:donations@ambedkaritecanada.org" style="color: var(--primary);">donations@ambedkaritecanada.org</a>
+                                </p>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.2rem; padding: 1.25rem;">
+                                Complete Donation
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Donor Recognition -->
+    <section class="bg-light">
+        <div class="container">
+            <div class="section-header">
+                <h2><span class="decoration">🙏</span> Thank You to Our Donors <span class="decoration">🙏</span></h2>
+                <p>We are grateful for your continued support</p>
+            </div>
+            <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: var(--shadow-md); border: 2px solid var(--border-light);">
+                <h3 style="text-align: center; color: var(--primary); margin-bottom: 1.5rem;">Community Supporters (2024-2025)</h3>
+                <div class="grid grid-3" style="gap: 1rem;">
+                    <div style="text-align: center; padding: 1rem;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🙏</div>
+                        <div style="font-weight: 600;">Bhaiyya Sondawale</div>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Community Supporter</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🙏</div>
+                        <div style="font-weight: 600;">Sumit Karmarkar</div>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Community Supporter</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🙏</div>
+                        <div style="font-weight: 600;">Harshal Mesharam</div>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Community Supporter</div>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    ...and 150+ community members who make our work possible
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Other Ways to Give -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <h2><span class="decoration">🤝</span> Other Ways to Support <span class="decoration">🤝</span></h2>
+            </div>
+            <div class="grid grid-3">
+                <div class="card">
+                    <div class="card-content" style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+                        <h3 style="margin-bottom: 1rem;">Volunteer</h3>
+                        <p>Share your time and skills to help organize events, teach classes, or support new students.</p>
+                        <a href="contact.html" class="btn btn-outline mt-lg">Learn More</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content" style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
+                        <h3 style="margin-bottom: 1rem;">Corporate Sponsorship</h3>
+                        <p>Partner with us to support community programs and receive recognition for your contribution.</p>
+                        <a href="contact.html" class="btn btn-outline mt-lg">Get in Touch</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content" style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                        <h3 style="margin-bottom: 1rem;">In-Kind Donations</h3>
+                        <p>Donate books, equipment, furniture, or supplies that support our community activities.</p>
+                        <a href="contact.html" class="btn btn-outline mt-lg">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-ornament">🪷 ☸ 🪷</div>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About Us</h3>
+                    <p>A nonprofit organization dedicated to building and supporting the Ambedkarite Buddhist community across Canada.</p>
+                    <p style="margin-top: 1rem; font-style: italic;">"Be your own light" - Buddha</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="donations.html">Donations</a></li>
+                        <li><a href="membership.html">Membership</a></li>
+                        <li><a href="students.html">Student Resources</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>📧 ambedkaritecanada@outlook.com</li>
+                        <li>📞 +1 000 000 0000</li>
+                        <li>📍 Toronto, Ontario, Canada</li>
+                        <li style="margin-top: 1rem;">
+                            <a href="#" style="margin-right: 1rem;">Facebook</a>
+                            <a href="#" style="margin-right: 1rem;">Twitter</a>
+                            <a href="#">Instagram</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Buddhist Teachings</a></li>
+                        <li><a href="#">Ambedkar's Works</a></li>
+                        <li><a href="#">Community Guidelines</a></li>
+                        <li><a href="#">Annual Reports</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Ambedkarite Buddhist Community Canada. All rights reserved. | Registered Canadian Nonprofit</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mainMenu');
+            menu.classList.toggle('active');
+        }
+
+        function selectGoal(goal) {
+            document.getElementById('goalSelect').value = goal;
+            document.getElementById('donationForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setAmount(amount) {
+            document.getElementById('amountInput').value = amount;
+        }
+
+        function toggleRecurring() {
+            // Handle recurring vs one-time logic
+        }
+
+        function handleDonation(e) {
+            e.preventDefault();
+            alert('Thank you for your generous donation! You will be redirected to our secure payment processor.');
+        }
+    </script>
+</body>
+</html>

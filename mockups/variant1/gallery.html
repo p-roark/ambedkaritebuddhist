@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery - Ambedkarite Buddhist Community Canada</title>
+  <meta name="description" content="View photos and videos from our community events and celebrations.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        🪷 <span>ABC</span> Canada
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="donations.html">Donate</a></li>
+        <li><a href="membership.html">Membership</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="signin.html" class="btn btn-primary" style="white-space: nowrap;">Sign In</a></li>
+        <li><a href="donations.html" class="btn btn-primary">Support Us</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <section class="hero" style="padding: 3rem 1.5rem;">
+    <div class="hero-content">
+      <h1>Community Gallery</h1>
+      <p>Celebrating our moments together</p>
+    </div>
+  </section>
+
+  <!-- Gallery Section -->
+  <section class="section">
+    <div class="container">
+      <!-- Filters -->
+      <div class="filters">
+        <button class="filter-button active" data-filter="all">All</button>
+        <button class="filter-button" data-filter="events">Events</button>
+        <button class="filter-button" data-filter="religious">Religious</button>
+        <button class="filter-button" data-filter="cultural">Cultural</button>
+        <button class="filter-button" data-filter="community">Community</button>
+      </div>
+
+      <!-- Photo Gallery Grid -->
+      <div class="gallery-grid">
+        <!-- Image 1 -->
+        <div class="gallery-item" data-category="religious">
+          <img src="https://picsum.photos/400/400?random=60" alt="Buddha Purnima 2024">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Buddha Purnima 2024</span>
+          </div>
+        </div>
+
+        <!-- Image 2 -->
+        <div class="gallery-item" data-category="cultural">
+          <img src="https://picsum.photos/400/400?random=61" alt="Cultural Performance">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Cultural Festival</span>
+          </div>
+        </div>
+
+        <!-- Image 3 -->
+        <div class="gallery-item" data-category="events">
+          <img src="https://picsum.photos/400/400?random=62" alt="Ambedkar Jayanti">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Ambedkar Jayanti</span>
+          </div>
+        </div>
+
+        <!-- Image 4 -->
+        <div class="gallery-item" data-category="community">
+          <img src="https://picsum.photos/400/400?random=63" alt="Community Picnic">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Summer Picnic</span>
+          </div>
+        </div>
+
+        <!-- Image 5 -->
+        <div class="gallery-item" data-category="religious">
+          <img src="https://picsum.photos/400/400?random=64" alt="Prayer Ceremony">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Prayer Ceremony</span>
+          </div>
+        </div>
+
+        <!-- Image 6 -->
+        <div class="gallery-item" data-category="events">
+          <img src="https://picsum.photos/400/400?random=65" alt="Workshop">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Student Workshop</span>
+          </div>
+        </div>
+
+        <!-- Image 7 -->
+        <div class="gallery-item" data-category="cultural">
+          <img src="https://picsum.photos/400/400?random=66" alt="Traditional Dance">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Traditional Dance</span>
+          </div>
+        </div>
+
+        <!-- Image 8 -->
+        <div class="gallery-item" data-category="community">
+          <img src="https://picsum.photos/400/400?random=67" alt="Group Photo">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Community Gathering</span>
+          </div>
+        </div>
+
+        <!-- Image 9 -->
+        <div class="gallery-item" data-category="religious">
+          <img src="https://picsum.photos/400/400?random=68" alt="Meditation">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Meditation Session</span>
+          </div>
+        </div>
+
+        <!-- Image 10 -->
+        <div class="gallery-item" data-category="events">
+          <img src="https://picsum.photos/400/400?random=69" alt="Networking Event">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Networking Meetup</span>
+          </div>
+        </div>
+
+        <!-- Image 11 -->
+        <div class="gallery-item" data-category="cultural">
+          <img src="https://picsum.photos/400/400?random=70" alt="Cultural Exhibition">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Art Exhibition</span>
+          </div>
+        </div>
+
+        <!-- Image 12 -->
+        <div class="gallery-item" data-category="community">
+          <img src="https://picsum.photos/400/400?random=71" alt="Volunteer Day">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Volunteer Day</span>
+          </div>
+        </div>
+
+        <!-- Image 14 -->
+        <div class="gallery-item" data-category="events">
+          <img src="https://picsum.photos/400/400?random=73" alt="Fundraiser">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Fundraising Event</span>
+          </div>
+        </div>
+
+        <!-- Image 15 -->
+        <div class="gallery-item" data-category="cultural">
+          <img src="https://picsum.photos/400/400?random=74" alt="Music Performance">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Music Performance</span>
+          </div>
+        </div>
+
+        <!-- Image 16 -->
+        <div class="gallery-item" data-category="community">
+          <img src="https://picsum.photos/400/400?random=75" alt="Children's Program">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Children's Program</span>
+          </div>
+        </div>
+
+        <!-- Image 17 -->
+        <div class="gallery-item" data-category="religious">
+          <img src="https://picsum.photos/400/400?random=76" alt="Temple Visit">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Temple Visit</span>
+          </div>
+        </div>
+
+        <!-- Image 18 -->
+        <div class="gallery-item" data-category="events">
+          <img src="https://picsum.photos/400/400?random=77" alt="Career Fair">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Career Fair</span>
+          </div>
+        </div>
+
+        <!-- Image 19 -->
+        <div class="gallery-item" data-category="cultural">
+          <img src="https://picsum.photos/400/400?random=78" alt="Poetry Recital">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Poetry Recital</span>
+          </div>
+        </div>
+
+        <!-- Image 20 -->
+        <div class="gallery-item" data-category="community">
+          <img src="https://picsum.photos/400/400?random=79" alt="Leadership Team">
+          <div class="gallery-overlay">
+            <span style="color: white; font-weight: 600;">Leadership Meeting</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video Section -->
+  <section class="section" style="background: var(--background-light);">
+    <div class="container">
+      <div class="section-title">
+        <h2>Event Videos</h2>
+        <p class="section-subtitle">Watch highlights from our recent events</p>
+      </div>
+      <div class="grid grid-3">
+        <!-- Video Card 1 -->
+        <div class="card">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+            <img src="https://picsum.photos/600/338?random=80" alt="Video thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <span style="color: white; font-size: 1.5rem; margin-left: 4px;">▶</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Buddha Purnima 2024 Highlights</h3>
+            <p class="card-text">Complete coverage of our grand Buddha Purnima celebration</p>
+          </div>
+        </div>
+
+        <!-- Video Card 2 -->
+        <div class="card">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+            <img src="https://picsum.photos/600/338?random=81" alt="Video thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <span style="color: white; font-size: 1.5rem; margin-left: 4px;">▶</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Dr. Ambedkar's Legacy</h3>
+            <p class="card-text">Documentary on Dr. Ambedkar's teachings and principles</p>
+          </div>
+        </div>
+
+        <!-- Video Card 3 -->
+        <div class="card">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+            <img src="https://picsum.photos/600/338?random=82" alt="Video thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <span style="color: white; font-size: 1.5rem; margin-left: 4px;">▶</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Community Success Stories</h3>
+            <p class="card-text">Interviews with students who succeeded with our support</p>
+          </div>
+        </div>
+
+        <!-- Video Card 4 -->
+        <div class="card">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+            <img src="https://picsum.photos/600/338?random=83" alt="Video thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <span style="color: white; font-size: 1.5rem; margin-left: 4px;">▶</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Cultural Festival 2024</h3>
+            <p class="card-text">Traditional performances and cultural programs</p>
+          </div>
+        </div>
+
+        <!-- Video Card 5 -->
+        <div class="card">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+            <img src="https://picsum.photos/600/338?random=84" alt="Video thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <span style="color: white; font-size: 1.5rem; margin-left: 4px;">▶</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Meditation Workshop</h3>
+            <p class="card-text">Guided meditation session with Buddhist monk</p>
+          </div>
+        </div>
+
+        <!-- Video Card 6 -->
+        <div class="card">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+            <img src="https://picsum.photos/600/338?random=85" alt="Video thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <span style="color: white; font-size: 1.5rem; margin-left: 4px;">▶</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Student Orientation 2024</h3>
+            <p class="card-text">Helpful tips for new students arriving in Canada</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Event Albums -->
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Event Albums</h2>
+        <p class="section-subtitle">Browse photos by event</p>
+      </div>
+      <div class="grid grid-4">
+        <div class="card">
+          <img src="https://picsum.photos/400/250?random=86" alt="Album" class="card-image">
+          <div class="card-content">
+            <h3 class="card-title">Buddha Purnima 2024</h3>
+            <p class="card-text">45 photos</p>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://picsum.photos/400/250?random=87" alt="Album" class="card-image">
+          <div class="card-content">
+            <h3 class="card-title">Ambedkar Jayanti 2024</h3>
+            <p class="card-text">62 photos</p>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://picsum.photos/400/250?random=88" alt="Album" class="card-image">
+          <div class="card-content">
+            <h3 class="card-title">Summer Picnic 2024</h3>
+            <p class="card-text">38 photos</p>
+          </div>
+        </div>
+        <div class="card">
+          <img src="https://picsum.photos/400/250?random=89" alt="Album" class="card-image">
+          <div class="card-content">
+            <h3 class="card-title">Cultural Festival 2024</h3>
+            <p class="card-text">71 photos</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <div class="lightbox-content">
+      <button class="lightbox-close" aria-label="Close">&times;</button>
+      <img src="" alt="Lightbox image">
+      <button class="lightbox-nav lightbox-prev" aria-label="Previous">‹</button>
+      <button class="lightbox-nav lightbox-next" aria-label="Next">›</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About ABC Canada</h3>
+          <p style="color: rgba(255,255,255,0.8); margin-bottom: 1rem;">
+            The Ambedkarite Buddhist Community in Canada is a nonprofit organization dedicated to promoting the principles of Dr. B.R. Ambedkar and Buddhist teachings.
+          </p>
+          <div class="social-links">
+            <a href="#" class="social-link" aria-label="Facebook">f</a>
+            <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+            <a href="#" class="social-link" aria-label="Instagram">📷</a>
+            <a href="#" class="social-link" aria-label="YouTube">▶</a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="events.html">Events</a></li>
+            <li><a href="donations.html">Donations</a></li>
+            <li><a href="membership.html">Membership</a></li>
+            <li><a href="students.html">Student Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Photo Gallery</a></li>
+            <li><a href="#">Annual Reports</a></li>
+            <li><a href="#">News & Updates</a></li>
+            <li><a href="#">Volunteer</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul class="footer-links">
+            <li>📧 info@abccanada.org</li>
+            <li>📞 +1 (416) 123-4567</li>
+            <li>📍 Toronto, ON, Canada</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Ambedkarite Buddhist Community Canada. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="js/main.js"></script>
+</body>
+</html>

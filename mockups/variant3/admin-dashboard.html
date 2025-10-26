@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Dashboard - Manage community">
+    <title>Admin Dashboard - Ambedkarite Buddhist Community</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <a href="index.html" class="logo">ABC Canada</a>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="admin-dashboard.html" class="btn btn-primary">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Admin Dashboard -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h1 class="section-title">Admin Dashboard</h1>
+                <p>Welcome back, Community Leader!</p>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-4">
+                <div class="card">
+                    <div class="card-content" style="text-align: center;">
+                        <div style="font-size: 2rem;">👥</div>
+                        <h2 style="font-size: 2rem; color: var(--primary);">155</h2>
+                        <p>Total Members</p>
+                        <small style="color: #10b981;">+12 this month</small>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content" style="text-align: center;">
+                        <div style="font-size: 2rem;">⏳</div>
+                        <h2 style="font-size: 2rem; color: #f59e0b;">8</h2>
+                        <p>Pending Approvals</p>
+                        <small><a href="#" style="color: var(--primary);">Review Now →</a></small>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content" style="text-align: center;">
+                        <div style="font-size: 2rem;">📅</div>
+                        <h2 style="font-size: 2rem; color: var(--secondary);">7</h2>
+                        <p>Upcoming Events</p>
+                        <small>Next: Apr 14</small>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content" style="text-align: center;">
+                        <div style="font-size: 2rem;">💰</div>
+                        <h2 style="font-size: 2rem; color: #10b981;">$283K</h2>
+                        <p>Total Donations</p>
+                        <small>57% of goal</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-content">
+                    <h3 class="card-title">⚡ Quick Actions</h3>
+                    <div class="grid grid-3" style="gap: 1rem; margin-top: 1rem;">
+                        <button class="btn btn-primary" style="width: 100%;">✅ Approve Members (8)</button>
+                        <button class="btn btn-outline" style="width: 100%;">➕ Create Event</button>
+                        <button class="btn btn-outline" style="width: 100%;">📢 Send Announcement</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="grid grid-2" style="gap: 1.5rem; margin-top: 2rem;">
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="card-title">Recent Applications</h3>
+                        <div style="margin-top: 1rem;">
+                            <div style="padding: 1rem; background: var(--background-light); border-radius: 8px; margin-bottom: 0.5rem;">
+                                <strong>Rajesh Kumar</strong>
+                                <p style="font-size: 0.9rem; color: var(--text-gray); margin: 0.25rem 0;">Student Member • 2 hours ago</p>
+                            </div>
+                            <div style="padding: 1rem; background: var(--background-light); border-radius: 8px; margin-bottom: 0.5rem;">
+                                <strong>Priya Deshmukh</strong>
+                                <p style="font-size: 0.9rem; color: var(--text-gray); margin: 0.25rem 0;">Regular Member • 5 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="card-title">Upcoming Events</h3>
+                        <div style="margin-top: 1rem;">
+                            <div style="padding: 1rem; border-left: 4px solid var(--primary); background: var(--background-light); margin-bottom: 0.5rem;">
+                                <strong>Ambedkar Jayanti 2025</strong>
+                                <p style="font-size: 0.9rem; color: var(--text-gray); margin: 0.25rem 0;">📅 April 14 • 78 Registered</p>
+                            </div>
+                            <div style="padding: 1rem; border-left: 4px solid var(--secondary); background: var(--background-light); margin-bottom: 0.5rem;">
+                                <strong>Buddha Jayanti 2025</strong>
+                                <p style="font-size: 0.9rem; color: var(--text-gray); margin: 0.25rem 0;">📅 May 15 • 52 Registered</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donation Goals -->
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-content">
+                    <h3 class="card-title">💰 Donation Goals Progress</h3>
+                    <div class="grid grid-3" style="gap: 1.5rem; margin-top: 1rem;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <strong>Permanent Vihara</strong>
+                                <span>45%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" style="width: 45%;"></div>
+                            </div>
+                            <p style="font-size: 0.9rem; color: var(--text-gray); margin-top: 0.5rem;">$225,000 / $500,000</p>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <strong>Student Scholarship</strong>
+                                <span>68%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" style="width: 68%;"></div>
+                            </div>
+                            <p style="font-size: 0.9rem; color: var(--text-gray); margin-top: 0.5rem;">$34,000 / $50,000</p>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <strong>Community Events</strong>
+                                <span>82%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" style="width: 82%;"></div>
+                            </div>
+                            <p style="font-size: 0.9rem; color: var(--text-gray); margin-top: 0.5rem;">$24,600 / $30,000</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <h3>Ambedkarite Buddhist Community Canada</h3>
+                    <p>&copy; 2025 All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

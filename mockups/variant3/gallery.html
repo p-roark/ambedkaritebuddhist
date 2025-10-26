@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Photo gallery of Ambedkarite Buddhist Community events and celebrations">
+    <title>Gallery - Ambedkarite Buddhist Community</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <a href="index.html" class="logo">ABC Canada</a>
+
+            <!-- Desktop Menu -->
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="students.html">Students</a></li>
+                <li><a href="gallery.html" class="active">Gallery</a></li>
+                <li><a href="membership.html">Membership</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                    <li><a href="signin.html" class="btn btn-primary" style="white-space: nowrap;">Sign In</a></li>
+                <li><a href="donations.html" class="nav-cta">Donate</a></li>
+            </ul>
+
+            <!-- Hamburger Menu -->
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu">
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="students.html">Students</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="membership.html">Membership</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                    <li><a href="signin.html" class="btn btn-primary" style="white-space: nowrap;">Sign In</a></li>
+                <li><a href="donations.html" class="nav-cta">Donate</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Page Hero -->
+    <section class="hero" style="min-height: 50vh;">
+        <div class="hero-content" style="grid-template-columns: 1fr; text-align: center;">
+            <div class="hero-text">
+                <h1>Community Gallery</h1>
+                <p>Explore photos and memories from our events, celebrations, and community gatherings.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="section">
+        <div class="container">
+            <!-- Filter Buttons -->
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All Photos</button>
+                <button class="filter-btn" data-filter="festival">Festivals</button>
+                <button class="filter-btn" data-filter="community">Community Events</button>
+                <button class="filter-btn" data-filter="student">Student Activities</button>
+                <button class="filter-btn" data-filter="workshop">Workshops</button>
+            </div>
+
+            <!-- Gallery Grid -->
+            <div class="gallery-grid">
+                <!-- Photo 1 -->
+                <div class="gallery-item reveal" data-category="festival">
+                    <img src="https://picsum.photos/400/300?random=80" alt="Buddha Jayanti Celebration">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Buddha Jayanti Celebration 2024</div>
+                    </div>
+                </div>
+
+                <!-- Photo 2 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=81" alt="Community Gathering">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Community Meetup - Toronto</div>
+                    </div>
+                </div>
+
+                <!-- Photo 3 -->
+                <div class="gallery-item reveal" data-category="student">
+                    <img src="https://picsum.photos/400/300?random=82" alt="Student Orientation">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Student Welcome Orientation</div>
+                    </div>
+                </div>
+
+                <!-- Photo 4 -->
+                <div class="gallery-item reveal" data-category="festival">
+                    <img src="https://picsum.photos/400/300?random=83" alt="Ambedkar Jayanti">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Dr. Ambedkar Jayanti 2024</div>
+                    </div>
+                </div>
+
+                <!-- Photo 5 -->
+                <div class="gallery-item reveal" data-category="workshop">
+                    <img src="https://picsum.photos/400/300?random=84" alt="Meditation Workshop">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Meditation & Mindfulness Workshop</div>
+                    </div>
+                </div>
+
+                <!-- Photo 6 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=85" alt="Volunteer Day">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Community Volunteer Day</div>
+                    </div>
+                </div>
+
+                <!-- Photo 7 -->
+                <div class="gallery-item reveal" data-category="festival">
+                    <img src="https://picsum.photos/400/300?random=86" alt="Dhamma Chakra Day">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Dhamma Chakra Pravartan Day</div>
+                    </div>
+                </div>
+
+                <!-- Photo 8 -->
+                <div class="gallery-item reveal" data-category="student">
+                    <img src="https://picsum.photos/400/300?random=87" alt="Career Workshop">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Career Development Workshop</div>
+                    </div>
+                </div>
+
+                <!-- Photo 9 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=88" alt="Youth Meetup">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Youth Community Meetup - Vancouver</div>
+                    </div>
+                </div>
+
+                <!-- Photo 10 -->
+                <div class="gallery-item reveal" data-category="workshop">
+                    <img src="https://picsum.photos/400/300?random=89" alt="Cultural Workshop">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Traditional Music Workshop</div>
+                    </div>
+                </div>
+
+                <!-- Photo 11 -->
+                <div class="gallery-item reveal" data-category="festival">
+                    <img src="https://picsum.photos/400/300?random=90" alt="Vesak Celebration">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Vesak Festival Celebration</div>
+                    </div>
+                </div>
+
+                <!-- Photo 12 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=91" alt="Family Picnic">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Annual Family Summer Picnic</div>
+                    </div>
+                </div>
+
+                <!-- Photo 13 -->
+                <div class="gallery-item reveal" data-category="student">
+                    <img src="https://picsum.photos/400/300?random=92" alt="Mentorship">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Student-Mentor Networking Event</div>
+                    </div>
+                </div>
+
+                <!-- Photo 15 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=94" alt="Fundraiser">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Vihara Fundraising Dinner</div>
+                    </div>
+                </div>
+
+                <!-- Photo 16 -->
+                <div class="gallery-item reveal" data-category="festival">
+                    <img src="https://picsum.photos/400/300?random=95" alt="New Year">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Buddhist New Year Celebration</div>
+                    </div>
+                </div>
+
+                <!-- Photo 17 -->
+                <div class="gallery-item reveal" data-category="student">
+                    <img src="https://picsum.photos/400/300?random=96" alt="Sports Day">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Student Sports Tournament</div>
+                    </div>
+                </div>
+
+                <!-- Photo 18 -->
+                <div class="gallery-item reveal" data-category="workshop">
+                    <img src="https://picsum.photos/400/300?random=97" alt="Art Workshop">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Buddhist Art & Calligraphy</div>
+                    </div>
+                </div>
+
+                <!-- Photo 19 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=98" alt="Leadership">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Leadership Team Meeting</div>
+                    </div>
+                </div>
+
+                <!-- Photo 20 -->
+                <div class="gallery-item reveal" data-category="festival">
+                    <img src="https://picsum.photos/400/300?random=99" alt="Prayer Ceremony">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Special Prayer Ceremony</div>
+                    </div>
+                </div>
+
+                <!-- Photo 21 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=100" alt="Anniversary">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">10th Anniversary Celebration</div>
+                    </div>
+                </div>
+
+                <!-- Photo 22 -->
+                <div class="gallery-item reveal" data-category="student">
+                    <img src="https://picsum.photos/400/300?random=101" alt="Graduation">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Celebrating Our Graduates</div>
+                    </div>
+                </div>
+
+                <!-- Photo 23 -->
+                <div class="gallery-item reveal" data-category="workshop">
+                    <img src="https://picsum.photos/400/300?random=102" alt="Pali Class">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Pali Language Class</div>
+                    </div>
+                </div>
+
+                <!-- Photo 24 -->
+                <div class="gallery-item reveal" data-category="community">
+                    <img src="https://picsum.photos/400/300?random=103" alt="Cultural Night">
+                    <div class="gallery-overlay">
+                        <div class="gallery-caption">Cultural Performances Night</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <section class="section section-alt">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-subtitle">Video Highlights</div>
+                <h2 class="section-title">Featured Videos</h2>
+                <p>Watch highlights from our major events and celebrations.</p>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="card reveal">
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <img src="https://picsum.photos/600/338?random=110" alt="Video Thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; background: rgba(232, 178, 14, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="card-title">Buddha Jayanti 2024 Highlights</h4>
+                        <p class="card-text">Watch the beautiful moments from our grand Buddha Jayanti celebration in Toronto.</p>
+                    </div>
+                </div>
+
+                <div class="card reveal">
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <img src="https://picsum.photos/600/338?random=111" alt="Video Thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; background: rgba(232, 178, 14, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="card-title">Dr. Ambedkar's Legacy - Documentary</h4>
+                        <p class="card-text">A special documentary on Dr. B.R. Ambedkar's contributions and our community's journey.</p>
+                    </div>
+                </div>
+
+                <div class="card reveal">
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <img src="https://picsum.photos/600/338?random=112" alt="Video Thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; background: rgba(232, 178, 14, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="card-title">Youth Community Initiatives</h4>
+                        <p class="card-text">See how our young community members are making a positive impact in their cities.</p>
+                    </div>
+                </div>
+
+                <div class="card reveal">
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <img src="https://picsum.photos/600/338?random=113" alt="Video Thumbnail" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; background: rgba(232, 178, 14, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="card-title">Meditation & Mindfulness Guide</h4>
+                        <p class="card-text">Learn Buddhist meditation techniques with our experienced instructors.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Share Section -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Share Your Photos</h2>
+                <p>Have photos from our events? We'd love to feature them in our gallery!</p>
+                <a href="contact.html" class="btn btn-gradient">Submit Your Photos</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox -->
+    <div class="lightbox">
+        <div class="lightbox-content">
+            <button class="lightbox-close">&times;</button>
+            <img src="" alt="Enlarged photo" class="lightbox-image">
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>About ABC Canada</h4>
+                    <p>The Ambedkarite Buddhist Community is a nonprofit organization dedicated to serving the Buddhist community across Canada.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.223-.548.223l.188-2.85 5.18-4.68c.223-.198-.054-.308-.346-.11l-6.4 4.03-2.76-.918c-.6-.187-.612-.6.125-.89l10.782-4.156c.5-.18.943.11.78.89z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="membership.html">Membership</a></li>
+                        <li><a href="donations.html">Donate</a></li>
+                        <li><a href="students.html">Student Resources</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="gallery.html">Photo Gallery</a></li>
+                        <li><a href="#">Newsletter</a></li>
+                        <li><a href="#">Annual Reports</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@abccanada.org</p>
+                    <p>Phone: +1 000 000 0000</p>
+                    <p>Address: 123 Buddhist Way<br>Toronto, ON M5V 3A8</p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 Ambedkarite Buddhist Community Canada. All rights reserved. | Nonprofit Registration: 123456789RR0001</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambedkarite Buddhist Community Website - Mockup Selection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #1F2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .symbol {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .variants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .variant-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .variant-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+        }
+
+        .variant-preview {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .variant-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        }
+
+        .variant-card:nth-child(1) .variant-preview {
+            background: linear-gradient(135deg, #f6f6f6 0%, #ffffff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .variant-card:nth-child(1) .variant-preview .preview-design {
+            width: 80%;
+            height: 60%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 2px solid #E8B20E;
+        }
+
+        .variant-card:nth-child(2) .variant-preview {
+            background: linear-gradient(135deg, #2D4D9B 0%, #E8B20E 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .variant-card:nth-child(2) .variant-preview .preview-design {
+            font-size: 4rem;
+        }
+
+        .variant-card:nth-child(3) .variant-preview {
+            background: linear-gradient(135deg, #E8B20E 0%, #2D4D9B 50%, #7F56D9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .variant-card:nth-child(3) .variant-preview .preview-design {
+            font-size: 4rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .variant-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .variant-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1F2937;
+        }
+
+        .variant-subtitle {
+            color: #6B7280;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .variant-description {
+            color: #4B5563;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            flex: 1;
+        }
+
+        .variant-features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+            padding: 0;
+        }
+
+        .variant-features li {
+            padding: 0.25rem 0;
+            font-size: 0.9rem;
+            color: #6B7280;
+        }
+
+        .variant-features li::before {
+            content: "✓ ";
+            color: #10B981;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .variant-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #E8B20E 0%, #2D4D9B 100%);
+            color: white;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(232, 178, 14, 0.3);
+        }
+
+        .variant-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232, 178, 14, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .footer h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer p {
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+
+        .footer a {
+            color: #E8B20E;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .variants-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="symbol">🪷</div>
+            <h1>Ambedkarite Buddhist Community Website</h1>
+            <p>Choose from three distinct design mockups for our community platform</p>
+        </div>
+
+        <div class="variants-grid">
+            <!-- Variant 1 -->
+            <div class="variant-card">
+                <div class="variant-preview">
+                    <div class="preview-design"></div>
+                </div>
+                <div class="variant-content">
+                    <h2 class="variant-title">Variant 1: Modern Minimalist</h2>
+                    <p class="variant-subtitle">Clean • Spacious • Contemporary</p>
+                    <p class="variant-description">
+                        A clean and spacious design with card-based layouts, smooth animations, and contemporary aesthetics. Perfect for users who prefer modern, uncluttered interfaces.
+                    </p>
+                    <ul class="variant-features">
+                        <li>Inter typography for headings</li>
+                        <li>Lots of white space</li>
+                        <li>Smooth transitions</li>
+                        <li>Card-based layouts</li>
+                    </ul>
+                    <a href="variant1/index.html" class="variant-button">View Mockup →</a>
+                </div>
+            </div>
+
+            <!-- Variant 2 -->
+            <div class="variant-card">
+                <div class="variant-preview">
+                    <div class="preview-design">🪷</div>
+                </div>
+                <div class="variant-content">
+                    <h2 class="variant-title">Variant 2: Traditional Elegant</h2>
+                    <p class="variant-subtitle">Cultural • Elegant • Refined</p>
+                    <p class="variant-description">
+                        A Buddhist-inspired design with traditional patterns, elegant serif typography, and rich colors. Features cultural elements like lotus motifs and dharma wheels.
+                    </p>
+                    <ul class="variant-features">
+                        <li>Merriweather serif typography</li>
+                        <li>Buddhist decorative elements</li>
+                        <li>Elegant animations</li>
+                        <li>Traditional aesthetic</li>
+                    </ul>
+                    <a href="variant2/index.html" class="variant-button">View Mockup →</a>
+                </div>
+            </div>
+
+            <!-- Variant 3 -->
+            <div class="variant-card">
+                <div class="variant-preview">
+                    <div class="preview-design">✨</div>
+                </div>
+                <div class="variant-content">
+                    <h2 class="variant-title">Variant 3: Vibrant Modern</h2>
+                    <p class="variant-subtitle">Bold • Dynamic • Energetic</p>
+                    <p class="variant-description">
+                        A vibrant design with bold gradients, dynamic layouts, and strong visual hierarchy. Youth-oriented and energetic, appealing to younger audiences.
+                    </p>
+                    <ul class="variant-features">
+                        <li>Poppins bold typography</li>
+                        <li>Vibrant color gradients</li>
+                        <li>Dynamic animations</li>
+                        <li>Modern UI patterns</li>
+                    </ul>
+                    <a href="variant3/index.html" class="variant-button">View Mockup →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <h3>About This Project</h3>
+            <p><strong>Organization:</strong> Ambedkarite Buddhist Organization Canada (Nonprofit)</p>
+            <p><strong>Project Lead:</strong> Pankaj Patil</p>
+            <p><strong>Colors:</strong> Primary #E8B20E (Saffron) • Secondary #2D4D9B (Blue)</p>
+            <p><strong>Features:</strong> All mockups include 9 fully navigable pages with events, donations, membership, student support, gallery, and contact features</p>
+            <p style="margin-top: 1rem;">
+                <a href="https://github.com/pankaj9um/ambedkaritebuddhist">View on GitHub</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

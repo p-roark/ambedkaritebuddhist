@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Approvals - Ambedkarite Buddhist Community Canada</title>
+  <meta name="description" content="Review and approve new member applications">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        🪷 <span>ABC</span> Canada
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="donations.html">Donate</a></li>
+        <li><a href="membership.html">Membership</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li>
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle">
+              Admin User
+              <span class="avatar">AU</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a href="dashboard.html">Dashboard</a></li>
+              <li><a href="profile.html">Profile</a></li>
+              <li><a href="#">Sign Out</a></li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <section class="section">
+    <div class="container">
+      <div class="grid" style="grid-template-columns: 250px 1fr; gap: 2rem;">
+        <!-- Sidebar Navigation -->
+        <div>
+          <div class="card">
+            <div class="card-content" style="padding: 0;">
+              <nav class="dashboard-nav">
+                <a href="admin-dashboard.html" class="dashboard-nav-item">Dashboard</a>
+                <a href="member-approvals.html" class="dashboard-nav-item active">Member Approvals</a>
+                <a href="#manage-events" class="dashboard-nav-item">Manage Events</a>
+                <a href="#manage-donations" class="dashboard-nav-item">Donations & Funds</a>
+                <a href="#content" class="dashboard-nav-item">Content Management</a>
+                <a href="#analytics" class="dashboard-nav-item">Analytics & Reports</a>
+              </nav>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div>
+          <!-- Statistics -->
+          <div class="grid grid-4" style="gap: 1rem; margin-bottom: 2rem;">
+            <div class="card">
+              <div class="card-content" style="text-align: center;">
+                <h3>Pending</h3>
+                <div style="font-size: 2rem; font-weight: 600; color: var(--primary-blue);">12</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-content" style="text-align: center;">
+                <h3>Approved Today</h3>
+                <div style="font-size: 2rem; font-weight: 600; color: var(--success);">8</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-content" style="text-align: center;">
+                <h3>Rejected Today</h3>
+                <div style="font-size: 2rem; font-weight: 600; color: var(--danger);">2</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-content" style="text-align: center;">
+                <h3>Total Members</h3>
+                <div style="font-size: 2rem; font-weight: 600;">245</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-content">
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <div class="form-group" style="flex: 1;">
+                  <input type="search" class="form-input" placeholder="Search applications...">
+                </div>
+                <div class="form-group" style="width: 200px;">
+                  <select class="form-select">
+                    <option value="all">All Applications</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <div class="form-group" style="width: 200px;">
+                  <select class="form-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Applications List -->
+          <div class="card">
+            <div class="card-content">
+              <h2 style="margin-bottom: 1.5rem;">Pending Applications</h2>
+              
+              <!-- Application Cards -->
+              <div style="display: grid; gap: 1rem;">
+                <!-- Application 1 -->
+                <div class="card" style="border: 1px solid var(--border-color);">
+                  <div class="card-content">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                      <div>
+                        <h3>Sarah Johnson</h3>
+                        <p style="color: var(--text-medium); margin: 0.5rem 0;">Student Member</p>
+                        <p style="margin: 0.5rem 0;">
+                          <strong>Referred by:</strong> John Doe (john.doe@email.com)<br>
+                          <strong>Applied:</strong> October 25, 2025
+                        </p>
+                      </div>
+                      <div>
+                        <span class="badge badge-warning">Pending Review</span>
+                      </div>
+                    </div>
+                    
+                    <div style="margin: 1rem 0; padding: 1rem; background: var(--background-light); border-radius: var(--radius-md);">
+                      <strong>Why I want to join:</strong>
+                      <p style="margin-top: 0.5rem;">
+                        I am a student at UofT, interested in learning more about Buddhism and Dr. Ambedkar's teachings. I would love to connect with the community and participate in cultural events.
+                      </p>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                      <button class="btn btn-primary">Approve</button>
+                      <button class="btn btn-danger">Reject</button>
+                      <button class="btn btn-secondary">View Details</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Application 2 -->
+                <div class="card" style="border: 1px solid var(--border-color);">
+                  <div class="card-content">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                      <div>
+                        <h3>Michael Smith</h3>
+                        <p style="color: var(--text-medium); margin: 0.5rem 0;">Family Member</p>
+                        <p style="margin: 0.5rem 0;">
+                          <strong>Referred by:</strong> Jane Wilson (jane.wilson@email.com)<br>
+                          <strong>Applied:</strong> October 24, 2025
+                        </p>
+                      </div>
+                      <div>
+                        <span class="badge badge-warning">Pending Review</span>
+                      </div>
+                    </div>
+                    
+                    <div style="margin: 1rem 0; padding: 1rem; background: var(--background-light); border-radius: var(--radius-md);">
+                      <strong>Why I want to join:</strong>
+                      <p style="margin-top: 0.5rem;">
+                        My family and I recently moved to Toronto and we're looking to connect with the Buddhist community here. We'd love to participate in community events and contribute to its growth.
+                      </p>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                      <button class="btn btn-primary">Approve</button>
+                      <button class="btn btn-danger">Reject</button>
+                      <button class="btn btn-secondary">View Details</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Application 3 -->
+                <div class="card" style="border: 1px solid var(--border-color);">
+                  <div class="card-content">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                      <div>
+                        <h3>Priya Patel</h3>
+                        <p style="color: var(--text-medium); margin: 0.5rem 0;">Regular Member</p>
+                        <p style="margin: 0.5rem 0;">
+                          <strong>Referred by:</strong> Amit Shah (amit.shah@email.com)<br>
+                          <strong>Applied:</strong> October 24, 2025
+                        </p>
+                      </div>
+                      <div>
+                        <span class="badge badge-warning">Pending Review</span>
+                      </div>
+                    </div>
+                    
+                    <div style="margin: 1rem 0; padding: 1rem; background: var(--background-light); border-radius: var(--radius-md);">
+                      <strong>Why I want to join:</strong>
+                      <p style="margin-top: 0.5rem;">
+                        I've been following Dr. Ambedkar's teachings for years and would love to connect with like-minded individuals in the community. I'm particularly interested in participating in study circles and discussions.
+                      </p>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                      <button class="btn btn-primary">Approve</button>
+                      <button class="btn btn-danger">Reject</button>
+                      <button class="btn btn-secondary">View Details</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pagination -->
+              <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 0.5rem;">
+                <button class="btn btn-secondary">Previous</button>
+                <button class="btn btn-primary">1</button>
+                <button class="btn btn-secondary">2</button>
+                <button class="btn btn-secondary">3</button>
+                <button class="btn btn-secondary">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About ABC Canada</h3>
+          <p style="color: rgba(255,255,255,0.8); margin-bottom: 1rem;">
+            The Ambedkarite Buddhist Community in Canada is a nonprofit organization dedicated to promoting the principles of Dr. B.R. Ambedkar and Buddhist teachings.
+          </p>
+          <div class="social-links">
+            <a href="#" class="social-link" aria-label="Facebook">f</a>
+            <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+            <a href="#" class="social-link" aria-label="Instagram">📷</a>
+            <a href="#" class="social-link" aria-label="YouTube">▶</a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="events.html">Events</a></li>
+            <li><a href="donations.html">Donations</a></li>
+            <li><a href="membership.html">Membership</a></li>
+            <li><a href="students.html">Student Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Photo Gallery</a></li>
+            <li><a href="#">Annual Reports</a></li>
+            <li><a href="#">News & Updates</a></li>
+            <li><a href="#">Volunteer</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul class="footer-links">
+            <li>📧 info@abccanada.org</li>
+            <li>📞 +1 (416) 123-4567</li>
+            <li>📍 Toronto, ON, Canada</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Ambedkarite Buddhist Community Canada. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="js/main.js"></script>
+</body>
+</html>

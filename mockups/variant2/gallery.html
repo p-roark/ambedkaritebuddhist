@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - Ambedkarite Buddhist Community Canada</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-top">
+            <div class="container">
+                <div>📧 ambedkaritecanada@outlook.com | 📞 +1 000 000 0000</div>
+                <div>Jai Bhim | Namo Buddhaya 🙏</div>
+            </div>
+        </div>
+        <div class="header-main">
+            <div class="container">
+                <div class="logo">
+                    <span class="logo-icon">☸</span>
+                    <div>
+                        <div>Ambedkarite Buddhist</div>
+                        <div style="font-size: 0.8rem; font-weight: 400; color: white;">Community Canada</div>
+                    </div>
+                </div>
+                <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+                <nav>
+                    <ul id="mainMenu">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="donations.html">Donations</a></li>
+                        <li><a href="membership.html">Membership</a></li>
+                        <li><a href="students.html">Students</a></li>
+                        <li><a href="gallery.html" class="active">Gallery</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="signin.html" class="btn btn-primary" style="margin-left: 1rem; white-space: nowrap;">Sign In</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="hero" style="padding: 3rem 0;">
+        <div class="hero-content">
+            <h1>Community Gallery</h1>
+            <p>Moments captured from our journey together</p>
+        </div>
+    </section>
+
+    <!-- Gallery Filters -->
+    <section class="bg-light" style="padding: 2rem 0;">
+        <div class="container">
+            <div class="decorative-border">
+                <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary filter-btn active" onclick="filterGallery('all')">All Photos</button>
+                    <button class="btn btn-outline filter-btn" onclick="filterGallery('events')">Events</button>
+                    <button class="btn btn-outline filter-btn" onclick="filterGallery('festivals')">Festivals</button>
+                    <button class="btn btn-outline filter-btn" onclick="filterGallery('community')">Community</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Photo Gallery -->
+    <section>
+        <div class="container">
+            <div class="grid grid-4" id="galleryGrid">
+                <!-- Photo 1 -->
+                <div class="card gallery-item" data-category="festivals" onclick="openLightbox('https://picsum.photos/1200/800?random=100')">
+                    <img src="https://picsum.photos/400/300?random=100" alt="Buddha Jayanti 2024" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Buddha Jayanti 2024</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">May 2024</p>
+                    </div>
+                </div>
+
+                <!-- Photo 2 -->
+                <div class="card gallery-item" data-category="events" onclick="openLightbox('https://picsum.photos/1200/800?random=101')">
+                    <img src="https://picsum.photos/400/300?random=101" alt="Community Gathering" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Community Gathering</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">April 2024</p>
+                    </div>
+                </div>
+
+                <!-- Photo 4 -->
+                <div class="card gallery-item" data-category="festivals" onclick="openLightbox('https://picsum.photos/1200/800?random=103')">
+                    <img src="https://picsum.photos/400/300?random=103" alt="Ambedkar Jayanti 2024" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Ambedkar Jayanti 2024</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">April 2024</p>
+                    </div>
+                </div>
+
+                <!-- Photo 5 -->
+                <div class="card gallery-item" data-category="community" onclick="openLightbox('https://picsum.photos/1200/800?random=104')">
+                    <img src="https://picsum.photos/400/300?random=104" alt="Youth Program" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Youth Leadership Program</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">February 2024</p>
+                    </div>
+                </div>
+
+                <!-- Photo 6 -->
+                <div class="card gallery-item" data-category="events" onclick="openLightbox('https://picsum.photos/1200/800?random=105')">
+                    <img src="https://picsum.photos/400/300?random=105" alt="Cultural Night" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Cultural Night</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">January 2024</p>
+                    </div>
+                </div>
+
+                <!-- Photo 8 -->
+                <div class="card gallery-item" data-category="community" onclick="openLightbox('https://picsum.photos/1200/800?random=107')">
+                    <img src="https://picsum.photos/400/300?random=107" alt="Student Welcome" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Student Welcome Event</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">December 2023</p>
+                    </div>
+                </div>
+
+                <!-- Photo 9 -->
+                <div class="card gallery-item" data-category="festivals" onclick="openLightbox('https://picsum.photos/1200/800?random=108')">
+                    <img src="https://picsum.photos/400/300?random=108" alt="Diwali Celebration" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Diwali Celebration</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">November 2023</p>
+                    </div>
+                </div>
+
+                <!-- Photo 10 -->
+                <div class="card gallery-item" data-category="events" onclick="openLightbox('https://picsum.photos/1200/800?random=109')">
+                    <img src="https://picsum.photos/400/300?random=109" alt="Charity Drive" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Community Charity Drive</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">October 2023</p>
+                    </div>
+                </div>
+
+                <!-- Photo 12 -->
+                <div class="card gallery-item" data-category="community" onclick="openLightbox('https://picsum.photos/1200/800?random=111')">
+                    <img src="https://picsum.photos/400/300?random=111" alt="Summer Picnic" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Summer Picnic</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">August 2023</p>
+                    </div>
+                </div>
+
+                <!-- Photo 13 -->
+                <div class="card gallery-item" data-category="events" onclick="openLightbox('https://picsum.photos/1200/800?random=112')">
+                    <img src="https://picsum.photos/400/300?random=112" alt="Workshop" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Educational Workshop</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">July 2023</p>
+                    </div>
+                </div>
+
+                <!-- Photo 14 -->
+                <div class="card gallery-item" data-category="festivals" onclick="openLightbox('https://picsum.photos/1200/800?random=113')">
+                    <img src="https://picsum.photos/400/300?random=113" alt="Dharma Day" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Dharma Day Celebration</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">July 2023</p>
+                    </div>
+                </div>
+
+                <!-- Photo 15 -->
+                <div class="card gallery-item" data-category="community" onclick="openLightbox('https://picsum.photos/1200/800?random=114')">
+                    <img src="https://picsum.photos/400/300?random=114" alt="Volunteers" class="card-image" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Volunteer Appreciation</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">June 2023</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Gallery -->
+    <section class="bg-light">
+        <div class="container">
+            <div class="section-header">
+                <h2><span class="decoration">🎥</span> Video Gallery <span class="decoration">🎥</span></h2>
+            </div>
+            <div class="grid grid-2">
+                <div class="card">
+                    <div style="position: relative; padding-bottom: 56.25%; background: var(--secondary);">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white;">
+                            <div style="font-size: 4rem; margin-bottom: 1rem;">▶️</div>
+                            <p>Buddha Jayanti 2024 Highlights</p>
+                        </div>
+                    </div>
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4>Buddha Jayanti 2024</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Watch our grand celebration</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="position: relative; padding-bottom: 56.25%; background: var(--secondary);">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white;">
+                            <div style="font-size: 4rem; margin-bottom: 1rem;">▶️</div>
+                            <p>Community Journey</p>
+                        </div>
+                    </div>
+                    <div class="card-content" style="padding: 1rem;">
+                        <h4>Our Community Story</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Documentary 2018-2024</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section>
+        <div class="container">
+            <div style="background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%); padding: 3rem; border-radius: 12px; text-align: center; color: white; box-shadow: var(--shadow-lg); border: 3px solid var(--primary);">
+                <h2 style="color: var(--primary); margin-bottom: 1rem;">Share Your Photos</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 2rem;">Have photos from our events? We'd love to feature them in our gallery!</p>
+                <a href="contact.html" class="btn btn-primary">Submit Photos</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <img id="lightbox-img" class="lightbox-content" src="" alt="Gallery Image">
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-ornament">🪷 ☸ 🪷</div>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About Us</h3>
+                    <p>A nonprofit organization dedicated to building and supporting the Ambedkarite Buddhist community across Canada.</p>
+                    <p style="margin-top: 1rem; font-style: italic;">"Be your own light" - Buddha</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="donations.html">Donations</a></li>
+                        <li><a href="membership.html">Membership</a></li>
+                        <li><a href="students.html">Student Resources</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>📧 ambedkaritecanada@outlook.com</li>
+                        <li>📞 +1 000 000 0000</li>
+                        <li>📍 Toronto, Ontario, Canada</li>
+                        <li style="margin-top: 1rem;">
+                            <a href="#" style="margin-right: 1rem;">Facebook</a>
+                            <a href="#" style="margin-right: 1rem;">Twitter</a>
+                            <a href="#">Instagram</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Buddhist Teachings</a></li>
+                        <li><a href="#">Ambedkar's Works</a></li>
+                        <li><a href="#">Community Guidelines</a></li>
+                        <li><a href="#">Annual Reports</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Ambedkarite Buddhist Community Canada. All rights reserved. | Registered Canadian Nonprofit</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mainMenu');
+            menu.classList.toggle('active');
+        }
+
+        function filterGallery(category) {
+            const items = document.querySelectorAll('.gallery-item');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            // Update button styles
+            buttons.forEach(btn => {
+                btn.classList.remove('active', 'btn-primary');
+                btn.classList.add('btn-outline');
+            });
+            event.target.classList.remove('btn-outline');
+            event.target.classList.add('btn-primary', 'active');
+
+            // Filter items
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                    item.style.animation = 'fadeIn 0.5s ease';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function openLightbox(imgSrc) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            lightboxImg.src = imgSrc;
+            lightbox.classList.add('active');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        // Close lightbox on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+
+        // Close lightbox on background click
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+
+        // Add hover effect to gallery images
+        document.querySelectorAll('.gallery-item img').forEach(img => {
+            img.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            img.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

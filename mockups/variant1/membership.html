@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membership - Ambedkarite Buddhist Community Canada</title>
+  <meta name="description" content="Join our community and become a member. Choose from various membership tiers to support our mission.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        🪷 <span>ABC</span> Canada
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="donations.html">Donate</a></li>
+        <li><a href="membership.html">Membership</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="signin.html" class="btn btn-primary" style="white-space: nowrap;">Sign In</a></li>
+        <li><a href="donations.html" class="btn btn-primary">Support Us</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <section class="hero" style="padding: 3rem 1.5rem;">
+    <div class="hero-content">
+      <h1>Join Our Community</h1>
+      <p>Connect with our members and become part of our growing family</p>
+    </div>
+  </section>
+
+  <!-- Benefits Section -->
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Membership Benefits</h2>
+        <p class="section-subtitle">What you get as a community member</p>
+      </div>
+      <div class="grid grid-4">
+        <div class="card">
+          <div class="card-content" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎟️</div>
+            <h3 class="card-title">Event Access</h3>
+            <p class="card-text">Priority registration and free entry to all community events</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-content" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">📚</div>
+            <h3 class="card-title">Resources</h3>
+            <p class="card-text">Access to educational materials and Buddhist texts</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-content" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🤝</div>
+            <h3 class="card-title">Network</h3>
+            <p class="card-text">Connect with community members and mentors</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-content" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">📧</div>
+            <h3 class="card-title">Updates</h3>
+            <p class="card-text">Monthly newsletter with news and opportunities</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section" style="background: var(--background-light);">
+    <div class="container">
+      <div class="section-title">
+        <h2>How to Join</h2>
+        <p class="section-subtitle">Our community grows through referrals from existing members</p>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="card-content" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">1️⃣</div>
+            <h3 class="card-title">Get a Referral</h3>
+            <p class="card-text">Connect with an existing member to receive a referral link. Each link is valid for 30 days.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-content" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">2️⃣</div>
+            <h3 class="card-title">Apply</h3>
+            <p class="card-text">Complete the membership application form using your referral link.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-content" style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">3️⃣</div>
+            <h3 class="card-title">Welcome!</h3>
+            <p class="card-text">After approval, you'll receive full access to member benefits.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Membership Form -->
+  <section class="section" id="membership-form">
+    <div class="container">
+      <div style="max-width: 700px; margin: 0 auto;">
+        <div class="section-title">
+          <h2>Membership Application</h2>
+          <p class="section-subtitle">Fill out the form below to join our community</p>
+        </div>
+
+        <div class="card">
+          <div class="card-content">
+            <form id="membership-application">
+              <!-- Referral Link -->
+              <div class="form-group">
+                <label for="referral-link" class="form-label">Referral Link/Code *</label>
+                <input type="text" id="referral-link" class="form-input" required placeholder="Enter your referral link or code">
+                <p class="form-hint">Don't have a referral link? Connect with our community at events or through existing members.</p>
+              </div>
+
+              <!-- Member Type Selection -->
+              <div class="form-group">
+                <label for="member-type" class="form-label">Member Type *</label>
+                <select id="member-type" class="form-select" required>
+                  <option value="">Select member type</option>
+                  <option value="regular">Regular Member</option>
+                  <option value="student">Student Member</option>
+                  <option value="family">Family Group</option>
+                </select>
+              </div>
+
+              <!-- Personal Information -->
+              <h3 style="margin: 2rem 0 1rem;">Personal Information</h3>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="first-name" class="form-label">First Name *</label>
+                  <input type="text" id="first-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label for="last-name" class="form-label">Last Name *</label>
+                  <input type="text" id="last-name" class="form-input" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email" class="form-label">Email Address *</label>
+                  <input type="email" id="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label for="phone" class="form-label">Phone Number *</label>
+                  <input type="tel" id="phone" class="form-input" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="date-of-birth" class="form-label">Date of Birth *</label>
+                  <input type="date" id="date-of-birth" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label for="occupation" class="form-label">Occupation</label>
+                  <input type="text" id="occupation" class="form-input" placeholder="e.g., Student, Engineer">
+                </div>
+              </div>
+
+              <!-- Address Information -->
+              <h3 style="margin: 2rem 0 1rem;">Address Information</h3>
+
+              <div class="form-group">
+                <label for="address" class="form-label">Street Address *</label>
+                <input type="text" id="address" class="form-input" required>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="city" class="form-label">City *</label>
+                  <select id="city" class="form-select" required>
+                    <option value="">Select city</option>
+                    <option value="toronto">Toronto</option>
+                    <option value="vancouver">Vancouver</option>
+                    <option value="calgary">Calgary</option>
+                    <option value="montreal">Montreal</option>
+                    <option value="ottawa">Ottawa</option>
+                    <option value="edmonton">Edmonton</option>
+                    <option value="winnipeg">Winnipeg</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="province" class="form-label">Province *</label>
+                  <select id="province" class="form-select" required>
+                    <option value="">Select province</option>
+                    <option value="ON">Ontario</option>
+                    <option value="BC">British Columbia</option>
+                    <option value="AB">Alberta</option>
+                    <option value="QC">Quebec</option>
+                    <option value="MB">Manitoba</option>
+                    <option value="SK">Saskatchewan</option>
+                    <option value="NS">Nova Scotia</option>
+                    <option value="NB">New Brunswick</option>
+                    <option value="PE">Prince Edward Island</option>
+                    <option value="NL">Newfoundland and Labrador</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="postal-code" class="form-label">Postal Code *</label>
+                <input type="text" id="postal-code" class="form-input" placeholder="A1A 1A1" required>
+              </div>
+
+              <!-- Student Information (conditional) -->
+              <div id="student-info" style="display: none;">
+                <h3 style="margin: 2rem 0 1rem;">Student Information</h3>
+                <div class="form-group">
+                  <label for="institution" class="form-label">Educational Institution</label>
+                  <input type="text" id="institution" class="form-input" placeholder="University/College name">
+                </div>
+                <div class="form-group">
+                  <label for="student-id" class="form-label">Student ID (for verification)</label>
+                  <input type="text" id="student-id" class="form-input">
+                </div>
+              </div>
+
+              <!-- Family Members (conditional) -->
+              <div id="family-info" style="display: none;">
+                <h3 style="margin: 2rem 0 1rem;">Family Members</h3>
+                <p style="color: var(--text-light); margin-bottom: 1rem;">List additional family members (up to 4 more people)</p>
+                <div class="form-group">
+                  <label for="family-members" class="form-label">Family Member Names</label>
+                  <textarea id="family-members" class="form-textarea" placeholder="Enter names, one per line&#10;Example:&#10;John Doe (Spouse)&#10;Jane Doe (Child)"></textarea>
+                </div>
+              </div>
+
+              <!-- How did you hear about us -->
+              <div class="form-group">
+                <label for="referral" class="form-label">How did you hear about us?</label>
+                <select id="referral" class="form-select">
+                  <option value="">Select an option</option>
+                  <option value="friend">Friend or family member</option>
+                  <option value="social">Social media</option>
+                  <option value="event">Attended an event</option>
+                  <option value="search">Online search</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <!-- Additional Comments -->
+              <div class="form-group">
+                <label for="comments" class="form-label">Additional Comments or Questions</label>
+                <textarea id="comments" class="form-textarea" placeholder="Share anything else you'd like us to know..."></textarea>
+              </div>
+
+              <!-- Terms and Conditions -->
+              <div class="form-group">
+                <label style="display: flex; align-items: start; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" required style="margin-top: 0.25rem;">
+                  <span>I agree to the <a href="#">terms and conditions</a> and confirm that the information provided is accurate *</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label style="display: flex; align-items: start; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" checked style="margin-top: 0.25rem;">
+                  <span>I would like to receive the monthly newsletter and event updates</span>
+                </label>
+              </div>
+
+              <!-- Submit Button -->
+              <div style="background: var(--background-light); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                <p style="margin: 0; color: var(--text-light); font-size: 0.875rem;">
+                  <strong>Next Step:</strong> After submitting this form, you'll be redirected to our secure payment page to complete your membership registration.
+                </p>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Continue to Payment</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For Existing Members -->
+  <section class="section" style="background: var(--background-light);">
+    <div class="container">
+      <div class="section-title">
+        <h2>For Existing Members</h2>
+        <p class="section-subtitle">Help grow our community by referring new members</p>
+      </div>
+      
+      <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-content" style="text-align: center;">
+          <h3>Generate Referral Links</h3>
+          <p style="margin: 1rem 0;">As an existing member, you can generate referral links to invite new members to join our community.</p>
+          <a href="#" class="btn btn-primary">Sign In to Generate Links</a>
+          <p style="margin-top: 1rem; color: var(--text-light); font-size: 0.875rem;">
+            Each member can have up to 5 active referral links. Links expire after 30 days.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="section">
+    <div class="container">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <div class="section-title">
+          <h2>Frequently Asked Questions</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="card">
+            <div class="card-content">
+              <h3 class="card-title">How do I get a referral link?</h3>
+              <p class="card-text">You can get a referral link from any existing member of our community. We encourage attending our events to meet current members.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-content">
+              <h3 class="card-title">How long does the approval process take?</h3>
+              <p class="card-text">Applications are typically reviewed within 5-7 business days. You'll receive an email notification once your application is approved.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-content">
+              <h3 class="card-title">Is membership really free?</h3>
+              <p class="card-text">Yes! Membership is completely free. We believe in building an inclusive community focused on shared values rather than financial contributions.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-content">
+              <h3 class="card-title">How many people can I refer?</h3>
+              <p class="card-text">Each member can have up to 5 active referral links at a time. New links can be generated as previous ones are used or expire.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About ABC Canada</h3>
+          <p style="color: rgba(255,255,255,0.8); margin-bottom: 1rem;">
+            The Ambedkarite Buddhist Community in Canada is a nonprofit organization dedicated to promoting the principles of Dr. B.R. Ambedkar and Buddhist teachings.
+          </p>
+          <div class="social-links">
+            <a href="#" class="social-link" aria-label="Facebook">f</a>
+            <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+            <a href="#" class="social-link" aria-label="Instagram">📷</a>
+            <a href="#" class="social-link" aria-label="YouTube">▶</a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="events.html">Events</a></li>
+            <li><a href="donations.html">Donations</a></li>
+            <li><a href="membership.html">Membership</a></li>
+            <li><a href="students.html">Student Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Photo Gallery</a></li>
+            <li><a href="#">Annual Reports</a></li>
+            <li><a href="#">News & Updates</a></li>
+            <li><a href="#">Volunteer</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul class="footer-links">
+            <li>📧 info@abccanada.org</li>
+            <li>📞 +1 (416) 123-4567</li>
+            <li>📍 Toronto, ON, Canada</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Ambedkarite Buddhist Community Canada. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="js/main.js"></script>
+  <script>
+    // Show/hide conditional fields based on member type
+    document.getElementById('member-type').addEventListener('change', function() {
+      const studentInfo = document.getElementById('student-info');
+      const familyInfo = document.getElementById('family-info');
+
+      if (this.value === 'student') {
+        studentInfo.style.display = 'block';
+        familyInfo.style.display = 'none';
+      } else if (this.value === 'family' || this.value === 'lifetime') {
+        studentInfo.style.display = 'none';
+        familyInfo.style.display = 'block';
+      } else {
+        studentInfo.style.display = 'none';
+        familyInfo.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

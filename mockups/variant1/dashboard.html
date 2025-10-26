@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Dashboard - Ambedkarite Buddhist Community Canada</title>
+  <meta name="description" content="Access your personalized member dashboard">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        🪷 <span>ABC</span> Canada
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="donations.html">Donate</a></li>
+        <li><a href="membership.html">Membership</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li>
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle">
+              John Doe
+              <span class="avatar">JD</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a href="dashboard.html">Dashboard</a></li>
+              <li><a href="profile.html">Profile</a></li>
+              <li><a href="#">Sign Out</a></li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Dashboard Header -->
+  <section class="hero" style="padding: 2rem 1.5rem; background: var(--background-light);">
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div class="avatar avatar-large">JD</div>
+        <div>
+          <h1 style="margin-bottom: 0.5rem;">Welcome, John!</h1>
+          <p style="color: var(--text-medium);">Student Member since October 2025</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard Content -->
+  <section class="section">
+    <div class="container">
+      <div class="grid" style="grid-template-columns: 250px 1fr; gap: 2rem;">
+        <!-- Sidebar Navigation -->
+        <div>
+          <div class="card">
+            <div class="card-content" style="padding: 0;">
+              <nav class="dashboard-nav">
+                <a href="#overview" class="dashboard-nav-item active">Dashboard</a>
+                <a href="#profile" class="dashboard-nav-item">Profile</a>
+                <a href="#events" class="dashboard-nav-item">My Events</a>
+                <a href="#referrals" class="dashboard-nav-item">Referrals</a>
+                <!-- Student-specific links -->
+                <a href="#resources" class="dashboard-nav-item">Student Resources</a>
+                <a href="#mentorship" class="dashboard-nav-item">Mentorship</a>
+                <!-- Family-specific links (hidden for students) -->
+                <a href="#family" class="dashboard-nav-item" style="display: none;">Family Members</a>
+                <!-- Leader-specific links (hidden for students) -->
+                <a href="#manage-events" class="dashboard-nav-item" style="display: none;">Manage Events</a>
+                <a href="#approvals" class="dashboard-nav-item" style="display: none;">Member Approvals</a>
+                <a href="#analytics" class="dashboard-nav-item" style="display: none;">Analytics</a>
+              </nav>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div>
+          <!-- Quick Actions -->
+          <div class="grid grid-3" style="gap: 1rem; margin-bottom: 2rem;">
+            <div class="card">
+              <div class="card-content">
+                <h3 class="card-title">Generate Referral Link</h3>
+                <p style="margin: 0.5rem 0;">You have 3 active referral links</p>
+                <a href="#" class="btn btn-primary" style="width: 100%;">Generate New Link</a>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-content">
+                <h3 class="card-title">Upcoming Events</h3>
+                <p style="margin: 0.5rem 0;">2 events this week</p>
+                <a href="#" class="btn btn-secondary" style="width: 100%;">View Calendar</a>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-content">
+                <h3 class="card-title">Resources</h3>
+                <p style="margin: 0.5rem 0;">15 new items available</p>
+                <a href="#" class="btn btn-secondary" style="width: 100%;">Browse Resources</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Student Resources Section -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-content">
+              <h2 style="margin-bottom: 1rem;">Student Resources</h2>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <a href="#" class="resource-card">
+                  <h3>Career Development</h3>
+                  <p>Resume templates, interview tips, and job boards</p>
+                </a>
+                <a href="#" class="resource-card">
+                  <h3>Study Materials</h3>
+                  <p>Access study guides and learning resources</p>
+                </a>
+                <a href="#" class="resource-card">
+                  <h3>Mentorship Program</h3>
+                  <p>Connect with experienced mentors</p>
+                </a>
+                <a href="#" class="resource-card">
+                  <h3>Workshops</h3>
+                  <p>Upcoming skill-building workshops</p>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Referrals -->
+          <div class="card">
+            <div class="card-content">
+              <h2 style="margin-bottom: 1rem;">Active Referrals</h2>
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Link</th>
+                      <th>Generated</th>
+                      <th>Expires</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>abc.ca/ref/j8k9m2</code></td>
+                      <td>Oct 20, 2025</td>
+                      <td>Nov 19, 2025</td>
+                      <td><span class="badge badge-success">Active</span></td>
+                    </tr>
+                    <tr>
+                      <td><code>abc.ca/ref/n4p5q7</code></td>
+                      <td>Oct 15, 2025</td>
+                      <td>Nov 14, 2025</td>
+                      <td><span class="badge badge-warning">Used</span></td>
+                    </tr>
+                    <tr>
+                      <td><code>abc.ca/ref/r8s9t1</code></td>
+                      <td>Oct 10, 2025</td>
+                      <td>Nov 9, 2025</td>
+                      <td><span class="badge badge-success">Active</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About ABC Canada</h3>
+          <p style="color: rgba(255,255,255,0.8); margin-bottom: 1rem;">
+            The Ambedkarite Buddhist Community in Canada is a nonprofit organization dedicated to promoting the principles of Dr. B.R. Ambedkar and Buddhist teachings.
+          </p>
+          <div class="social-links">
+            <a href="#" class="social-link" aria-label="Facebook">f</a>
+            <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+            <a href="#" class="social-link" aria-label="Instagram">📷</a>
+            <a href="#" class="social-link" aria-label="YouTube">▶</a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="events.html">Events</a></li>
+            <li><a href="donations.html">Donations</a></li>
+            <li><a href="membership.html">Membership</a></li>
+            <li><a href="students.html">Student Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="gallery.html">Photo Gallery</a></li>
+            <li><a href="#">Annual Reports</a></li>
+            <li><a href="#">News & Updates</a></li>
+            <li><a href="#">Volunteer</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul class="footer-links">
+            <li>📧 info@abccanada.org</li>
+            <li>📞 +1 (416) 123-4567</li>
+            <li>📍 Toronto, ON, Canada</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Ambedkarite Buddhist Community Canada. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="js/main.js"></script>
+  <script>
+    // Toggle navigation menu items based on member type
+    function updateDashboardNav(memberType) {
+      const studentLinks = document.querySelectorAll('[href="#resources"], [href="#mentorship"]');
+      const familyLinks = document.querySelectorAll('[href="#family"]');
+      const leaderLinks = document.querySelectorAll('[href="#manage-events"], [href="#approvals"], [href="#analytics"]');
+
+      // Hide all role-specific links first
+      [...studentLinks, ...familyLinks, ...leaderLinks].forEach(link => {
+        link.style.display = 'none';
+      });
+
+      // Show relevant links based on member type
+      switch(memberType) {
+        case 'student':
+          studentLinks.forEach(link => link.style.display = 'block');
+          break;
+        case 'family':
+          familyLinks.forEach(link => link.style.display = 'block');
+          break;
+        case 'leader':
+          leaderLinks.forEach(link => link.style.display = 'block');
+          break;
+      }
+    }
+
+    // Initialize with student view
+    updateDashboardNav('student');
+  </script>
+</body>
+</html>
