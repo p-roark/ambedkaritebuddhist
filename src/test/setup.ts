@@ -2,7 +2,7 @@
  * Test setup file for Vitest
  */
 
-import { expect, afterEach, vi } from 'vitest'
+import { afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
@@ -23,24 +23,5 @@ vi.mock('next/router', () => ({
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({
-  default: ({
-    src,
-    alt,
-    ...props
-  }: {
-    src: string
-    alt: string
-    [key: string]: any
-  }) => <img src={src} alt={alt} {...props} />,
+  default: (props: any) => props.src,
 }))
-
-// Global test utilities
-declare global {
-  namespace Vi {
-    interface Matchers<R> {
-      toBeInTheDocument(): R
-      toBeVisible(): R
-      toHaveClass(className: string): R
-    }
-  }
-}

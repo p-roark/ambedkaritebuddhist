@@ -1,0 +1,2 @@
+.pnpmrc
+node-linker=hardlinks
