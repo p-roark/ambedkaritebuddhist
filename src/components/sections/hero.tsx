@@ -28,7 +28,7 @@ export function Hero({
   layout = 'single',
   fullHeight = true,
 }: HeroProps) {
-  const heightClass = fullHeight ? 'min-h-screen' : 'min-h-[60vh]'
+  const heightClass = fullHeight ? 'min-h-[70vh]' : 'min-h-[75vh]'
 
   // Use state to handle random selection on client-side only
   const [selectedOverlayImage, setSelectedOverlayImage] = useState<string>('')
