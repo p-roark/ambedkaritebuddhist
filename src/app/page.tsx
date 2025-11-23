@@ -30,6 +30,7 @@ interface EventData {
     image: string
     imageFolder: string
     registrationFormUrl: string
+    registrationStatus: 'open' | 'closed' | 'not-started'
     status: 'upcoming'
   }>
 }
@@ -45,6 +46,7 @@ interface PreviewEvent {
   image?: string
   status?: 'past' | 'upcoming'
   registrationFormUrl?: string
+  registrationStatus?: 'open' | 'closed' | 'not-started'
 }
 
 export default function Home() {
@@ -85,6 +87,7 @@ export default function Home() {
           description: event.description,
           status: event.status,
           registrationFormUrl: event.registrationFormUrl,
+          registrationStatus: event.registrationStatus,
         }))
         setPreviewEvents(eventsForPreview)
       } catch (error) {
@@ -118,6 +121,14 @@ export default function Home() {
       image: '/images/events/covers/cultural-events.jpeg',
       link: '/events',
       linkText: 'View Events',
+    },
+    {
+      id: '2',
+      title: 'Membership',
+      description: 'Join our community and become a member. Get exclusive access to events and resources.',
+      image: '/images/events/covers/cultural-events.jpeg',
+      link: '/membership',
+      linkText: 'Join Now',
     },
   ]
 

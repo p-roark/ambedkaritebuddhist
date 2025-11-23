@@ -12,6 +12,7 @@ interface EventCard {
   image: string
   status?: 'past' | 'upcoming'
   registrationFormUrl?: string
+  registrationStatus?: 'open' | 'closed' | 'not-started'
 }
 
 interface EventsPreviewProps {
@@ -99,6 +100,20 @@ export function EventsPreview({
                   >
                     View Photos
                   </Link>
+                ) : event.registrationStatus === 'not-started' ? (
+                  <button
+                    disabled
+                    className="inline-block px-6 py-3 bg-gray-300 text-gray-600 font-bold rounded-full cursor-not-allowed opacity-60"
+                  >
+                    Coming Soon
+                  </button>
+                ) : event.registrationStatus === 'closed' ? (
+                  <button
+                    disabled
+                    className="inline-block px-6 py-3 bg-gray-300 text-gray-600 font-bold rounded-full cursor-not-allowed opacity-60"
+                  >
+                    Registration Closed
+                  </button>
                 ) : (
                   <a
                     href={event.registrationFormUrl || '#'}

@@ -14,9 +14,40 @@
       "link": "/events/dhamma-chakra-pravartan-din-2025-10-18",
       "images": ["1.jpeg", "2.jpeg", "3.jpeg", "4.jpeg", "5.jpeg", "6.jpeg", "7.jpeg", "8.jpeg", "9.jpeg", "10.jpeg", "11.jpeg", "12.jpeg", "13.jpeg", "14.jpeg"],
       "status": "past"
+    },
+    {
+      "id": "summer-picnic-2025-08-09",
+      "title": "Summer Picnic",
+      "category": "Community",
+      "date": "August 9, 2025",
+      "dateFormatted": "2025-08-09",
+      "location": "Albion Hills Conservation Park, Caledon, ON",
+      "attendees": "TBA",
+      "description": "Join us for a relaxing summer picnic with the community. Enjoy nature, food, and fellowship as we celebrate our vibrant Buddhist community.",
+      "image": "/images/events/covers/picnic.jpeg",
+      "imageFolder": "/images/events/summer-picnic-2025-08-09/",
+      "link": "/events/summer-picnic-2025-08-09",
+      "images": ["1.jpeg", "2.jpeg", "3.jpeg", "4.jpeg"],
+      "status": "past"
     }
   ],
   "upcomingEvents": [
+    {
+      "id": "babasaheb-mahaparinirvan-din-2025-12-06",
+      "title": "Dr. Babasaheb Ambedkar Mahaparinirvan Din",
+      "category": "Cultural",
+      "date": "December 6, 2025",
+      "dateFormatted": "2025-12-06",
+      "location": "Toronto, ON",
+      "attendees": "TBA",
+      "description": "Commemorate the death anniversary of Dr. B.R. Ambedkar, honoring his extraordinary legacy in the struggle for social justice, equality, and the establishment of Buddhism in India.",
+      "image": "/images/events/covers/mahaparinirvan-din.jpg",
+      "imageFolder": "/images/events/babasaheb-mahaparinirvan-din-2025-12-06/",
+      "link": "/events/babasaheb-mahaparinirvan-din-2025-12-06",
+      "registrationFormUrl": "https://docs.google.com/forms/d/e/1FAIpQLScEF09yqKKh_hBUoCnMvR7jZQxp8KPf9PvCGT4aLaH5Ruacbg/viewform?usp=dialog",
+      "registrationStatus": "open",
+      "status": "upcoming"
+    },
     {
       "id": "ambedkar-jayanti-2026-04-14",
       "title": "Ambedkar Jayanti",
@@ -30,6 +61,7 @@
       "imageFolder": "/images/events/ambedkar-jayanti-2026-04-14/",
       "link": "/events/ambedkar-jayanti-2026-04-14",
       "registrationFormUrl": "https://docs.google.com/forms/d/e/1FAIpQLScEF09yqKKh_hBUoCnMvR7jZQxp8KPf9PvCGT4aLaH5Ruacbg/viewform?usp=dialog",
+      "registrationStatus": "not-started",
       "status": "upcoming"
     }
   ]

@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 interface EventData {
   pastEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; status: 'past' }>
-  upcomingEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; registrationFormUrl: string; status: 'upcoming' }>
+  upcomingEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; registrationFormUrl: string; registrationStatus: 'open' | 'closed' | 'not-started'; status: 'upcoming' }>
 }
 
 export default function EventsPage() {
@@ -64,7 +64,17 @@ export default function EventsPage() {
                     <div className="flex items-center gap-2"><span>👥</span><span>{event.attendees}</span></div>
                   </div>
                   <p className="text-text-medium mb-6 leading-relaxed">{event.description}</p>
-                  <a href={event.registrationFormUrl} target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200">Register Now</a>
+                  {event.registrationStatus === 'not-started' ? (
+                    <button disabled className="inline-block px-6 py-3 bg-gray-300 text-gray-600 font-bold rounded-full cursor-not-allowed opacity-60">
+                      Coming Soon
+                    </button>
+                  ) : event.registrationStatus === 'closed' ? (
+                    <button disabled className="inline-block px-6 py-3 bg-gray-300 text-gray-600 font-bold rounded-full cursor-not-allowed opacity-60">
+                      Registration Closed
+                    </button>
+                  ) : (
+                    <a href={event.registrationFormUrl} target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200">Register Now</a>
+                  )}
                 </div>
               </div>
             ))}
