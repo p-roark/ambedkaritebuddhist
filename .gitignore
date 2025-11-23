@@ -59,3 +59,6 @@ yarn-error.log*
 # Prisma
 prisma/migrations/
 .claude/
+
+# Playwright MCP
+.playwright-mcp/
