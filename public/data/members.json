@@ -1,0 +1,32 @@
+{
+  "members": [
+    {
+      "id": "member-1",
+      "name": "Member 1",
+      "phone": "+1 (XXX) XXX-XXXX",
+      "email": "member1@ambedkaritebuddhist.ca",
+      "joinedDate": "2020-01-15"
+    },
+    {
+      "id": "member-2",
+      "name": "Member 2",
+      "phone": "+1 (XXX) XXX-XXXX",
+      "email": "member2@ambedkaritebuddhist.ca",
+      "joinedDate": "2021-03-20"
+    },
+    {
+      "id": "member-3",
+      "name": "Member 3",
+      "phone": "+1 (XXX) XXX-XXXX",
+      "email": "member3@ambedkaritebuddhist.ca",
+      "joinedDate": "2021-06-10"
+    },
+    {
+      "id": "member-4",
+      "name": "Member 4",
+      "phone": "+1 (XXX) XXX-XXXX",
+      "email": "member4@ambedkaritebuddhist.ca",
+      "joinedDate": "2022-02-28"
+    }
+  ]
+}

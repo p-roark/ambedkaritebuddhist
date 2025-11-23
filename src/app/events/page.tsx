@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 interface EventData {
   pastEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; status: 'past' }>
-  upcomingEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; status: 'upcoming' }>
+  upcomingEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; registrationFormUrl: string; status: 'upcoming' }>
 }
 
 export default function EventsPage() {
@@ -45,7 +45,7 @@ export default function EventsPage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-text-dark mb-4">Upcoming Events</h2>
-            <p className="text-text-medium text-lg">Don't miss our upcoming events!</p>
+            <p className="text-text-medium text-lg">Don&apos;t miss our upcoming events!</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {data.upcomingEvents.map((event) => (
@@ -64,7 +64,7 @@ export default function EventsPage() {
                     <div className="flex items-center gap-2"><span>👥</span><span>{event.attendees}</span></div>
                   </div>
                   <p className="text-text-medium mb-6 leading-relaxed">{event.description}</p>
-                  <Link href={`/events/${event.id}`} className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200">Register Now</Link>
+                  <a href={event.registrationFormUrl} target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200">Register Now</a>
                 </div>
               </div>
             ))}

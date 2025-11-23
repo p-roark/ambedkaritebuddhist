@@ -11,6 +11,7 @@ interface EventCard {
   description: string
   image: string
   status?: 'past' | 'upcoming'
+  registrationFormUrl?: string
 }
 
 interface EventsPreviewProps {
@@ -99,12 +100,14 @@ export function EventsPreview({
                     View Photos
                   </Link>
                 ) : (
-                  <Link
-                    href={`/events/${event.id}`}
+                  <a
+                    href={event.registrationFormUrl || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
                   >
                     Register Now
-                  </Link>
+                  </a>
                 )}
               </div>
             </div>

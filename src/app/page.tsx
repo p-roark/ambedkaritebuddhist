@@ -29,6 +29,7 @@ interface EventData {
     description: string
     image: string
     imageFolder: string
+    registrationFormUrl: string
     status: 'upcoming'
   }>
 }
@@ -42,6 +43,8 @@ interface PreviewEvent {
   category: string
   description: string
   image?: string
+  status?: 'past' | 'upcoming'
+  registrationFormUrl?: string
 }
 
 export default function Home() {
@@ -81,6 +84,7 @@ export default function Home() {
           category: event.category || 'Event',
           description: event.description,
           status: event.status,
+          registrationFormUrl: event.registrationFormUrl,
         }))
         setPreviewEvents(eventsForPreview)
       } catch (error) {
@@ -159,6 +163,7 @@ export default function Home() {
         image={heroImage}
         buttons={[
           { label: 'Learn More', href: '/about', variant: 'secondary' },
+          { label: 'Join Us', href: '/contact', variant: 'primary' },
         ]}
         layout="two-column"
       />
