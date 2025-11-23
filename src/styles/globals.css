@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,44 +19,58 @@ body {
   color: var(--color-text-dark);
   background-color: var(--color-white);
   line-height: 1.6;
+  font-size: 16px;
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-poppins);
   font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 h1 {
-  font-size: 3.5rem;
+  font-size: clamp(2.5rem, 5vw, 4rem);
   line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 h2 {
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.3;
+  font-weight: 700;
 }
 
 h3 {
-  font-size: 1.875rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
   line-height: 1.4;
+  font-weight: 600;
 }
 
 h4 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   line-height: 1.5;
+  font-weight: 600;
 }
 
 h5 {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   line-height: 1.6;
+  font-weight: 600;
 }
 
-/* Ensure minimum font size for accessibility */
-body {
+h6 {
   font-size: 1rem;
-  min-font-size: 16px;
+  line-height: 1.6;
+  font-weight: 600;
 }
+
+p {
+  margin-bottom: 1rem;
+  color: var(--color-text-medium);
+}
+
 
 /* Links */
 a {

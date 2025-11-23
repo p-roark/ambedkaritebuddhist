@@ -17,21 +17,21 @@ export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-text-dark text-white py-12">
+    <footer className="bg-text-dark text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           {/* About Column */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-primary-saffron">🪷 ABC</h3>
-            <p className="text-gray-300 text-sm leading-relaxed">
+            <h3 className="font-poppins text-lg font-bold mb-4 text-primary-saffron">🪷 ABC</h3>
+            <p className="text-gray-300 text-sm leading-relaxed font-noto-sans">
               Ambedkarite Buddhist Community in Canada - Fostering unity, education, and social welfare.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Quick Links</h4>
+            <h4 className="font-poppins text-sm font-semibold mb-4 uppercase tracking-wide text-white">Quick Links</h4>
             <ul className="space-y-2">
               {footerLinks.quickLinks.map((link) => (
                 <li key={link.href}>
@@ -48,7 +48,7 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Resources</h4>
+            <h4 className="font-poppins text-sm font-semibold mb-4 uppercase tracking-wide text-white">Resources</h4>
             <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
@@ -65,7 +65,7 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Contact</h4>
+            <h4 className="font-poppins text-sm font-semibold mb-4 uppercase tracking-wide text-white">Contact</h4>
             <p className="text-gray-300 text-sm mb-2">
               Email: <a href="mailto:info@abccanada.org" className="hover:text-primary-saffron transition-colors">info@abccanada.org</a>
             </p>
@@ -76,7 +76,7 @@ export function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-700 pt-8">
+        <div className="border-t border-gray-700 pt-12">
           {/* Social Links */}
           <div className="flex justify-center gap-6 mb-6">
             <a

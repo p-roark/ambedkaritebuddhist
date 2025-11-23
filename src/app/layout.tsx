@@ -1,8 +1,23 @@
 import type { Metadata } from 'next'
+import { Poppins, Noto_Sans } from 'next/font/google'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import '@/styles/variables.css'
 import '@/styles/globals.css'
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '600', '700', '800'],
+  variable: '--font-poppins',
+  display: 'swap',
+})
+
+const notoSans = Noto_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-noto-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Ambedkarite Buddhist Community - Canada',
@@ -30,8 +45,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="flex flex-col min-h-screen bg-white text-text-dark antialiased">
+    <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
+      <body className="flex flex-col min-h-screen bg-white text-text-dark font-noto-sans antialiased pt-20">
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />

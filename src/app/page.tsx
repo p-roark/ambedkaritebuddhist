@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Hero } from '@/components/sections/hero'
 import { MissionPreview } from '@/components/sections/mission-preview'
 import { EventsPreview } from '@/components/sections/events-preview'
-import { getEventImages, getRandomEventImage } from '@/lib/event-images'
+import { getEventImages } from '@/lib/event-images'
 
 interface EventData {
   pastEvents: Array<{
@@ -50,7 +50,7 @@ interface PreviewEvent {
 }
 
 export default function Home() {
-  const [heroImage, setHeroImage] = useState<string>('https://picsum.photos/600/700?random=1')
+  const [heroImage, setHeroImage] = useState<string>('/images/placeholder.jpg')
   const [eventImages, setEventImages] = useState<string[]>([])
   const [previewEvents, setPreviewEvents] = useState<PreviewEvent[]>([])
 
@@ -69,11 +69,6 @@ export default function Home() {
           const firstEvent = allEventsList[0]
           const images = await getEventImages(firstEvent.id)
           setEventImages(images)
-          // Set initial random image
-          const randomImage = getRandomEventImage(images)
-          if (randomImage) {
-            setHeroImage(randomImage)
-          }
         }
 
         // Transform events for preview section
@@ -101,10 +96,19 @@ export default function Home() {
 
   // Slideshow effect - change image every 5 seconds
   useEffect(() => {
-    if (eventImages.length === 0) return
+    if (eventImages.length === 0) {
+      // Keep placeholder if no event images available
+      return
+    }
 
+    // Set first event image immediately
+    const randomIndex = Math.floor(Math.random() * eventImages.length)
+    setHeroImage(eventImages[randomIndex])
+
+    // Then cycle through images every 5 seconds
     const interval = setInterval(() => {
-      const randomImage = getRandomEventImage(eventImages)
+      const randomIndex = Math.floor(Math.random() * eventImages.length)
+      const randomImage = eventImages[randomIndex]
       if (randomImage) {
         setHeroImage(randomImage)
       }
@@ -126,7 +130,7 @@ export default function Home() {
       id: '2',
       title: 'Membership',
       description: 'Join our community and become a member. Get exclusive access to events and resources.',
-      image: '/images/events/covers/cultural-events.jpeg',
+      image: '/images/membership.jpg',
       link: '/membership',
       linkText: 'Join Now',
     },
@@ -162,7 +166,7 @@ export default function Home() {
 
   const events = previewEvents.map((event) => ({
     ...event,
-    image: eventImages_[event.id] || `https://picsum.photos/500/250?random=default`,
+    image: eventImages_[event.id] || '/images/events/covers/cultural-events.jpeg',
   }))
 
   return (
