@@ -18,17 +18,17 @@ export function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-1000 bg-white/95 backdrop-blur-sm shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          <Link href="/" className="flex-shrink-0 font-poppins font-bold text-2xl bg-gradient-primary bg-clip-text text-transparent">
+        <div className="flex justify-between items-center h-24">
+          <Link href="/" className="flex-shrink-0 font-poppins font-bold text-2xl md:text-3xl bg-gradient-primary bg-clip-text text-transparent">
             ABC Canada
           </Link>
 
-          <div className="hidden md:flex space-x-8 items-center">
+          <div className="hidden md:flex lg:space-x-8 md:space-x-4 items-center">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="font-poppins font-semibold text-sm text-text-dark hover:text-primary-saffron transition-colors duration-200 relative group"
+                className="font-poppins font-bold md:text-sm lg:text-base text-text-dark hover:text-primary-saffron transition-colors duration-200 relative group whitespace-nowrap"
               >
                 {link.label}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-200"></span>
