@@ -87,9 +87,9 @@ export default function MembershipPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-background-light p-8 md:p-12 mb-12">
             <div className="text-center">
-              <h3 className="text-2xl md:text-3xl font-bold text-text-dark mb-4">Don't Have a Referral Link?</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-text-dark mb-4">Don&apos;t Have a Referral Link?</h3>
               <p className="text-text-medium text-lg mb-6 max-w-2xl mx-auto">
-                No problem! Reach out to us and we'll help you get connected with existing members in our community. We're here to welcome new people.
+                No problem! Reach out to us and we&apos;ll help you get connected with existing members in our community. We&apos;re here to welcome new people.
               </p>
               <Link
                 href="/contact"

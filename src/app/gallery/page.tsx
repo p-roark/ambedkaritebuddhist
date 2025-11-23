@@ -73,7 +73,7 @@ export default function GalleryPage() {
     }
 
     loadEventGalleries()
-  }, [])
+  }, [searchParams])
 
   if (loading) {
     return (
