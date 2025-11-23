@@ -52,7 +52,7 @@ export default function Home() {
     loadEventImages()
   }, [])
 
-  // Slideshow effect - change image every 3 seconds
+  // Slideshow effect - change image every 5 seconds
   useEffect(() => {
     if (eventImages.length === 0) return
 
@@ -61,7 +61,7 @@ export default function Home() {
       if (randomImage) {
         setHeroImage(randomImage)
       }
-    }, 3000) // Change every 3 seconds
+    }, 5000) // Change every 5 seconds
 
     return () => clearInterval(interval)
   }, [eventImages])
