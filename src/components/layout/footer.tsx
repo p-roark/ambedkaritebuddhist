@@ -1,14 +1,15 @@
 import Link from 'next/link'
 
 const footerLinks = {
-  about: [
+  quickLinks: [
     { label: 'About Us', href: '/about' },
-    { label: 'Our Mission', href: '/about#mission' },
-    { label: 'Our Values', href: '/about#values' },
-  ],
-  community: [
     { label: 'Events', href: '/events' },
+    { label: 'Membership', href: '/membership' },
     { label: 'Gallery', href: '/gallery' },
+  ],
+  resources: [
+    { label: 'Photo Gallery', href: '/gallery' },
+    { label: 'Contact Us', href: '/contact' },
   ],
 }
 
@@ -19,7 +20,7 @@ export function Footer() {
     <footer className="bg-text-dark text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* About Column */}
           <div>
             <h3 className="text-lg font-bold mb-4 text-primary-saffron">🪷 ABC</h3>
@@ -28,11 +29,11 @@ export function Footer() {
             </p>
           </div>
 
-          {/* About Links */}
+          {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">About</h4>
+            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Quick Links</h4>
             <ul className="space-y-2">
-              {footerLinks.about.map((link) => (
+              {footerLinks.quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -45,11 +46,11 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Community Links */}
+          {/* Resources */}
           <div>
-            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Community</h4>
+            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Resources</h4>
             <ul className="space-y-2">
-              {footerLinks.community.map((link) => (
+              {footerLinks.resources.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -60,6 +61,17 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Contact</h4>
+            <p className="text-gray-300 text-sm mb-2">
+              Email: <a href="mailto:info@abccanada.org" className="hover:text-primary-saffron transition-colors">info@abccanada.org</a>
+            </p>
+            <p className="text-gray-300 text-sm">
+              Phone: <a href="tel:+1000000000" className="hover:text-primary-saffron transition-colors">+1 (000) 000-0000</a>
+            </p>
           </div>
         </div>
 
@@ -105,16 +117,7 @@ export function Footer() {
           {/* Copyright */}
           <div className="text-center text-gray-400 text-sm">
             <p>
-              © {currentYear} Ambedkarite Buddhist Community Canada. All rights reserved.
-            </p>
-            <p className="mt-2">
-              <Link href="/privacy" className="hover:text-primary-saffron transition-colors duration-200">
-                Privacy Policy
-              </Link>
-              {' '} | {' '}
-              <Link href="/terms" className="hover:text-primary-saffron transition-colors duration-200">
-                Terms of Service
-              </Link>
+              © {currentYear} Ambedkarite Buddhist Community Canada. All rights reserved. | Nonprofit Registration: 123456789RR0001
             </p>
           </div>
         </div>
