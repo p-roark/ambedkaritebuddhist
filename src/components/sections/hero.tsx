@@ -40,7 +40,7 @@ export function Hero({
     } else {
       setSelectedOverlayImage(overlayImage)
     }
-  }, [])
+  }, [overlayImage])
 
   // Use a default image during SSR
   const displayImage = selectedOverlayImage || AVAILABLE_BACKGROUNDS[0]
