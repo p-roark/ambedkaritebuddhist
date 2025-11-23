@@ -1,12 +1,70 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Hero } from '@/components/sections/hero'
 import { MissionPreview } from '@/components/sections/mission-preview'
 import { EventsPreview } from '@/components/sections/events-preview'
 import { GoalsPreview } from '@/components/sections/goals-preview'
 import { CTASection } from '@/components/sections/cta-section'
+import { getEventImages, getRandomEventImage } from '@/lib/event-images'
+
+interface EventData {
+  pastEvents: Array<{
+    id: string
+    imageFolder: string
+  }>
+  upcomingEvents: Array<{
+    id: string
+    imageFolder: string
+  }>
+}
 
 export default function Home() {
+  const [heroImage, setHeroImage] = useState<string>('https://picsum.photos/600/700?random=1')
+  const [eventImages, setEventImages] = useState<string[]>([])
+
+  useEffect(() => {
+    // Fetch events.json and get all images from past events
+    const loadEventImages = async () => {
+      try {
+        const response = await fetch('/data/events.json')
+        const data: EventData = await response.json()
+
+        // Try to get images from past events first, then upcoming events
+        const eventsList = [...data.pastEvents, ...data.upcomingEvents]
+
+        if (eventsList.length > 0) {
+          const firstEvent = eventsList[0]
+          const images = await getEventImages(firstEvent.id)
+          setEventImages(images)
+          // Set initial random image
+          const randomImage = getRandomEventImage(images)
+          if (randomImage) {
+            setHeroImage(randomImage)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load event images:', error)
+        // Fallback to default image if loading fails
+      }
+    }
+
+    loadEventImages()
+  }, [])
+
+  // Slideshow effect - change image every 3 seconds
+  useEffect(() => {
+    if (eventImages.length === 0) return
+
+    const interval = setInterval(() => {
+      const randomImage = getRandomEventImage(eventImages)
+      if (randomImage) {
+        setHeroImage(randomImage)
+      }
+    }, 3000) // Change every 3 seconds
+
+    return () => clearInterval(interval)
+  }, [eventImages])
   // Sample data - in Phase 2 this will come from JSON files or database
   const missionCards = [
     {
@@ -108,7 +166,7 @@ export default function Home() {
       <Hero
         title="Building a Vibrant Buddhist Community"
         description="Join us in creating a welcoming space for Ambedkarite Buddhists across Canada. Together, we celebrate our heritage, support newcomers, and grow stronger."
-        image="https://picsum.photos/600/700?random=1"
+        image={heroImage}
         buttons={[
           { label: 'Become a Member', href: '/membership', variant: 'primary' },
           { label: 'Learn More', href: '/about', variant: 'secondary' },
