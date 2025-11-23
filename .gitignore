@@ -62,3 +62,4 @@ prisma/migrations/
 
 # Playwright MCP
 .playwright-mcp/
+dist/
