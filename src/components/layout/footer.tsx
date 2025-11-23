@@ -8,13 +8,7 @@ const footerLinks = {
   ],
   community: [
     { label: 'Events', href: '/events' },
-    { label: 'Membership', href: '/membership' },
     { label: 'Gallery', href: '/gallery' },
-  ],
-  support: [
-    { label: 'Donations', href: '/donations' },
-    { label: 'Contact', href: '/contact' },
-    { label: 'Resources', href: '/resources' },
   ],
 }
 
@@ -56,23 +50,6 @@ export function Footer() {
             <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Community</h4>
             <ul className="space-y-2">
               {footerLinks.community.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-300 hover:text-primary-saffron transition-colors duration-200 text-sm"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support Links */}
-          <div>
-            <h4 className="text-sm font-semibold mb-4 uppercase tracking-wide">Support</h4>
-            <ul className="space-y-2">
-              {footerLinks.support.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}

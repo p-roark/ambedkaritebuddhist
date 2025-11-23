@@ -10,6 +10,7 @@ interface EventCard {
   category: string
   description: string
   image: string
+  status?: 'past' | 'upcoming'
 }
 
 interface EventsPreviewProps {
@@ -90,12 +91,21 @@ export function EventsPreview({
                   {event.description}
                 </p>
 
-                <Link
-                  href={`/events/${event.id}`}
-                  className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                >
-                  Register Now
-                </Link>
+                {event.status === 'past' ? (
+                  <Link
+                    href={`/gallery?event=${event.id}`}
+                    className="inline-block px-6 py-3 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
+                  >
+                    View Photos
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/events/${event.id}`}
+                    className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                  >
+                    Register Now
+                  </Link>
+                )}
               </div>
             </div>
           ))}

@@ -4,24 +4,50 @@ import { useEffect, useState } from 'react'
 import { Hero } from '@/components/sections/hero'
 import { MissionPreview } from '@/components/sections/mission-preview'
 import { EventsPreview } from '@/components/sections/events-preview'
-import { GoalsPreview } from '@/components/sections/goals-preview'
-import { CTASection } from '@/components/sections/cta-section'
 import { getEventImages, getRandomEventImage } from '@/lib/event-images'
 
 interface EventData {
   pastEvents: Array<{
     id: string
+    title: string
+    date: string
+    location: string
+    attendees: string
+    category: string
+    description: string
+    image: string
     imageFolder: string
+    status: 'past'
   }>
   upcomingEvents: Array<{
     id: string
+    title: string
+    date: string
+    location: string
+    attendees: string
+    category: string
+    description: string
+    image: string
     imageFolder: string
+    status: 'upcoming'
   }>
+}
+
+interface PreviewEvent {
+  id: string
+  title: string
+  date: string
+  location: string
+  attendees: string
+  category: string
+  description: string
+  image?: string
 }
 
 export default function Home() {
   const [heroImage, setHeroImage] = useState<string>('https://picsum.photos/600/700?random=1')
   const [eventImages, setEventImages] = useState<string[]>([])
+  const [previewEvents, setPreviewEvents] = useState<PreviewEvent[]>([])
 
   useEffect(() => {
     // Fetch events.json and get all images from past events
@@ -30,11 +56,12 @@ export default function Home() {
         const response = await fetch('/data/events.json')
         const data: EventData = await response.json()
 
-        // Try to get images from past events first, then upcoming events
-        const eventsList = [...data.pastEvents, ...data.upcomingEvents]
+        // Use only upcoming events for home page preview, but use past events for hero images
+        const allEventsList = [...data.pastEvents, ...data.upcomingEvents]
+        const eventsList = data.upcomingEvents
 
-        if (eventsList.length > 0) {
-          const firstEvent = eventsList[0]
+        if (allEventsList.length > 0) {
+          const firstEvent = allEventsList[0]
           const images = await getEventImages(firstEvent.id)
           setEventImages(images)
           // Set initial random image
@@ -43,6 +70,19 @@ export default function Home() {
             setHeroImage(randomImage)
           }
         }
+
+        // Transform events for preview section
+        const eventsForPreview = eventsList.map((event) => ({
+          id: event.id,
+          title: event.title,
+          date: event.date,
+          location: event.location,
+          attendees: event.attendees || 'TBA',
+          category: event.category || 'Event',
+          description: event.description,
+          status: event.status,
+        }))
+        setPreviewEvents(eventsForPreview)
       } catch (error) {
         console.error('Failed to load event images:', error)
         // Fallback to default image if loading fails
@@ -69,96 +109,46 @@ export default function Home() {
   const missionCards = [
     {
       id: '1',
-      title: 'Community Support',
-      description: 'Building strong connections and providing assistance to community members in times of need.',
-      image: 'https://picsum.photos/400/250?random=2',
-      link: '/about',
-      linkText: 'Learn More',
-    },
-    {
-      id: '2',
-      title: 'Student Resources',
-      description: 'Comprehensive support for students moving to Canada or already studying here.',
-      image: 'https://picsum.photos/400/250?random=3',
-      link: '/resources',
-      linkText: 'Explore Resources',
-    },
-    {
-      id: '3',
       title: 'Cultural Events',
       description: 'Regular gatherings celebrating Buddhist festivals and Ambedkarite traditions.',
-      image: 'https://picsum.photos/400/250?random=4',
+      image: '/images/events/covers/cultural-events.jpeg',
       link: '/events',
       linkText: 'View Events',
     },
   ]
 
-  const events = [
-    {
-      id: '1',
-      title: 'Buddha Jayanti Celebration 2025',
-      date: 'May 15, 2025',
-      location: 'Toronto, ON',
-      attendees: '200 attendees',
-      category: 'Festival',
-      description: 'Celebrate the birth of Lord Buddha with prayers, meditation, cultural performances, and community feast.',
-      image: 'https://picsum.photos/500/250?random=5',
-    },
-    {
-      id: '2',
-      title: 'Monthly Dhamma Talk Series',
-      date: 'Every First Sunday',
-      location: 'Virtual',
-      attendees: '50+ attendees',
-      category: 'Education',
-      description: 'Join our monthly online discussion on Buddhist teachings and their application in modern life.',
-      image: 'https://picsum.photos/500/250?random=6',
-    },
-    {
-      id: '3',
-      title: 'Youth Community Meetup',
-      date: 'March 20, 2025',
-      location: 'Vancouver, BC',
-      attendees: '75 attendees',
-      category: 'Community',
-      description: 'Connect with young community members for networking, sports, and cultural activities.',
-      image: 'https://picsum.photos/500/250?random=7',
-    },
-    {
-      id: '4',
-      title: 'New Student Orientation',
-      date: 'April 10, 2025',
-      location: 'Toronto, ON',
-      attendees: '40 students',
-      category: 'Student',
-      description: 'Essential orientation for students newly arrived in Canada. Learn about resources and connect with mentors.',
-      image: 'https://picsum.photos/500/250?random=8',
-    },
-  ]
+  // Map preview events to include cover images from events.json
+  // First, we need to fetch the actual image URLs from the events data
+  const [eventImages_, setEventImages_] = useState<{ [key: string]: string }>({})
 
-  const goals = [
-    {
-      id: '1',
-      title: 'Build Community Vihara',
-      description: 'Establish a permanent Buddhist temple and community center in Toronto.',
-      targetAmount: 1000000,
-      currentAmount: 450000,
-    },
-    {
-      id: '2',
-      title: 'Student Emergency Fund',
-      description: 'Support students facing financial hardships during their studies in Canada.',
-      targetAmount: 50000,
-      currentAmount: 28500,
-    },
-    {
-      id: '3',
-      title: 'Youth Education Program',
-      description: 'Fund educational workshops and leadership programs for community youth.',
-      targetAmount: 25000,
-      currentAmount: 18200,
-    },
-  ]
+  useEffect(() => {
+    const loadEventCovers = async () => {
+      try {
+        const response = await fetch('/data/events.json')
+        const data: EventData = await response.json()
+        const imageMap: { [key: string]: string } = {}
+
+        // Map event IDs to their cover images
+        data.upcomingEvents.forEach((event: any) => {
+          imageMap[event.id] = event.image
+        })
+        data.pastEvents.forEach((event: any) => {
+          imageMap[event.id] = event.image
+        })
+
+        setEventImages_(imageMap)
+      } catch (error) {
+        console.error('Failed to load event covers:', error)
+      }
+    }
+
+    loadEventCovers()
+  }, [])
+
+  const events = previewEvents.map((event) => ({
+    ...event,
+    image: eventImages_[event.id] || `https://picsum.photos/500/250?random=default`,
+  }))
 
   return (
     <div className="w-full">
@@ -168,7 +158,6 @@ export default function Home() {
         description="Join us in creating a welcoming space for Ambedkarite Buddhists across Canada. Together, we celebrate our heritage, support newcomers, and grow stronger."
         image={heroImage}
         buttons={[
-          { label: 'Become a Member', href: '/membership', variant: 'primary' },
           { label: 'Learn More', href: '/about', variant: 'secondary' },
         ]}
         layout="two-column"
@@ -190,23 +179,6 @@ export default function Home() {
         events={events}
       />
 
-      {/* Goals Preview */}
-      <GoalsPreview
-        subtitle="Support Our Vision"
-        title="Current Fundraising Goals"
-        description="Help us achieve our community goals through your generous contributions."
-        goals={goals}
-      />
-
-      {/* CTA Section */}
-      <CTASection
-        title="Ready to Join Our Community?"
-        description="Become a member today and be part of something greater. Together, we can build a stronger, more connected community."
-        buttons={[
-          { label: 'Become a Member', href: '/membership', variant: 'primary' },
-          { label: 'Make a Donation', href: '/donations', variant: 'secondary' },
-        ]}
-      />
     </div>
   )
 }

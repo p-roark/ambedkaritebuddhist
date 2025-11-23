@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { getEventImages } from '@/lib/event-images'
 
@@ -31,6 +32,7 @@ interface EventWithImages {
 }
 
 export default function GalleryPage() {
+  const searchParams = useSearchParams()
   const [events, setEvents] = useState<EventWithImages[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventWithImages | null>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -42,8 +44,8 @@ export default function GalleryPage() {
         const response = await fetch('/data/events.json')
         const data: EventData = await response.json()
 
-        // Combine past and upcoming events
-        const allEvents = [...data.pastEvents, ...data.upcomingEvents]
+        // Only use past events for gallery
+        const allEvents = data.pastEvents
 
         // Load images for each event
         const eventsWithImages = await Promise.all(
@@ -54,6 +56,15 @@ export default function GalleryPage() {
         )
 
         setEvents(eventsWithImages)
+
+        // Auto-select event from query parameter if provided
+        const eventId = searchParams.get('event')
+        if (eventId && eventsWithImages.length > 0) {
+          const targetEvent = eventsWithImages.find((e) => e.id === eventId)
+          if (targetEvent) {
+            setSelectedEvent(targetEvent)
+          }
+        }
       } catch (error) {
         console.error('Failed to load events gallery:', error)
       } finally {

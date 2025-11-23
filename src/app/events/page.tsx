@@ -1,9 +1,115 @@
-export default function Page() {
+'use client'
+
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+
+interface EventData {
+  pastEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; status: 'past' }>
+  upcomingEvents: Array<{ id: string; title: string; date: string; location: string; attendees: string; category: string; description: string; image: string; status: 'upcoming' }>
+}
+
+export default function EventsPage() {
+  const [data, setData] = useState<EventData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const response = await fetch('/data/events.json')
+        const eventsData: EventData = await response.json()
+        setData(eventsData)
+      } catch (error) {
+        console.error('Failed to load events:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadEvents()
+  }, [])
+
+  if (loading) {
+    return <div className="min-h-screen bg-white flex items-center justify-center"><p className="text-lg text-text-medium">Loading events...</p></div>
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h1 className="text-4xl md:text-5xl font-bold text-text-dark">Page Coming Soon</h1>
+      <section className="bg-gradient-to-br from-primary-blue via-accent-purple to-accent-orange py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Events</h1>
+          <p className="text-xl text-white/90 max-w-2xl mx-auto">Join our community events and celebrations</p>
+        </div>
       </section>
+
+      {data?.upcomingEvents && data.upcomingEvents.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-text-dark mb-4">Upcoming Events</h2>
+            <p className="text-text-medium text-lg">Don't miss our upcoming events!</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {data.upcomingEvents.map((event) => (
+              <div key={event.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-background-light">
+                <div className="relative h-64 overflow-hidden">
+                  <Image src={event.image} alt={event.title} fill className="object-cover group-hover:scale-110 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 50vw" />
+                  <div className="absolute top-4 right-4">
+                    <span className="inline-block px-4 py-2 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold text-sm rounded-full">{event.category}</span>
+                  </div>
+                </div>
+                <div className="p-6 md:p-8">
+                  <h3 className="text-xl md:text-2xl font-bold text-text-dark mb-4">{event.title}</h3>
+                  <div className="space-y-2 mb-4 text-text-medium text-sm md:text-base">
+                    <div className="flex items-center gap-2"><span>📅</span><span>{event.date}</span></div>
+                    <div className="flex items-center gap-2"><span>📍</span><span>{event.location}</span></div>
+                    <div className="flex items-center gap-2"><span>👥</span><span>{event.attendees}</span></div>
+                  </div>
+                  <p className="text-text-medium mb-6 leading-relaxed">{event.description}</p>
+                  <Link href={`/events/${event.id}`} className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200">Register Now</Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {data?.pastEvents && data.pastEvents.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-gray-200">
+          <div className="mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-text-dark mb-4">Past Events</h2>
+            <p className="text-text-medium text-lg">Explore photos and memories from our past events</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {data.pastEvents.map((event) => (
+              <div key={event.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-background-light opacity-90">
+                <div className="relative h-64 overflow-hidden">
+                  <Image src={event.image} alt={event.title} fill className="object-cover group-hover:scale-110 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 50vw" />
+                  <div className="absolute top-4 right-4">
+                    <span className="inline-block px-4 py-2 bg-gray-600 text-white font-bold text-sm rounded-full">{event.category}</span>
+                  </div>
+                </div>
+                <div className="p-6 md:p-8">
+                  <h3 className="text-xl md:text-2xl font-bold text-text-dark mb-4">{event.title}</h3>
+                  <div className="space-y-2 mb-4 text-text-medium text-sm md:text-base">
+                    <div className="flex items-center gap-2"><span>📅</span><span>{event.date}</span></div>
+                    <div className="flex items-center gap-2"><span>📍</span><span>{event.location}</span></div>
+                    <div className="flex items-center gap-2"><span>👥</span><span>{event.attendees}</span></div>
+                  </div>
+                  <p className="text-text-medium mb-6 leading-relaxed">{event.description}</p>
+                  <Link href={`/gallery?event=${event.id}`} className="inline-block px-6 py-3 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200">View Photos</Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(!data || (data.upcomingEvents.length === 0 && data.pastEvents.length === 0)) && !loading && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center">
+            <p className="text-lg text-text-medium">No events found. Please check back soon!</p>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

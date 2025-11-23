@@ -6,14 +6,29 @@
       "category": "Cultural",
       "date": "October 18, 2025",
       "dateFormatted": "2025-10-18",
-      "location": "Toronto, ON",
+      "location": "North York, ON",
       "attendees": "150+ attendees",
       "description": "Celebrate the day when Dr. B.R. Ambedkar embraced Buddhism and took the vow to convert to Buddhism. A significant occasion for Ambedkarite Buddhists.",
-      "image": "/images/events/dhamma-chakra-pravartan-din-2025-10-18/cover.jpg",
+      "image": "/images/events/covers/dcpd.jpg",
       "imageFolder": "/images/events/dhamma-chakra-pravartan-din-2025-10-18/",
       "link": "/events/dhamma-chakra-pravartan-din-2025-10-18",
       "status": "past"
     }
   ],
-  "upcomingEvents": []
+  "upcomingEvents": [
+    {
+      "id": "ambedkar-jayanti-2026-04-14",
+      "title": "Ambedkar Jayanti",
+      "category": "Cultural",
+      "date": "April 14, 2026",
+      "dateFormatted": "2026-04-14",
+      "location": "Mississauga, ON",
+      "attendees": "TBA",
+      "description": "Celebrate the birth anniversary of Dr. B.R. Ambedkar, the architect of the Indian Constitution and a beacon of social justice, equality, and Buddhist philosophy.",
+      "image": "/images/events/covers/ambedkar-jayanti.jpg",
+      "imageFolder": "/images/events/ambedkar-jayanti-2026-04-14/",
+      "link": "/events/ambedkar-jayanti-2026-04-14",
+      "status": "upcoming"
+    }
+  ]
 }
