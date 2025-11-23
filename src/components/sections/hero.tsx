@@ -1,10 +1,15 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { getRandomBackground, AVAILABLE_BACKGROUNDS } from '@/lib/backgrounds'
 
 interface HeroProps {
   title: string
   description: string
   image?: string
+  overlayImage?: string
   buttons?: Array<{
     label: string
     href: string
@@ -18,22 +23,49 @@ export function Hero({
   title,
   description,
   image,
+  overlayImage,
   buttons,
   layout = 'single',
   fullHeight = true,
 }: HeroProps) {
   const heightClass = fullHeight ? 'min-h-screen' : 'min-h-[60vh]'
 
+  // Use state to handle random selection on client-side only
+  const [selectedOverlayImage, setSelectedOverlayImage] = useState<string>('')
+
+  useEffect(() => {
+    if (!overlayImage) {
+      const randomImage = getRandomBackground()
+      setSelectedOverlayImage(randomImage)
+    } else {
+      setSelectedOverlayImage(overlayImage)
+    }
+  }, [])
+
+  // Use a default image during SSR
+  const displayImage = selectedOverlayImage || AVAILABLE_BACKGROUNDS[0]
+
   if (layout === 'two-column' && image) {
     return (
-      <section className={`${heightClass} flex items-center justify-center bg-gradient-to-r from-primary-blue via-accent-purple to-accent-orange relative overflow-hidden`}>
-        {/* Animated background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.2) 1px, transparent 1px)',
-            backgroundSize: '50px 50px',
-          }} />
-        </div>
+      <section
+        className={`${heightClass} flex items-center justify-center relative overflow-hidden`}
+        style={{
+          background: 'linear-gradient(135deg, #2D4D9B 0%, #7F56D9 50%, #FF6B35 100%)',
+        }}
+      >
+        {/* Overlay image on background */}
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: `url(${displayImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'left center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+
+        {/* Fade overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center relative z-10">
