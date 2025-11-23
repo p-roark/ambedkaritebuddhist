@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -28,6 +31,9 @@ export function EventsPreview({
   description,
   events,
 }: EventsPreviewProps) {
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null
+
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -115,14 +121,20 @@ export function EventsPreview({
                     Registration Closed
                   </button>
                 ) : (
-                  <a
-                    href={event.registrationFormUrl || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                  >
-                    Register Now
-                  </a>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setSelectedEventId(event.id)}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
+                    >
+                      Register Now
+                    </button>
+                    <Link
+                      href="/contact?type=volunteer"
+                      className="flex-1 inline-block px-6 py-3 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200 text-center"
+                    >
+                      Volunteer
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>
@@ -139,6 +151,59 @@ export function EventsPreview({
           </Link>
         </div>
       </div>
+
+      {/* Registration Modal */}
+      {selectedEvent && selectedEventId && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full my-8 shadow-xl">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-primary-blue via-accent-purple to-accent-orange p-6 rounded-t-2xl flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">
+                Register for {selectedEvent.title}
+              </h2>
+              <button
+                onClick={() => setSelectedEventId(null)}
+                className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
+              {selectedEvent.registrationFormUrl ? (
+                <iframe
+                  src={selectedEvent.registrationFormUrl + (selectedEvent.registrationFormUrl.includes('?') ? '&embedded=true' : '?embedded=true')}
+                  width="100%"
+                  height="700"
+                  frameBorder="0"
+                  marginHeight={0}
+                  marginWidth={0}
+                  className="w-full"
+                >
+                  Loading…
+                </iframe>
+              ) : (
+                <p className="text-text-medium text-center py-12">
+                  Registration form not available
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
