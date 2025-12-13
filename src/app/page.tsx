@@ -28,7 +28,7 @@ export default function Home() {
         </h1>
 
         <p className="text-lg md:text-xl text-text-medium mb-12 max-w-2xl mx-auto">
-          We're building something special for our community. Stay tuned for updates!
+          We&apos;re building something special for our community. Stay tuned for updates!
         </p>
 
         {/* Divider */}
@@ -55,7 +55,7 @@ export default function Home() {
 
             <div className="bg-primary-saffron/5 border-l-4 border-primary-saffron p-6 my-6 rounded-r">
               <p className="text-text-dark italic">
-                "Educate, Agitate, Organize" - Dr. B.R. Ambedkar
+                &ldquo;Educate, Agitate, Organize&rdquo; - Dr. B.R. Ambedkar
               </p>
             </div>
 
