@@ -1,204 +1,117 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { Hero } from '@/components/sections/hero'
-import { MissionPreview } from '@/components/sections/mission-preview'
-import { EventsPreview } from '@/components/sections/events-preview'
-import { getEventImages } from '@/lib/event-images'
-
-interface EventData {
-  pastEvents: Array<{
-    id: string
-    title: string
-    date: string
-    location: string
-    attendees: string
-    category: string
-    description: string
-    image: string
-    imageFolder: string
-    status: 'past'
-  }>
-  upcomingEvents: Array<{
-    id: string
-    title: string
-    date: string
-    location: string
-    attendees: string
-    category: string
-    description: string
-    image: string
-    imageFolder: string
-    registrationFormUrl: string
-    registrationStatus: 'open' | 'closed' | 'not-started'
-    status: 'upcoming'
-  }>
-}
-
-interface PreviewEvent {
-  id: string
-  title: string
-  date: string
-  location: string
-  attendees: string
-  category: string
-  description: string
-  image?: string
-  status?: 'past' | 'upcoming'
-  registrationFormUrl?: string
-  registrationStatus?: 'open' | 'closed' | 'not-started'
-}
-
 export default function Home() {
-  const [heroImage, setHeroImage] = useState<string>('/images/placeholder.jpg')
-  const [eventImages, setEventImages] = useState<string[]>([])
-  const [previewEvents, setPreviewEvents] = useState<PreviewEvent[]>([])
-
-  useEffect(() => {
-    // Fetch events.json and get all images from past events
-    const loadEventImages = async () => {
-      try {
-        const response = await fetch('/data/events.json')
-        const data: EventData = await response.json()
-
-        // Use only upcoming events for home page preview, but use past events for hero images
-        const allEventsList = [...data.pastEvents, ...data.upcomingEvents]
-        const eventsList = data.upcomingEvents
-
-        if (allEventsList.length > 0) {
-          const firstEvent = allEventsList[0]
-          const images = await getEventImages(firstEvent.id)
-          setEventImages(images)
-        }
-
-        // Transform events for preview section
-        const eventsForPreview = eventsList.map((event) => ({
-          id: event.id,
-          title: event.title,
-          date: event.date,
-          location: event.location,
-          attendees: event.attendees || 'TBA',
-          category: event.category || 'Event',
-          description: event.description,
-          status: event.status,
-          registrationFormUrl: event.registrationFormUrl,
-          registrationStatus: event.registrationStatus,
-        }))
-        setPreviewEvents(eventsForPreview)
-      } catch (error) {
-        console.error('Failed to load event images:', error)
-        // Fallback to default image if loading fails
-      }
-    }
-
-    loadEventImages()
-  }, [])
-
-  // Slideshow effect - change image every 5 seconds
-  useEffect(() => {
-    if (eventImages.length === 0) {
-      // Keep placeholder if no event images available
-      return
-    }
-
-    // Set first event image immediately
-    const randomIndex = Math.floor(Math.random() * eventImages.length)
-    setHeroImage(eventImages[randomIndex])
-
-    // Then cycle through images every 5 seconds
-    const interval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * eventImages.length)
-      const randomImage = eventImages[randomIndex]
-      if (randomImage) {
-        setHeroImage(randomImage)
-      }
-    }, 5000) // Change every 5 seconds
-
-    return () => clearInterval(interval)
-  }, [eventImages])
-  // Sample data - in Phase 2 this will come from JSON files or database
-  const missionCards = [
-    {
-      id: '1',
-      title: 'Cultural Events',
-      description: 'Regular gatherings celebrating Buddhist festivals and Ambedkarite traditions.',
-      image: '/images/events/covers/cultural-events.jpeg',
-      link: '/events',
-      linkText: 'View Events',
-    },
-    {
-      id: '2',
-      title: 'Membership',
-      description: 'Join our community and become a member. Get exclusive access to events and resources.',
-      image: '/images/membership.jpg',
-      link: '/membership',
-      linkText: 'Join Now',
-    },
-  ]
-
-  // Map preview events to include cover images from events.json
-  // First, we need to fetch the actual image URLs from the events data
-  const [eventImages_, setEventImages_] = useState<{ [key: string]: string }>({})
-
-  useEffect(() => {
-    const loadEventCovers = async () => {
-      try {
-        const response = await fetch('/data/events.json')
-        const data: EventData = await response.json()
-        const imageMap: { [key: string]: string } = {}
-
-        // Map event IDs to their cover images
-        data.upcomingEvents.forEach((event: any) => {
-          imageMap[event.id] = event.image
-        })
-        data.pastEvents.forEach((event: any) => {
-          imageMap[event.id] = event.image
-        })
-
-        setEventImages_(imageMap)
-      } catch (error) {
-        console.error('Failed to load event covers:', error)
-      }
-    }
-
-    loadEventCovers()
-  }, [])
-
-  const events = previewEvents.map((event) => ({
-    ...event,
-    image: eventImages_[event.id] || '/images/events/covers/cultural-events.jpeg',
-  }))
-
   return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <Hero
-        title="Building a Vibrant Buddhist Community"
-        description="Join us in creating a welcoming space for Ambedkarite Buddhists across Canada. Together, we celebrate our heritage, support newcomers, and grow stronger."
-        image={heroImage}
-        buttons={[
-          { label: 'Learn More', href: '/about', variant: 'secondary' },
-          { label: 'Join Us', href: '/contact', variant: 'primary' },
-        ]}
-        layout="two-column"
-      />
+    <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50">
+      <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+        {/* Construction Icon */}
+        <div className="mb-8">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary-saffron/10 mb-6">
+            <svg
+              className="w-12 h-12 text-primary-saffron"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+              />
+            </svg>
+          </div>
+        </div>
 
-      {/* Mission Preview */}
-      <MissionPreview
-        subtitle="Our Mission"
-        title="Empowering Through Community & Education"
-        description="Following the principles of Dr. B.R. Ambedkar, we create opportunities for growth, learning, and connection within the Buddhist community across Canada."
-        cards={missionCards}
-      />
+        {/* Main Heading */}
+        <h1 className="text-4xl md:text-5xl font-bold text-text-dark mb-4 font-poppins">
+          Website Under Construction
+        </h1>
 
-      {/* Events Preview */}
-      <EventsPreview
-        subtitle="What's Coming"
-        title="Upcoming Events"
-        description="Join us for upcoming celebrations, learning sessions, and community gatherings."
-        events={events}
-      />
+        <p className="text-lg md:text-xl text-text-medium mb-12 max-w-2xl mx-auto">
+          We're building something special for our community. Stay tuned for updates!
+        </p>
 
+        {/* Divider */}
+        <div className="w-24 h-1 bg-primary-saffron mx-auto mb-12"></div>
+
+        {/* About Section */}
+        <div className="bg-white rounded-lg shadow-sm p-8 md:p-12 mb-8 text-left">
+          <h2 className="text-2xl md:text-3xl font-bold text-text-dark mb-6 font-poppins text-center">
+            About Our Community
+          </h2>
+
+          <div className="space-y-4 text-text-medium leading-relaxed">
+            <p>
+              Welcome to the <strong className="text-text-dark">Ambedkarite Buddhist Community</strong> in Canada.
+              We are a nonprofit organization dedicated to fostering unity, education, and social welfare
+              based on the teachings of <strong className="text-text-dark">Dr. B.R. Ambedkar</strong> and the principles of Buddhism.
+            </p>
+
+            <p>
+              Our mission is to build an inclusive digital home for Ambedkarite Buddhists across Canada,
+              providing support for newcomers, celebrating our rich cultural heritage, and maintaining
+              transparency in all our community operations.
+            </p>
+
+            <div className="bg-primary-saffron/5 border-l-4 border-primary-saffron p-6 my-6 rounded-r">
+              <p className="text-text-dark italic">
+                "Educate, Agitate, Organize" - Dr. B.R. Ambedkar
+              </p>
+            </div>
+
+            <p>
+              Through this platform, we aim to:
+            </p>
+
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>Connect Ambedkarite Buddhists across Canada</li>
+              <li>Organize cultural events and celebrations</li>
+              <li>Support students and newcomers to Canada</li>
+              <li>Promote the teachings of Dr. Ambedkar and Buddhism</li>
+              <li>Facilitate community engagement and growth</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Contact Section */}
+        <div className="bg-primary-blue/5 rounded-lg p-8 border border-primary-blue/10">
+          <h2 className="text-2xl font-bold text-text-dark mb-4 font-poppins">
+            Get in Touch
+          </h2>
+
+          <p className="text-text-medium mb-6">
+            Have questions or want to learn more about our community?
+          </p>
+
+          <div className="flex items-center justify-center gap-3 text-primary-blue">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            <a
+              href="mailto:info@ambedkaritebuddhist.ca"
+              className="text-lg font-semibold hover:underline"
+            >
+              info@ambedkaritebuddhist.ca
+            </a>
+          </div>
+        </div>
+
+        {/* Footer Note */}
+        <p className="text-sm text-text-light mt-12">
+          Ambedkarite Buddhist Organization Canada - Nonprofit Community
+        </p>
+      </div>
     </div>
   )
 }
