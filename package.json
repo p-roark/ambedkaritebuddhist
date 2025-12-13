@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cloudflare": "next build && open-next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -29,7 +28,6 @@
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.0.10",
     "jsdom": "^23.0.0",
-    "open-next": "^3.1.3",
     "postcss": "^8.4.32",
     "prettier": "^3.1.0",
     "tailwindcss": "^3.4.0",
