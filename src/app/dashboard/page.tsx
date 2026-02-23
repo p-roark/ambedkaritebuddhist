@@ -289,9 +289,13 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <button onClick={() => toggleCode(c.id)} className={`px-3 py-1.5 text-xs font-medium rounded ${c.active ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
-                          {c.active ? 'Disable' : 'Enable'}
-                        </button>
+                        {c.currentUses >= c.maxUses ? (
+                          <span className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 rounded cursor-not-allowed">Exhausted</span>
+                        ) : (
+                          <button onClick={() => toggleCode(c.id)} className={`px-3 py-1.5 text-xs font-medium rounded ${c.active ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+                            {c.active ? 'Disable' : 'Enable'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
