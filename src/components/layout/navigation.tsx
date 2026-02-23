@@ -16,16 +16,16 @@ export function Navigation() {
     setSessionState(session)
   }, [session, status])
 
+  const isAdmin = sessionState?.user?.role === 'ADMIN'
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Logo */}
           <Link href="/" className="flex-shrink-0 font-poppins font-bold text-xl md:text-2xl text-primary-blue">
             ABC Canada
           </Link>
 
-          {/* Nav Links */}
           <div className="hidden md:flex items-center space-x-1">
             <Link
               href="/"
@@ -73,12 +73,12 @@ export function Navigation() {
             ) : (
               <>
                 <Link
-                  href="/dashboard"
+                  href="/about"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/dashboard') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                    isActive('/about') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
                   }`}
                 >
-                  Dashboard
+                  About
                 </Link>
                 <Link
                   href="/events"
@@ -96,40 +96,43 @@ export function Navigation() {
                 >
                   Gallery
                 </Link>
+                <Link
+                  href="/contact"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/contact') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Contact
+                </Link>
+                {isAdmin && (
+                  <Link
+                    href="/dashboard"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive('/dashboard') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                )}
               </>
             )}
           </div>
 
-          {/* Auth Buttons */}
           <div className="flex items-center space-x-2">
             {!sessionState ? (
-              <>
-                <Link
-                  href="/auth/login"
-                  className="px-4 py-2 text-sm font-medium text-primary-blue hover:text-primary-blue/80 transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
-                >
-                  Join
-                </Link>
-              </>
+              <Link
+                href="/auth/login"
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+              >
+                Sign In
+              </Link>
             ) : (
               <>
                 <span className="text-sm text-gray-700">
                   {sessionState?.user?.name || sessionState?.user?.email}
                 </span>
-                <Link
-                  href="/dashboard"
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
-                >
-                  Admin Dashboard
-                </Link>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => signOut({ callbackUrl: '/' })}
                   className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
                 >
                   Sign Out

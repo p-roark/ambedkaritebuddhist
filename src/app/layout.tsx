@@ -3,6 +3,7 @@ import { Poppins, Noto_Sans } from 'next/font/google'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import AuthSessionProvider from '@/components/providers/session-provider'
+import { MembershipGate } from '@/components/auth/membership-gate'
 import '@/styles/variables.css'
 import '@/styles/globals.css'
 
@@ -50,6 +51,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen bg-white text-text-dark font-noto-sans antialiased pt-20">
         <AuthSessionProvider>
           <Header />
+          <MembershipGate />
           <main className="flex-grow">{children}</main>
           <Footer />
         </AuthSessionProvider>

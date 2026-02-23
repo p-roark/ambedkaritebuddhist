@@ -5,6 +5,6 @@ pages_build_output_dir = ".vercel/output/static"
 
 [[d1_databases]]
 binding       = "DB"
-database_name = "REPLACE_WITH_YOUR_DATABASE_NAME"
-database_id   = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_name = "ambedkaritebuddhist"
+database_id   = "c1eda722-53f9-4bf5-93ab-bbdb5e98631b"
 migrations_dir = "migrations"

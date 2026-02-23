@@ -11,13 +11,22 @@ import * as schema from './schema';
  * Call this inside API route handlers — not at module level.
  */
 export function getDb() {
-  const ctx = (
+  const cloudflareRequestContextSymbol = Symbol.for('__cloudflare-request-context__');
+  const requestContext = (
+    globalThis as unknown as {
+      [key: symbol]: { env?: { DB?: D1Database } } | undefined;
+    }
+  )[cloudflareRequestContextSymbol];
+
+  const d1FromRequest = requestContext?.env?.DB;
+
+  const globalContext = (
     globalThis as unknown as {
       __cloudflareContext?: { env?: { DB?: D1Database } };
     }
   ).__cloudflareContext;
 
-  const d1 = ctx?.env?.DB;
+  const d1 = d1FromRequest ?? globalContext?.env?.DB;
 
   if (!d1) {
     throw new Error(

@@ -87,7 +87,7 @@ export default function Home() {
         layout="two-column"
         buttons={[
           { label: 'Learn More', href: '/about', variant: 'secondary' },
-          { label: 'Join Us', href: '/auth/register', variant: 'primary' }
+          { label: 'Sign In', href: '/auth/login', variant: 'primary' }
         ]}
       />
       <MissionPreview

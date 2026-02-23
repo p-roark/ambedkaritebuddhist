@@ -5,6 +5,7 @@ import { getDb } from '@/db';
 import { users, referralCodes } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -53,10 +53,20 @@ export default function DashboardPage() {
   const [maxUses, setMaxUses] = useState(10);
   const [generatedCode, setGeneratedCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [referralCodeInput, setReferralCodeInput] = useState('');
+  const [referralError, setReferralError] = useState('');
+  const [isVerifyingReferral, setIsVerifyingReferral] = useState(false);
+  const [isLocallyVerified, setIsLocallyVerified] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
   }, [status, router]);
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+      router.push('/');
+    }
+  }, [status, session?.user?.role, router]);
 
   if (status === 'loading') {
     return (
@@ -66,10 +76,13 @@ export default function DashboardPage() {
     );
   }
   if (!session) return null;
+  if (session.user.role !== 'ADMIN') return null;
 
-  const isAdmin = session.user.role === 'ADMIN';
-  const isLeader = session.user.role === 'LEADER';
-  const canManage = isAdmin || isLeader;
+  const effectiveRole = session.user.role;
+  const effectiveIsMember = session.user.isMember || isLocallyVerified;
+  const isAdmin = effectiveRole === 'ADMIN';
+  const canManage = isAdmin;
+  const requiresReferralVerification = !effectiveIsMember;
 
   const handleGenerate = () => {
     const code = generateCode();
@@ -109,6 +122,39 @@ export default function DashboardPage() {
     setReferralCodes(prev => prev.map(c => c.id === id ? { ...c, active: !c.active } : c));
   };
 
+  const handleVerifyReferral = async () => {
+    const normalizedCode = referralCodeInput.trim().toUpperCase();
+    if (!normalizedCode) {
+      setReferralError('Referral code is required');
+      return;
+    }
+
+    setReferralError('');
+    setIsVerifyingReferral(true);
+
+    try {
+      const response = await fetch('/api/referral/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referralCode: normalizedCode }),
+      });
+
+      const data = await response.json() as { error?: string };
+      if (!response.ok) {
+        setReferralError(data.error ?? 'Unable to verify referral code');
+        return;
+      }
+
+      setIsLocallyVerified(true);
+      await getSession();
+      router.refresh();
+    } catch {
+      setReferralError('Unable to verify referral code. Please try again.');
+    } finally {
+      setIsVerifyingReferral(false);
+    }
+  };
+
   const tabs = [
     { id: 'overview', label: 'Overview' },
     ...(canManage ? [
@@ -127,14 +173,11 @@ export default function DashboardPage() {
             <h1 className="text-xl font-bold text-gray-900">Community Dashboard</h1>
             <p className="text-sm text-gray-500">
               {session.user.name} ·{' '}
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${ROLE_COLORS[session.user.role] || 'bg-gray-100 text-gray-800'}`}>
-                {session.user.role}
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${ROLE_COLORS[effectiveRole] || 'bg-gray-100 text-gray-800'}`}>
+                {effectiveRole}
               </span>
             </p>
           </div>
-          <button onClick={() => signOut({ callbackUrl: '/' })} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">
-            Sign Out
-          </button>
         </div>
       </div>
 
@@ -305,6 +348,57 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Referral Verification Modal */}
+      {requiresReferralVerification && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Referral Code Verification</h3>
+              <p className="text-sm text-gray-600 mt-1">Enter your referral code to complete member access.</p>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700 mb-1">
+                  Referral Code
+                </label>
+                <input
+                  id="referralCode"
+                  type="text"
+                  value={referralCodeInput}
+                  onChange={(e) => {
+                    setReferralCodeInput(e.target.value.toUpperCase());
+                    if (referralError) setReferralError('');
+                  }}
+                  placeholder="BHIM-ABC-1234"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isVerifyingReferral}
+                />
+              </div>
+
+              {referralError && <p className="text-sm text-red-600">{referralError}</p>}
+            </div>
+
+            <div className="px-6 py-4 border-t bg-gray-50 rounded-b-xl flex justify-end space-x-3">
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                disabled={isVerifyingReferral}
+                className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={handleVerifyReferral}
+                disabled={isVerifyingReferral}
+                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isVerifyingReferral ? 'Verifying...' : 'Verify'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Generate Referral Code Modal */}
       {showModal && (
