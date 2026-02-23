@@ -1,13 +1,142 @@
+'use client'
+
 import Link from 'next/link'
+import { useSession, signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export function Navigation() {
+  const { data: session, status } = useSession()
+  const pathname = usePathname()
+  const [sessionState, setSessionState] = useState(session)
+
+  const isActive = (href: string) => pathname === href
+
+  useEffect(() => {
+    setSessionState(session)
+  }, [session, status])
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-1000 bg-white/95 backdrop-blur-sm shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-center items-center h-24">
-          <Link href="/" className="flex-shrink-0 font-poppins font-bold text-2xl md:text-3xl bg-gradient-primary bg-clip-text text-transparent">
+        <div className="flex justify-between items-center h-20">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0 font-poppins font-bold text-xl md:text-2xl text-primary-blue">
             ABC Canada
           </Link>
+
+          {/* Nav Links */}
+          <div className="hidden md:flex items-center space-x-1">
+            <Link
+              href="/"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+              }`}
+            >
+              Home
+            </Link>
+            {!sessionState ? (
+              <>
+                <Link
+                  href="/about"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/about') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  About
+                </Link>
+                <Link
+                  href="/events"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/events') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Events
+                </Link>
+                <Link
+                  href="/gallery"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/gallery') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Gallery
+                </Link>
+                <Link
+                  href="/contact"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/contact') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Contact
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/dashboard"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/dashboard') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/events"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/events') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Events
+                </Link>
+                <Link
+                  href="/gallery"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/gallery') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Gallery
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center space-x-2">
+            {!sessionState ? (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="px-4 py-2 text-sm font-medium text-primary-blue hover:text-primary-blue/80 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+                >
+                  Join
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-gray-700">
+                  {sessionState?.user?.name || sessionState?.user?.email}
+                </span>
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
+                >
+                  Admin Dashboard
+                </Link>
+                <button
+                  onClick={() => signOut()}
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>

@@ -7,9 +7,9 @@ async function main() {
   console.log('Seeding database...');
 
   // Create admin user
-  const adminEmail = 'pankaj9um@gmail.com';
-  const adminPassword = 'admin123'; // Change this in production
-  const adminReferralCode = 'BHIM-ABC-7K2M';
+  const adminEmail = process.env.ADMIN_EMAIL || 'pankaj9um@gmail.com';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminReferralCode = process.env.ADMIN_REFERRAL_CODE || 'BHIM-ABC-7K2M';
 
   // Hash the password
   const passwordHash = await bcrypt.hash(adminPassword, 12);

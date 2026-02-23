@@ -35,10 +35,10 @@ export function EventsPreview({
   const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null
 
   return (
-    <section className="py-20 md:py-28 bg-white">
+    <section className="py-20 md:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-24">
           <p className="text-sm md:text-base font-bold text-primary-saffron uppercase tracking-wider mb-4">
             {subtitle}
           </p>
