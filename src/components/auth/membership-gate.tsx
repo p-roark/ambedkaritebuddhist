@@ -11,20 +11,44 @@ export function MembershipGate() {
   const [referralError, setReferralError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerifiedLocally, setIsVerifiedLocally] = useState(false);
+  const [dbIsMember, setDbIsMember] = useState<boolean>(false);
+  const [statusLoading, setStatusLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (status !== 'authenticated') {
       setIsVerifiedLocally(false);
       setReferralCodeInput('');
       setReferralError('');
+      setDbIsMember(false);
+      setStatusLoading(false);
     }
   }, [status]);
+
+  useEffect(() => {
+    const loadStatus = async () => {
+      if (status !== 'authenticated') return;
+      setStatusLoading(true);
+      try {
+        const res = await fetch('/api/me/status', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to load membership status');
+        const data = (await res.json()) as { isMember: boolean };
+        setDbIsMember(Boolean(data.isMember));
+      } catch {
+        setDbIsMember(Boolean(session?.user?.isMember));
+      } finally {
+        setStatusLoading(false);
+      }
+    };
+
+    void loadStatus();
+  }, [status, session?.user?.isMember]);
 
   const shouldShow =
     status === 'authenticated' &&
     pathname !== '/auth/login' &&
     session?.user?.role !== 'ADMIN' &&
-    !session?.user?.isMember &&
+    !statusLoading &&
+    !dbIsMember &&
     !isVerifiedLocally;
 
   const handleVerifyReferral = async () => {
@@ -51,6 +75,7 @@ export function MembershipGate() {
       }
 
       setIsVerifiedLocally(true);
+      setDbIsMember(true);
       await getSession();
     } catch {
       setReferralError('Unable to verify referral code. Please try again.');

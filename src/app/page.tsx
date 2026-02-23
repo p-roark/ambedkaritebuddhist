@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { Hero } from '@/components/sections/hero'
 import { MissionPreview } from '@/components/sections/mission-preview'
 import { EventsPreview } from '@/components/sections/events-preview'
@@ -18,6 +19,7 @@ interface Event {
 }
 
 export default function Home() {
+  const { status } = useSession()
   const [heroImage, setHeroImage] = useState<string>('')
   const [events, setEvents] = useState<Event[]>([])
   const [_isLoading, setIsLoading] = useState(true)
@@ -36,18 +38,14 @@ export default function Home() {
       title: 'Membership',
       description: 'Join our community and become part of a vibrant network of like-minded individuals.',
       image: '/images/membership.jpg',
-      link: '/membership',
+      link: '/auth/login',
       linkText: 'Join Us',
     },
-    {
-      id: '3',
-      title: 'Student Support',
-      description: 'Educational resources and mentorship for students and newcomers to Canada.',
-      image: '/images/placeholder.jpg',
-      link: '/resources',
-      linkText: 'Learn More',
-    },
   ]
+
+  const visibleMissionCards = status === 'authenticated'
+    ? missionCards.filter((card) => card.id !== '2')
+    : missionCards
 
   useEffect(() => {
     const loadData = async () => {
@@ -85,16 +83,18 @@ export default function Home() {
         image="/images/backgrounds/ambedkar-1.jpg"
         overlayImage={heroImage}
         layout="two-column"
-        buttons={[
-          { label: 'Learn More', href: '/about', variant: 'secondary' },
-          { label: 'Sign In', href: '/auth/login', variant: 'primary' }
-        ]}
+        buttons={status === 'authenticated'
+          ? [{ label: 'Learn More', href: '/about', variant: 'secondary' }]
+          : [
+              { label: 'Learn More', href: '/about', variant: 'secondary' },
+              { label: 'Sign In', href: '/auth/login', variant: 'primary' },
+            ]}
       />
       <MissionPreview
         subtitle="Our Community"
         title="Building a Vibrant Buddhist Community"
         description="Discover how we serve our community through cultural celebration, education, and support."
-        cards={missionCards}
+        cards={visibleMissionCards}
       />
       <EventsPreview
         subtitle="Join Us"

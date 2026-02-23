@@ -1,18 +1,17 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { authOptions } from '@/lib/auth';
 import { referralCodes, users } from '@/db/schema';
 import { isValidReferralCodeFormat } from '@/lib/referral';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const email = session?.user?.email;
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const email = token?.email;
 
     if (!email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -27,7 +26,7 @@ export async function POST(request: Request) {
 
     const db = getDb();
 
-    const dbUser = await db
+    let dbUser = await db
       .select({ id: users.id, role: users.role, referredBy: users.referredBy })
       .from(users)
       .where(eq(users.email, email))
@@ -35,7 +34,22 @@ export async function POST(request: Request) {
       .then((rows) => rows[0]);
 
     if (!dbUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      const now = new Date().toISOString();
+      const userId = crypto.randomUUID();
+
+      await db.insert(users).values({
+        id: userId,
+        name: String(token?.name ?? 'Community Member'),
+        email,
+        passwordHash: '',
+        role: 'MEMBER',
+        image: token?.picture ? String(token.picture) : null,
+        emailVerified: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      dbUser = { id: userId, role: 'MEMBER', referredBy: null };
     }
 
     if (dbUser.referredBy || dbUser.role === 'ADMIN' || dbUser.role === 'LEADER') {

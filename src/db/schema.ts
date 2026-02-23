@@ -68,9 +68,25 @@ export const referralCodes = sqliteTable('ReferralCode', {
   codeIdx: index('ReferralCode_code_idx').on(t.code),
 }));
 
+// ─── Events ───────────────────────────────────────────────────────────────────
+
+export const events = sqliteTable('Event', {
+  id:        text('id').primaryKey(),
+  title:     text('title').notNull(),
+  date:      text('date').notNull(), // YYYY-MM-DD
+  location:  text('location').notNull(),
+  status:    text('status').notNull().default('Upcoming'), // Upcoming | Registration Started | Event Ended
+  createdAt: text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt: text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  dateIdx: index('Event_date_idx').on(t.date),
+}));
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;
 export type NewUser        = typeof users.$inferInsert;
 export type ReferralCode   = typeof referralCodes.$inferSelect;
 export type NewReferralCode = typeof referralCodes.$inferInsert;
+export type Event = typeof events.$inferSelect;
+export type NewEvent = typeof events.$inferInsert;

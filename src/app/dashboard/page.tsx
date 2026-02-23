@@ -2,39 +2,36 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 type Tab = 'members' | 'events' | 'referrals';
 
-const MOCK_PENDING = [
-  { id: 'p1', name: 'Rahul Meshram', email: 'rahul.meshram@gmail.com', referralCode: 'BHIM-ABC-7K2M', requestedAt: '2026-02-22' },
-  { id: 'p2', name: 'Priya Kamble', email: 'priya.kamble@yahoo.com', referralCode: 'BHIM-XYZ-9P3Q', requestedAt: '2026-02-22' },
-  { id: 'p3', name: 'Sanjay Gaikwad', email: 'sanjay.g@gmail.com', referralCode: 'BHIM-DEF-4R1S', requestedAt: '2026-02-23' },
-];
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  joinedAt: string;
+};
 
-const MOCK_MEMBERS = [
-  { id: 'm1', name: 'Pankaj Meshram', email: 'pankaj@example.com', role: 'ADMIN' as Role, joinedAt: '2025-10-01' },
-  { id: 'm2', name: 'Anita Jadhav', email: 'anita.j@gmail.com', role: 'MEMBER' as Role, joinedAt: '2025-11-15' },
-  { id: 'm3', name: 'Vikram Rathod', email: 'vikram.r@gmail.com', role: 'MEMBER' as Role, joinedAt: '2025-12-03' },
-  { id: 'm4', name: 'Sunita Pawar', email: 'sunita.p@gmail.com', role: 'MEMBER' as Role, joinedAt: '2026-01-10' },
-  { id: 'm5', name: 'Amit Bansode', email: 'amit.b@gmail.com', role: 'MEMBER' as Role, joinedAt: '2026-01-22' },
-  { id: 'm6', name: 'Deepa Shinde', email: 'deepa.s@gmail.com', role: 'MEMBER' as Role, joinedAt: '2026-02-05' },
-];
+type EventItem = {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  status: EventStatus;
+};
 
-const MOCK_EVENTS = [
-  { id: 'e1', title: 'Ambedkar Jayanti Celebration', date: '2026-04-14', location: 'Toronto', status: 'Upcoming' as EventStatus },
-  { id: 'e2', title: 'Dhamma Study Circle', date: '2026-03-18', location: 'Mississauga', status: 'Registration Started' as EventStatus },
-  { id: 'e3', title: 'Winter Community Meetup', date: '2026-01-12', location: 'Brampton', status: 'Event Ended' as EventStatus },
-];
-
-const MOCK_REFERRAL_CODES = [
-  { id: '1', code: 'BHIM-K4P-9M2X', maxUses: 10, currentUses: 3, active: true, createdAt: '2026-01-15' },
-  { id: '2', code: 'BHIM-R7T-2B5N', maxUses: 5, currentUses: 5, active: false, createdAt: '2026-01-20' },
-  { id: '3', code: 'BHIM-W2Q-6H8J', maxUses: 10, currentUses: 1, active: true, createdAt: '2026-02-01' },
-  { id: '4', code: 'BHIM-L9S-4D7F', maxUses: 3, currentUses: 0, active: true, createdAt: '2026-02-10' },
-];
+type ReferralCode = {
+  id: string;
+  code: string;
+  maxUses: number;
+  currentUses: number;
+  active: boolean;
+  createdAt: string;
+};
 
 const ROLE_COLORS: Record<Role, string> = {
   ADMIN: 'bg-red-100 text-red-800',
@@ -58,10 +55,10 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<Tab>('members');
-  const [pending, setPending] = useState(MOCK_PENDING);
-  const [members, setMembers] = useState(MOCK_MEMBERS);
-  const [events, setEvents] = useState(MOCK_EVENTS);
-  const [referralCodes, setReferralCodes] = useState(MOCK_REFERRAL_CODES);
+  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
 
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
@@ -83,7 +80,46 @@ export default function DashboardPage() {
     }
   }, [status, session?.user?.role, router]);
 
-  if (status === 'loading') {
+  const loadMembers = async () => {
+    const res = await fetch('/api/admin/members', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load members');
+    const data = (await res.json()) as { members: Member[] };
+    setMembers(data.members);
+  };
+
+  const loadEvents = async () => {
+    const res = await fetch('/api/admin/events', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load events');
+    const data = (await res.json()) as { events: EventItem[] };
+    setEvents(data.events);
+  };
+
+  const loadReferralCodes = async () => {
+    const res = await fetch('/api/admin/referral-codes', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load referral codes');
+    const data = (await res.json()) as { referralCodes: ReferralCode[] };
+    setReferralCodes(data.referralCodes);
+  };
+
+  useEffect(() => {
+    if (status !== 'authenticated' || session?.user?.role !== 'ADMIN') return;
+    let alive = true;
+    const loadAll = async () => {
+      try {
+        await Promise.all([loadMembers(), loadEvents(), loadReferralCodes()]);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+    void loadAll();
+    return () => {
+      alive = false;
+    };
+  }, [status, session?.user?.role]);
+
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -93,86 +129,79 @@ export default function DashboardPage() {
   if (!session) return null;
   if (session.user.role !== 'ADMIN') return null;
 
-  const tabs = useMemo(
-    () => [
-      { id: 'members', label: `Members (${members.length})` },
-      { id: 'events', label: `Events (${events.length})` },
-      { id: 'referrals', label: 'Referral Codes' },
-    ] satisfies Array<{ id: Tab; label: string }>,
-    [members.length, events.length],
-  );
+  const tabs: Array<{ id: Tab; label: string }> = [
+    { id: 'members', label: `Members (${members.length})` },
+    { id: 'events', label: `Events (${events.length})` },
+    { id: 'referrals', label: 'Referral Codes' },
+  ];
 
-  const handleRoleChange = (memberId: string, role: Role) => {
-    setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, role } : m)));
+  const handleRoleChange = async (memberId: string, role: Role) => {
+    const res = await fetch('/api/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'setRole', userId: memberId, role }),
+    });
+    if (!res.ok) return;
+    await loadMembers();
   };
 
-  const handleApprovePending = (pendingId: string) => {
-    const request = pending.find((p) => p.id === pendingId);
-    if (!request) return;
-
-    const today = new Date().toISOString().split('T')[0];
-    setMembers((prev) => [
-      {
-        id: `m-${Date.now()}`,
-        name: request.name,
-        email: request.email,
-        role: 'MEMBER',
-        joinedAt: today,
-      },
-      ...prev,
-    ]);
-    setPending((prev) => prev.filter((p) => p.id !== pendingId));
+  const handleRemoveMember = async (memberId: string) => {
+    const res = await fetch('/api/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'removeMember', userId: memberId }),
+    });
+    if (!res.ok) return;
+    await loadMembers();
   };
 
-  const handleRejectPending = (pendingId: string) => {
-    setPending((prev) => prev.filter((p) => p.id !== pendingId));
-  };
-
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!newEventTitle.trim() || !newEventDate || !newEventLocation.trim()) return;
-
-    setEvents((prev) => [
-      {
-        id: `e-${Date.now()}`,
+    const res = await fetch('/api/admin/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         title: newEventTitle.trim(),
         date: newEventDate,
         location: newEventLocation.trim(),
         status: newEventStatus,
-      },
-      ...prev,
-    ]);
+      }),
+    });
+    if (!res.ok) return;
 
     setNewEventTitle('');
     setNewEventDate('');
     setNewEventLocation('');
     setNewEventStatus('Upcoming');
+    await loadEvents();
   };
 
-  const handleEventStatusChange = (eventId: string, status: EventStatus) => {
-    setEvents((prev) => prev.map((event) => (event.id === eventId ? { ...event, status } : event)));
+  const handleEventStatusChange = async (eventId: string, status: EventStatus) => {
+    const res = await fetch('/api/admin/events', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: eventId, status }),
+    });
+    if (!res.ok) return;
+    await loadEvents();
   };
 
   const handleGenerate = () => {
-    const code = generateCode();
-    setGeneratedCode(code);
+    setGeneratedCode(generateCode());
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!generatedCode) return;
-    setReferralCodes((prev) => [
-      {
-        id: String(Date.now()),
-        code: generatedCode,
-        maxUses,
-        currentUses: 0,
-        active: true,
-        createdAt: new Date().toISOString().split('T')[0],
-      },
-      ...prev,
-    ]);
+    const res = await fetch('/api/admin/referral-codes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: generatedCode, maxUses }),
+    });
+    if (!res.ok) return;
     setShowModal(false);
     setGeneratedCode('');
     setMaxUses(10);
+    await loadReferralCodes();
   };
 
   const handleCopy = () => {
@@ -188,8 +217,14 @@ export default function DashboardPage() {
     setCopied(false);
   };
 
-  const toggleCode = (id: string) => {
-    setReferralCodes((prev) => prev.map((c) => (c.id === id ? { ...c, active: !c.active } : c)));
+  const toggleCode = async (id: string, nextActive: boolean) => {
+    const res = await fetch('/api/admin/referral-codes', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, active: nextActive }),
+    });
+    if (!res.ok) return;
+    await loadReferralCodes();
   };
 
   return (
@@ -230,71 +265,12 @@ export default function DashboardPage() {
         {activeTab === 'members' && (
           <div className="space-y-8">
             <section>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Pending Member Approvals ({pending.length})
-                </h2>
-              </div>
-
-              {pending.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-                  No pending approvals.
-                </div>
-              ) : (
-                <div className="bg-white shadow rounded-lg overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        {['Name', 'Email', 'Referral Code', 'Requested', 'Actions'].map((h) => (
-                          <th
-                            key={h}
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {pending.map((req) => (
-                        <tr key={req.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{req.name}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{req.email}</td>
-                          <td className="px-6 py-4">
-                            <span className="px-2 py-1 text-xs font-mono bg-gray-100 text-gray-700 rounded">
-                              {req.referralCode}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{req.requestedAt}</td>
-                          <td className="px-6 py-4 space-x-2">
-                            <button
-                              onClick={() => handleApprovePending(req.id)}
-                              className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleRejectPending(req.id)}
-                              className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded hover:bg-red-200"
-                            >
-                              Reject
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-
-            <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">All Members</h2>
               <div className="bg-white shadow rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {['Member', 'Email', 'Role', 'Joined'].map((h) => (
+                      {['Member', 'Email', 'Role', 'Joined', 'Actions'].map((h) => (
                         <th
                           key={h}
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -305,28 +281,51 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {members.map((m) => (
-                      <tr key={m.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{m.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={m.role}
-                              onChange={(e) => handleRoleChange(m.id, e.target.value as Role)}
-                              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    {members.map((m) => {
+                      const isSelf = m.email.toLowerCase() === String(session.user.email ?? '').toLowerCase();
+                      const normalizedRole: Role = m.role === 'ADMIN' ? 'ADMIN' : 'MEMBER';
+
+                      return (
+                        <tr key={m.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {m.name}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={normalizedRole}
+                                onChange={(e) => handleRoleChange(m.id, e.target.value as Role)}
+                                disabled={isSelf}
+                                className={`px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                  isSelf ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
+                                }`}
+                              >
+                                <option value="ADMIN">Admin</option>
+                                <option value="MEMBER">Member</option>
+                              </select>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${ROLE_COLORS[normalizedRole]}`}>
+                                {normalizedRole}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => handleRemoveMember(m.id)}
+                              disabled={isSelf}
+                              className={`px-3 py-1.5 text-xs font-medium rounded ${
+                                isSelf
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'bg-red-100 text-red-700 hover:bg-red-200'
+                              }`}
                             >
-                              <option value="ADMIN">Admin</option>
-                              <option value="MEMBER">Member</option>
-                            </select>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${ROLE_COLORS[m.role]}`}>
-                              {m.role}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
-                      </tr>
-                    ))}
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -465,7 +464,7 @@ export default function DashboardPage() {
                         {c.currentUses >= c.maxUses ? (
                           <span className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 rounded cursor-not-allowed">Exhausted</span>
                         ) : (
-                          <button onClick={() => toggleCode(c.id)} className={`px-3 py-1.5 text-xs font-medium rounded ${c.active ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+                          <button onClick={() => toggleCode(c.id, !c.active)} className={`px-3 py-1.5 text-xs font-medium rounded ${c.active ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
                             {c.active ? 'Disable' : 'Enable'}
                           </button>
                         )}

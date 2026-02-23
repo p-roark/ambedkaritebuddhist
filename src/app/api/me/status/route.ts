@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { users } from '@/db/schema';
-import { authOptions } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const email = session?.user?.email;
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const email = token?.email;
 
     if (!email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -31,11 +30,11 @@ export async function GET() {
       const userId = crypto.randomUUID();
       await db.insert(users).values({
         id: userId,
-        name: session.user.name ?? 'Community Member',
+        name: String(token?.name ?? 'Community Member'),
         email,
         passwordHash: '',
         role: 'MEMBER',
-        image: session.user.image ?? null,
+        image: token?.picture ? String(token.picture) : null,
         emailVerified: now,
         createdAt: now,
         updatedAt: now,
