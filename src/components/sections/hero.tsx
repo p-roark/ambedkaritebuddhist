@@ -23,7 +23,7 @@ export function Hero({
   title,
   description,
   image,
-  overlayImage,
+  overlayImage: _overlayImage,
   buttons,
   layout = 'single',
   fullHeight = true,
@@ -46,7 +46,8 @@ export function Hero({
 
         // Load events and pick a random event with gallery image
         const eventsRes = await fetch('/data/events.json')
-        const eventsData = await eventsRes.json()
+        type EventEntry = { images?: string[]; imageFolder?: string; title?: string; date?: string }
+        const eventsData = await eventsRes.json() as { upcomingEvents?: EventEntry[]; pastEvents?: EventEntry[] }
         const allEvents = [
           ...(eventsData.upcomingEvents || []),
           ...(eventsData.pastEvents || [])
@@ -54,19 +55,20 @@ export function Hero({
         
         if (allEvents.length > 0) {
           // Filter events that have gallery images
-          const eventsWithGallery = allEvents.filter((e: any) => e.images && e.images.length > 0)
+          const eventsWithGallery = allEvents.filter((e) => e.images && e.images.length > 0)
           if (eventsWithGallery.length > 0) {
             const randomEventIndex = Math.floor(Math.random() * eventsWithGallery.length)
             const selectedEvent = eventsWithGallery[randomEventIndex]
             
             // Pick a random image from the event's gallery
-            const randomImageIndex = Math.floor(Math.random() * selectedEvent.images.length)
-            const galleryImage = selectedEvent.images[randomImageIndex]
-            const fullImagePath = `${selectedEvent.imageFolder}${galleryImage}`
+            const images = selectedEvent.images!
+            const randomImageIndex = Math.floor(Math.random() * images.length)
+            const galleryImage = images[randomImageIndex]
+            const fullImagePath = `${selectedEvent.imageFolder ?? ''}${galleryImage}`
             
             setRandomEventImage(fullImagePath)
-            setRandomEventName(selectedEvent.title)
-            setRandomEventDate(selectedEvent.date)
+            setRandomEventName(selectedEvent.title ?? '')
+            setRandomEventDate(selectedEvent.date ?? '')
           }
         }
       } catch (error) {

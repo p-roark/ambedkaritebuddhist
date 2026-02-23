@@ -71,3 +71,7 @@ dist/
 /generated/prisma
 prisma/dev.db
 dev.db
+-e 
+# Cloudflare / wrangler
+.dev.vars
+.wrangler/

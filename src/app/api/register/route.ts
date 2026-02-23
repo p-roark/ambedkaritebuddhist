@@ -1,116 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
+import { eq, sql } from 'drizzle-orm';
+import { getDb } from '@/db';
+import { users, referralCodes } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, referralCode } = await request.json();
+    const body = await request.json() as {
+      name: string; email: string; password: string; referralCode: string;
+    };
+    const { name, email, password, referralCode } = body;
 
     // Validate required fields
     if (!name || !email || !password || !referralCode) {
-      return NextResponse.json(
-        { error: 'All fields are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
-    // Validate referral code format (must start with BHIM-)
+    // Referral code must start with BHIM-
     if (!referralCode.startsWith('BHIM-')) {
-      return NextResponse.json(
-        { error: 'Invalid referral code format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid referral code format' }, { status: 400 });
     }
+
+    const db = getDb();
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'User already exists with this email' },
-        { status: 400 }
-      );
+    if (existing.length > 0) {
+      return NextResponse.json({ error: 'User already exists with this email' }, { status: 400 });
     }
 
     // Validate referral code
-    const referral = await prisma.referralCode.findUnique({
-      where: { code: referralCode }
-    });
+    const referral = await db
+      .select()
+      .from(referralCodes)
+      .where(eq(referralCodes.code, referralCode))
+      .limit(1)
+      .then((r) => r[0]);
 
     if (!referral) {
-      return NextResponse.json(
-        { error: 'Invalid referral code' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid referral code' }, { status: 400 });
     }
-
     if (!referral.active) {
-      return NextResponse.json(
-        { error: 'Referral code is inactive' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Referral code is inactive' }, { status: 400 });
     }
-
     if (referral.currentUses >= referral.maxUses) {
-      return NextResponse.json(
-        { error: 'Referral code has reached maximum uses' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Referral code has reached maximum uses' }, { status: 400 });
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
+    const now = new Date().toISOString();
+    const userId = crypto.randomUUID();
 
-    // Create user and increment referral usage in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create user
-      const user = await tx.user.create({
-        data: {
-          name,
-          email,
-          passwordHash,
-          role: 'MEMBER',
-          referredBy: referralCode,
-        }
-      });
-
-      // Increment referral code usage
-      await tx.referralCode.update({
-        where: { code: referralCode },
-        data: {
-          currentUses: {
-            increment: 1
-          }
-        }
-      });
-
-      return user;
+    // D1 doesn't support true transactions yet — run sequentially
+    await db.insert(users).values({
+      id:           userId,
+      name,
+      email,
+      passwordHash,
+      role:         'MEMBER',
+      referredBy:   referralCode,
+      createdAt:    now,
+      updatedAt:    now,
     });
 
+    await db
+      .update(referralCodes)
+      .set({ currentUses: sql`${referralCodes.currentUses} + 1` })
+      .where(eq(referralCodes.code, referralCode));
+
     return NextResponse.json(
-      { 
-        message: 'User registered successfully',
-        user: {
-          id: result.id,
-          name: result.name,
-          email: result.email,
-          role: result.role
-        }
-      },
-      { status: 201 }
+      { message: 'User registered successfully', user: { id: userId, name, email, role: 'MEMBER' } },
+      { status: 201 },
     );
 
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

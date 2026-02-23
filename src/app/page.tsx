@@ -8,6 +8,7 @@ interface Event {
   id: string
   title: string
   date: string
+  dateFormatted?: string
   location: string
   attendees: string
   category: string
@@ -19,7 +20,7 @@ interface Event {
 export default function Home() {
   const [heroImage, setHeroImage] = useState<string>('')
   const [events, setEvents] = useState<Event[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [_isLoading, setIsLoading] = useState(true)
 
   const missionCards = [
     {
@@ -52,7 +53,7 @@ export default function Home() {
     const loadData = async () => {
       try {
         const eventsRes = await fetch('/data/events.json')
-        const eventsData = await eventsRes.json()
+        const eventsData = await eventsRes.json() as { upcomingEvents?: Event[]; pastEvents?: Event[] }
         
         // Combine past and upcoming events
         const allEvents = [
@@ -62,7 +63,7 @@ export default function Home() {
         setEvents(allEvents)
         
         // Get the next upcoming event for the hero image
-        const upcomingEvent = allEvents.find((e) => new Date(e.dateFormatted) > new Date())
+        const upcomingEvent = allEvents.find((e) => e.dateFormatted && new Date(e.dateFormatted) > new Date())
         if (upcomingEvent?.image) {
           setHeroImage(upcomingEvent.image)
         }
