@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'export',
+  // output: 'export', // Commented out to enable API routes
   images: {
-    unoptimized: true,
+    // unoptimized: true, // Not needed without output: 'export'
     remotePatterns: [
       {
         protocol: 'https',

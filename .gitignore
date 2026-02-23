@@ -67,3 +67,7 @@ prisma/migrations/
 # Playwright MCP
 .playwright-mcp/
 dist/
+
+/generated/prisma
+prisma/dev.db
+dev.db

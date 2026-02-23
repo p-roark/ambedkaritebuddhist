@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Poppins, Noto_Sans } from 'next/font/google'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import AuthSessionProvider from '@/components/providers/session-provider'
 import '@/styles/variables.css'
 import '@/styles/globals.css'
 
@@ -47,9 +48,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
       <body className="flex flex-col min-h-screen bg-white text-text-dark font-noto-sans antialiased pt-20">
-        <Header />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+        <AuthSessionProvider>
+          <Header />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </AuthSessionProvider>
       </body>
     </html>
   )
