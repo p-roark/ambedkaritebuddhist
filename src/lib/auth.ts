@@ -63,10 +63,47 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
 
   callbacks: {
+    async signIn({ user, account }) {
+      // For OAuth providers (Google etc.) — create the user in D1 if new
+      if (account?.provider && account.provider !== 'credentials') {
+        try {
+          const db = getDb();
+          const existing = await db
+            .select({ id: users.id, role: users.role })
+            .from(users)
+            .where(eq(users.email, user.email!))
+            .limit(1);
+
+          if (existing.length === 0) {
+            const now = new Date().toISOString();
+            await db.insert(users).values({
+              id:           crypto.randomUUID(),
+              name:         user.name  ?? 'Community Member',
+              email:        user.email!,
+              passwordHash: '', // OAuth users don't have a password
+              role:         'MEMBER',
+              image:        user.image ?? null,
+              emailVerified: now,
+              createdAt:    now,
+              updatedAt:    now,
+            });
+          } else {
+            // Carry role forward onto the user object for the jwt callback
+            (user as { role?: string }).role = existing[0].role;
+          }
+        } catch (err) {
+          console.error('OAuth signIn DB error:', err);
+          return false; // Block sign-in on DB failure
+        }
+      }
+      return true;
+    },
+
     async jwt({ token, user }) {
       if (user) token.role = (user as { role?: string }).role ?? 'MEMBER';
       return token;
     },
+
     async session({ session, token }) {
       if (token) {
         session.user.id   = token.sub!;
