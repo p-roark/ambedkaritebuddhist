@@ -10,6 +10,16 @@ export const runtime = 'edge';
 
 const MAX_IMAGES_PER_EVENT = 25;
 
+function inferImageContentType(filename: string) {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.avif')) return 'image/avif';
+  return 'application/octet-stream';
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const token = await requireAdmin(request);
   if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -43,8 +53,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     const extension = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
     const key = `events/${id}/${crypto.randomUUID()}.${extension}`;
+    const contentType = file.type || inferImageContentType(file.name);
     await bucket.put(key, await file.arrayBuffer(), {
-      httpMetadata: { contentType: file.type },
+      httpMetadata: { contentType },
     });
     uploadedKeys.push(key);
   }
