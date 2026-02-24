@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 type RegistrationStatus = 'Pending Registration' | 'Confirmed' | 'Rejected';
@@ -484,12 +483,11 @@ export default function AdminEventPage() {
             {eventForm.eventImages.map((key, index) => (
               <div key={`${key}-${index}`} className="border border-slate-200 rounded-md p-2">
                 <div className="relative h-24 rounded overflow-hidden bg-slate-100">
-                  <Image
+                  <img
                     src={toImageSrc(key)}
                     alt={`Event image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="200px"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <p className="mt-1 text-[11px] text-slate-500 truncate">{key.split('/').pop()}</p>

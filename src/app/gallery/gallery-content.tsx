@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 
 type DbEvent = {
   id: string
@@ -140,11 +139,11 @@ export function GalleryContent() {
                     className="relative h-64 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer group"
                     onClick={() => setSelectedImage(imageSrc(key))}
                   >
-                    <Image
+                    <img
                       src={imageSrc(key)}
                       alt={`${selectedEvent.title} - Photo ${page * pageSize + index + 1}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                   </div>
@@ -191,11 +190,10 @@ export function GalleryContent() {
                 X
               </button>
               <div className="relative h-96 md:h-[600px] rounded-lg overflow-hidden">
-                <Image
+                <img
                   src={selectedImage}
                   alt="Gallery view"
-                  fill
-                  className="object-contain"
+                  className="w-full h-full object-contain"
                 />
               </div>
             </div>
@@ -233,11 +231,11 @@ export function GalleryContent() {
                 }}
               >
                 <div className="relative h-48 overflow-hidden bg-gray-200">
-                  <Image
+                  <img
                     src={imageSrc(event.imageKeys[0])}
                     alt={event.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                   <div className="absolute top-4 right-4 bg-primary-saffron text-text-dark px-3 py-1 rounded-full text-sm font-bold">

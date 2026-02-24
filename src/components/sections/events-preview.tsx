@@ -33,10 +33,7 @@ export function EventsPreview({
   events,
 }: EventsPreviewProps) {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
-  const [thumbPageByEvent, setThumbPageByEvent] = useState<Record<string, number>>({})
   const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null
-  const pageSize = 4
-  const toImageSrc = (key: string) => `/api/events/image?key=${encodeURIComponent(key)}`
 
   return (
     <section className="py-20 md:py-32 bg-white">
@@ -102,47 +99,6 @@ export function EventsPreview({
                 <p className="text-text-medium mb-6 leading-relaxed">
                   {event.description}
                 </p>
-                {event.imageKeys && event.imageKeys.length > 0 && (
-                  <div className="mb-6">
-                    {(() => {
-                      const currentPage = thumbPageByEvent[event.id] ?? 0
-                      const totalPages = Math.ceil(event.imageKeys!.length / pageSize)
-                      const start = currentPage * pageSize
-                      const slice = event.imageKeys!.slice(start, start + pageSize)
-                      return (
-                        <>
-                          <div className="grid grid-cols-2 gap-2">
-                            {slice.map((key) => (
-                              <div key={key} className="relative h-20 rounded-md overflow-hidden bg-gray-100">
-                                <Image src={toImageSrc(key)} alt={event.title} fill className="object-cover" sizes="120px" />
-                              </div>
-                            ))}
-                          </div>
-                          {totalPages > 1 && (
-                            <div className="mt-2 flex items-center justify-between text-xs">
-                              <button
-                                onClick={() => setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.max(0, currentPage - 1) }))}
-                                disabled={currentPage === 0}
-                                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
-                              >
-                                Prev
-                              </button>
-                              <span className="text-gray-500">Page {currentPage + 1} / {totalPages}</span>
-                              <button
-                                onClick={() => setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.min(totalPages - 1, currentPage + 1) }))}
-                                disabled={currentPage >= totalPages - 1}
-                                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
-                              >
-                                Next
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      )
-                    })()}
-                  </div>
-                )}
-
                 {event.status === 'past' ? (
                   <Link
                     href={`/gallery?event=${event.id}`}
