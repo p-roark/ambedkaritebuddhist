@@ -3,6 +3,7 @@ import { eq, ne } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { users } from '@/db/schema';
 import { requireAdmin } from '@/lib/admin-auth';
+import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -23,7 +24,15 @@ export async function GET(request: NextRequest) {
     .from(users)
     .where(ne(users.role, 'STUDENT'));
 
-  return NextResponse.json({ members }, { status: 200 });
+  const normalizedMembers = members.map((member) => ({
+    ...member,
+    name: pickDisplayName({
+      dbName: member.name,
+      email: member.email,
+    }),
+  }));
+
+  return NextResponse.json({ members: normalizedMembers }, { status: 200 });
 }
 
 export async function PATCH(request: NextRequest) {

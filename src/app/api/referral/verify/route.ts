@@ -5,6 +5,7 @@ import { getDb } from '@/db';
 import { referralCodes, users } from '@/db/schema';
 import { auth } from '@/lib/auth';
 import { isValidReferralCodeFormat } from '@/lib/referral';
+import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -47,7 +48,11 @@ export async function POST(request: NextRequest) {
 
       await db.insert(users).values({
         id: userId,
-        name: String(token?.name ?? 'Community Member'),
+        name: pickDisplayName({
+          sessionName: session?.user?.name,
+          tokenName: String(token?.name ?? ''),
+          email,
+        }),
         email,
         passwordHash: '',
         role: 'MEMBER',

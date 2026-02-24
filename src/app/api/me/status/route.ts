@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { users } from '@/db/schema';
 import { auth } from '@/lib/auth';
+import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -35,7 +36,11 @@ export async function GET(request: NextRequest) {
       const userId = crypto.randomUUID();
       await db.insert(users).values({
         id: userId,
-        name: String(session?.user?.name ?? token?.name ?? 'Community Member'),
+        name: pickDisplayName({
+          sessionName: session?.user?.name,
+          tokenName: String(token?.name ?? ''),
+          email,
+        }),
         email,
         passwordHash: '',
         role: 'MEMBER',

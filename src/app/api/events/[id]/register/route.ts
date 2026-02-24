@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { and, eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
+import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -49,7 +50,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const userId = crypto.randomUUID();
     await db.insert(users).values({
       id: userId,
-      name: String(token?.name ?? 'Community Member'),
+      name: pickDisplayName({
+        tokenName: String(token?.name ?? ''),
+        email,
+      }),
       email,
       passwordHash: '',
       role: 'MEMBER',

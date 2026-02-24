@@ -3,6 +3,7 @@ import { desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { referralCodes, users } from '@/db/schema';
 import { requireAdmin } from '@/lib/admin-auth';
+import { nameFromEmail } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -22,7 +23,7 @@ async function ensureOwnerId(email: string) {
   const id = crypto.randomUUID();
   await db.insert(users).values({
     id,
-    name: 'Admin User',
+    name: nameFromEmail(email),
     email,
     passwordHash: '',
     role: 'ADMIN',
