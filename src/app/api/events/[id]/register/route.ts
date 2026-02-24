@@ -5,7 +5,6 @@ import { getDb } from '@/db';
 import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
@@ -156,3 +155,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   return NextResponse.json({ message: 'Pending Registration', totalAmount }, { status: 200 });
 }
+

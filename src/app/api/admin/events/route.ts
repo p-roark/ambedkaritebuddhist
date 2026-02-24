@@ -5,7 +5,6 @@ import { getDb } from '@/db';
 import { events } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 
@@ -115,3 +114,4 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
+

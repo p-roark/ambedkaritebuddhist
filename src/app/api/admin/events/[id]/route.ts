@@ -5,7 +5,6 @@ import { getDb } from '@/db';
 import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 
 async function requireAdmin(request: NextRequest) {
@@ -166,3 +165,4 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
+

@@ -5,7 +5,6 @@ import { getDb } from '@/db';
 import { familyMembers, users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 async function getOrCreateUserId(request: NextRequest) {
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
@@ -128,4 +127,5 @@ export async function DELETE(request: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
+
 
