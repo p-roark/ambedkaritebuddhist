@@ -169,24 +169,18 @@ export function EventsPreview({
                     {event.registrationFormUrl ? (
                       <button
                         onClick={() => setSelectedEventId(event.id)}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
+                        className="px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
                       >
                         Register Now
                       </button>
                     ) : (
                       <Link
                         href="/events"
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
+                        className="px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
                       >
                         Register Now
                       </Link>
                     )}
-                    <Link
-                      href="/contact?type=volunteer"
-                      className="flex-1 inline-block px-6 py-3 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200 text-center"
-                    >
-                      Volunteer
-                    </Link>
                   </div>
                 )}
               </div>
