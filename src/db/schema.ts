@@ -141,6 +141,24 @@ export const familyMembers = sqliteTable('FamilyMember', {
   userIdx: index('FamilyMember_user_idx').on(t.userId),
 }));
 
+// --- Contact messages --------------------------------------------------------
+
+export const contactMessages = sqliteTable('ContactMessage', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone'),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+  status: text('status').notNull().default('PENDING'), // PENDING | RESOLVED
+  adminNote: text('adminNote'),
+  createdAt: text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt: text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  statusIdx: index('ContactMessage_status_idx').on(t.status),
+  createdIdx: index('ContactMessage_createdAt_idx').on(t.createdAt),
+}));
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;
@@ -153,3 +171,5 @@ export type EventRegistration = typeof eventRegistrations.$inferSelect;
 export type NewEventRegistration = typeof eventRegistrations.$inferInsert;
 export type FamilyMember = typeof familyMembers.$inferSelect;
 export type NewFamilyMember = typeof familyMembers.$inferInsert;
+export type ContactMessage = typeof contactMessages.$inferSelect;
+export type NewContactMessage = typeof contactMessages.$inferInsert;

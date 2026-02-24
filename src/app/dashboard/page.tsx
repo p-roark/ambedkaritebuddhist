@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'members' | 'events' | 'referrals';
+type Tab = 'members' | 'events' | 'referrals' | 'messages';
 
 type Member = {
   id: string;
@@ -40,6 +40,19 @@ type ReferralCode = {
   currentUses: number;
   active: boolean;
   createdAt: string;
+};
+
+type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  status: 'PENDING' | 'RESOLVED';
+  adminNote: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 const ROLE_COLORS: Record<Role, string> = {
@@ -75,6 +88,9 @@ export default function DashboardPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [messageNoteDraft, setMessageNoteDraft] = useState('');
 
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDescription, setNewEventDescription] = useState('');
@@ -125,12 +141,19 @@ export default function DashboardPage() {
     setReferralCodes(data.referralCodes);
   };
 
+  const loadMessages = async () => {
+    const res = await fetch('/api/admin/messages', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load messages');
+    const data = (await res.json()) as { messages: ContactMessage[] };
+    setMessages(data.messages);
+  };
+
   useEffect(() => {
     if (status !== 'authenticated' || session?.user?.role !== 'ADMIN') return;
     let alive = true;
     const loadAll = async () => {
       try {
-        await Promise.all([loadMembers(), loadEvents(), loadReferralCodes()]);
+        await Promise.all([loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
       } catch (error) {
         console.error(error);
       } finally {
@@ -157,7 +180,10 @@ export default function DashboardPage() {
     { id: 'members', label: `Members (${members.length})` },
     { id: 'events', label: `Events (${events.length})` },
     { id: 'referrals', label: 'Referral Codes' },
+    { id: 'messages', label: `Messages (${messages.filter((m) => m.status === 'PENDING').length} pending)` },
   ];
+  const pendingMessages = messages.filter((m) => m.status === 'PENDING');
+  const resolvedMessages = messages.filter((m) => m.status === 'RESOLVED');
 
   const handleRoleChange = async (memberId: string, role: Role) => {
     const res = await fetch('/api/admin/members', {
@@ -282,6 +308,26 @@ export default function DashboardPage() {
     });
     if (!res.ok) return;
     await loadReferralCodes();
+  };
+
+  const updateMessage = async (id: string, patch: { status?: 'PENDING' | 'RESOLVED'; adminNote?: string }) => {
+    const res = await fetch('/api/admin/messages', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...patch }),
+    });
+    if (!res.ok) return;
+    await loadMessages();
+    if (selectedMessage?.id === id) {
+      const updated = messages.find((m) => m.id === id);
+      if (updated) {
+        setSelectedMessage({
+          ...updated,
+          ...patch,
+          adminNote: typeof patch.adminNote === 'undefined' ? updated.adminNote : patch.adminNote || null,
+        });
+      }
+    }
   };
 
   return (
@@ -650,7 +696,203 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {activeTab === 'messages' && (
+          <div className="space-y-8">
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Messages</h2>
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {['Name', 'Subject', 'Contact', 'Received', 'Actions'].map((h) => (
+                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {pendingMessages.map((m) => (
+                      <tr key={m.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{m.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{m.subject}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          <div>{m.email}</div>
+                          {m.phone && <div>{m.phone}</div>}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.createdAt}</td>
+                        <td className="px-6 py-4 space-x-2">
+                          <button
+                            onClick={() => {
+                              setSelectedMessage(m);
+                              setMessageNoteDraft(m.adminNote ?? '');
+                            }}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
+                          >
+                            Open
+                          </button>
+                          <button
+                            onClick={() => updateMessage(m.id, { status: 'RESOLVED' })}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200"
+                          >
+                            Mark Resolved
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pendingMessages.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">
+                          No pending messages.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Resolved Messages</h2>
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {['Name', 'Subject', 'Contact', 'Received', 'Actions'].map((h) => (
+                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {resolvedMessages.map((m) => (
+                      <tr key={m.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{m.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{m.subject}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          <div>{m.email}</div>
+                          {m.phone && <div>{m.phone}</div>}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.createdAt}</td>
+                        <td className="px-6 py-4 space-x-2">
+                          <button
+                            onClick={() => {
+                              setSelectedMessage(m);
+                              setMessageNoteDraft(m.adminNote ?? '');
+                            }}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
+                          >
+                            Open
+                          </button>
+                          <button
+                            onClick={() => updateMessage(m.id, { status: 'PENDING' })}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                          >
+                            Move to Pending
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {resolvedMessages.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">
+                          No resolved messages.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        )}
       </div>
+
+      {selectedMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Message Details</h3>
+              <button
+                onClick={() => setSelectedMessage(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Name</p>
+                  <p className="text-sm text-gray-900 mt-1">{selectedMessage.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Email</p>
+                  <p className="text-sm text-gray-900 mt-1">{selectedMessage.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Phone</p>
+                  <p className="text-sm text-gray-900 mt-1">{selectedMessage.phone || 'Not provided'}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Received</p>
+                  <p className="text-sm text-gray-900 mt-1">{selectedMessage.createdAt}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Subject</p>
+                <p className="text-sm text-gray-900 mt-1">{selectedMessage.subject}</p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Message</p>
+                <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{selectedMessage.message}</p>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wide text-gray-500 font-semibold mb-1">
+                  Admin Note
+                </label>
+                <textarea
+                  rows={4}
+                  value={messageNoteDraft}
+                  onChange={(e) => setMessageNoteDraft(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-between gap-2">
+              <button
+                onClick={async () => {
+                  await updateMessage(selectedMessage.id, {
+                    status: selectedMessage.status === 'PENDING' ? 'RESOLVED' : 'PENDING',
+                    adminNote: messageNoteDraft,
+                  });
+                  setSelectedMessage(null);
+                }}
+                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                  selectedMessage.status === 'PENDING'
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                }`}
+              >
+                {selectedMessage.status === 'PENDING' ? 'Save & Mark Resolved' : 'Save & Move to Pending'}
+              </button>
+              <button
+                onClick={() => setSelectedMessage(null)}
+                className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
