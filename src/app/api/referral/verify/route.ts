@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { referralCodes, users } from '@/db/schema';
+import { auth } from '@/lib/auth';
 import { isValidReferralCodeFormat } from '@/lib/referral';
 
 export const dynamic = 'force-dynamic';
@@ -10,11 +11,15 @@ export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    const sessionEmail = String(session?.user?.email ?? '').trim().toLowerCase();
+
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
     });
-    const email = token?.email;
+    const tokenEmail = String(token?.email ?? '').trim().toLowerCase();
+    const email = sessionEmail || tokenEmail;
 
     if (!email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
