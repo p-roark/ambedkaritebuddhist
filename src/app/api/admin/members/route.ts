@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, ne } from 'drizzle-orm';
+import { and, eq, isNotNull, ne, or } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { users } from '@/db/schema';
 import { requireAdmin } from '@/lib/admin-auth';
@@ -22,7 +22,16 @@ export async function GET(request: NextRequest) {
       joinedAt: users.createdAt,
     })
     .from(users)
-    .where(ne(users.role, 'STUDENT'));
+    .where(
+      and(
+        ne(users.role, 'STUDENT'),
+        or(
+          isNotNull(users.referredBy),
+          eq(users.role, 'ADMIN'),
+          eq(users.role, 'LEADER'),
+        ),
+      ),
+    );
 
   const normalizedMembers = members.map((member) => ({
     ...member,
