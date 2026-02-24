@@ -75,15 +75,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid referral code format' }, { status: 400 });
   }
 
-  await db.insert(referralCodes).values({
-    id,
-    code,
-    ownerId,
-    maxUses,
-    currentUses: 0,
-    active: true,
-    createdAt: now,
-  });
+  try {
+    await db.insert(referralCodes).values({
+      id,
+      code,
+      ownerId,
+      maxUses,
+      currentUses: 0,
+      active: true,
+      createdAt: now,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message.includes('UNIQUE constraint failed: ReferralCode.code')) {
+      return NextResponse.json({ error: 'Referral code already exists. Try again.' }, { status: 409 });
+    }
+
+    if (message.includes('no such table: ReferralCode')) {
+      return NextResponse.json(
+        { error: 'ReferralCode table missing. Run D1 migrations on the bound database.' },
+        { status: 500 },
+      );
+    }
+
+    console.error('Create referral code error:', error);
+    return NextResponse.json({ error: 'Failed to create referral code' }, { status: 500 });
+  }
 
   return NextResponse.json({ id }, { status: 201 });
 }
