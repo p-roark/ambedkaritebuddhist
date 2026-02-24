@@ -6,6 +6,7 @@ import { events } from '@/db/schema';
 import { getEventImagesBucket, parseEventImageKeys } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 const MAX_IMAGES_PER_EVENT = 25;
 
@@ -104,5 +105,4 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
   return NextResponse.json({ imageKeys: nextKeys }, { status: 200 });
 }
-
 

@@ -5,11 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:worker": "opennextjs-cloudflare build",
-    "preview": "pnpm run build:worker && wrangler dev",
-    "deploy": "pnpm run build:worker && wrangler deploy",
-    "pages:build": "pnpm run build:worker",
-    "pages:dev": "pnpm run preview",
+    "pages:build": "pnpm build && npx @cloudflare/next-on-pages",
+    "pages:dev": "pnpm pages:build && wrangler pages dev",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -21,22 +18,21 @@
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
     "db:studio": "drizzle-kit studio",
     "db:seed:local": "wrangler d1 execute DB --local --file=./seeds/seed.sql",
-    "db:seed:remote": "wrangler d1 execute DB --remote --file=./seeds/seed.sql",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "db:seed:remote": "wrangler d1 execute DB --remote --file=./seeds/seed.sql"
   },
   "dependencies": {
     "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.38.3",
-    "next": "^16.0.11",
+    "next": "^16.0.10",
     "next-auth": "^4.24.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "styled-jsx": "^5.1.1"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.7",
     "@cloudflare/workers-types": "^4.20241205.0",
-    "@opennextjs/cloudflare": "^1.0.0",
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
@@ -54,7 +50,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.3.3",
     "vitest": "^1.0.0",
-    "wrangler": "^4.65.0"
+    "wrangler": "^3.99.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -64,4 +60,3 @@
     ]
   }
 }
-

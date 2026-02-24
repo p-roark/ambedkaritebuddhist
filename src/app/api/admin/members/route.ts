@@ -5,6 +5,7 @@ import { getDb } from '@/db';
 import { users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 async function requireAdmin(request: NextRequest) {
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
@@ -89,4 +90,3 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }
-

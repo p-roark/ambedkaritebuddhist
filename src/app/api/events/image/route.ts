@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { getEventImagesBucket } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   const key = request.nextUrl.searchParams.get('key');
@@ -23,5 +24,4 @@ export async function GET(request: NextRequest) {
     },
   });
 }
-
 

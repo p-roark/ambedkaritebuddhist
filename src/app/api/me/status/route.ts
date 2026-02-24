@@ -5,6 +5,7 @@ import { getDb } from '@/db';
 import { users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,4 +55,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

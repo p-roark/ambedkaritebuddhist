@@ -5,6 +5,7 @@ import { getDb } from '@/db';
 import { referralCodes, users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 async function requireAdmin(request: NextRequest) {
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
@@ -100,4 +101,3 @@ export async function PATCH(request: NextRequest) {
   await db.update(referralCodes).set({ active: body.active }).where(eq(referralCodes.id, body.id));
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

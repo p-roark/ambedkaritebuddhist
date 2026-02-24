@@ -5,6 +5,7 @@ import { getDb } from '@/db';
 import { eventRegistrations, events, users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export async function GET(request: Request) {
   const db = getDb();
@@ -52,4 +53,3 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ events: rows, registrations, registrationCounts }, { status: 200 });
 }
-
