@@ -104,6 +104,14 @@ export function Navigation() {
                 >
                   Contact
                 </Link>
+                <Link
+                  href="/profile"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/profile') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+                  }`}
+                >
+                  Profile
+                </Link>
                 {isAdmin && (
                   <Link
                     href="/dashboard"

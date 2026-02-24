@@ -32,6 +32,11 @@ type Registration = {
   email: string;
   volunteering: boolean;
   includeFamily: boolean;
+  selectedFamilyMemberIds: string;
+  nonMemberGuestDetails: string;
+  selectedFamilyMembers?: Array<{ id: string; userId: string; name: string; age: number | null }>;
+  nonMemberAdultGuests: number;
+  nonMemberChildGuests: number;
   adultsCount: number;
   childrenCount: number;
   totalAmount: number;
@@ -67,6 +72,26 @@ export default function AdminEventPage() {
     status: 'Upcoming' as EventStatus,
     eventImages: [] as string[],
   });
+
+  const getGuestDetails = (raw: string) => {
+    try {
+      const parsed = JSON.parse(raw || '[]') as unknown;
+      if (!Array.isArray(parsed)) return [] as Array<{ name: string; age: number }>;
+      return parsed
+        .map((item) => ({
+          name: String((item as { name?: unknown }).name ?? '').trim(),
+          age: Number((item as { age?: unknown }).age ?? -1),
+        }))
+        .filter((item) => item.name.length > 0 && Number.isFinite(item.age) && item.age >= 0);
+    } catch {
+      return [];
+    }
+  };
+
+  const totalAttendees = registrations.reduce(
+    (sum, r) => sum + Number(r.adultsCount ?? 0) + Number(r.childrenCount ?? 0),
+    0,
+  );
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -357,7 +382,8 @@ export default function AdminEventPage() {
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">Registered Members</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Registered Members ({registrations.length})</h2>
+            <p className="text-sm text-slate-600 mt-1">Total attendees: {totalAttendees}</p>
           </div>
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
@@ -378,7 +404,25 @@ export default function AdminEventPage() {
                     <input type="checkbox" checked={r.volunteering} readOnly />
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-700">
-                    {r.includeFamily ? `${r.adultsCount} adult(s), ${r.childrenCount} child(ren)` : 'No'}
+                    {r.includeFamily ? (
+                      <div>
+                        <p>{r.adultsCount} adult(s), {r.childrenCount} child(ren)</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Family: {(r.selectedFamilyMembers ?? []).filter((m) => m.age == null || m.age >= 18).length} adult(s), {(r.selectedFamilyMembers ?? []).filter((m) => m.age != null && m.age < 18).length} child(ren)
+                        </p>
+                        {(r.selectedFamilyMembers ?? []).map((m) => (
+                          <p key={m.id} className="text-xs text-slate-500">{m.name}{m.age != null ? ` (${m.age})` : ''}</p>
+                        ))}
+                        <p className="text-xs text-slate-500 mt-1">
+                          Guests: {getGuestDetails(r.nonMemberGuestDetails).filter((g) => g.age >= 18).length} adult(s), {getGuestDetails(r.nonMemberGuestDetails).filter((g) => g.age < 18).length} child(ren)
+                        </p>
+                        {getGuestDetails(r.nonMemberGuestDetails).map((g, idx) => (
+                          <p key={`${g.name}-${g.age}-${idx}`} className="text-xs text-slate-500">{g.name} ({g.age})</p>
+                        ))}
+                      </div>
+                    ) : (
+                      'No'
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-700">
                     <p>{r.paymentStatus}</p>

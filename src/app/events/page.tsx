@@ -24,6 +24,18 @@ type EventItem = {
   status: EventStatus
 }
 
+type FamilyMember = {
+  id: string
+  name: string
+  relationship: string
+  age: number | null
+}
+
+type NonMemberGuest = {
+  name: string
+  age: number
+}
+
 function getRegistrationLabel(status: string) {
   if (status === 'Pending Registration') return 'Registration Pending'
   if (status === 'Confirmed') return 'Registration Confirmed'
@@ -39,8 +51,11 @@ export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
   const [volunteering, setVolunteering] = useState(false)
   const [includeFamily, setIncludeFamily] = useState(false)
-  const [adultsCount, setAdultsCount] = useState(1)
-  const [childrenCount, setChildrenCount] = useState(0)
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
+  const [selectedFamilyMemberIds, setSelectedFamilyMemberIds] = useState<string[]>([])
+  const [nonMemberGuests, setNonMemberGuests] = useState<NonMemberGuest[]>([])
+  const [newGuestName, setNewGuestName] = useState('')
+  const [newGuestAge, setNewGuestAge] = useState('')
   const [registering, setRegistering] = useState(false)
   const [message, setMessage] = useState('')
   const [thumbPageByEvent, setThumbPageByEvent] = useState<Record<string, number>>({})
@@ -75,10 +90,22 @@ export default function EventsPage() {
     setRegistrationByEvent(statusMap)
   }
 
+  const loadFamilyMembers = async () => {
+    if (status !== 'authenticated') {
+      setFamilyMembers([])
+      return
+    }
+    const res = await fetch('/api/profile/family', { cache: 'no-store' })
+    if (!res.ok) return
+    const data = (await res.json()) as { familyMembers: FamilyMember[] }
+    setFamilyMembers(data.familyMembers ?? [])
+  }
+
   useEffect(() => {
     const run = async () => {
       try {
         await loadEvents()
+        await loadFamilyMembers()
       } catch (error) {
         console.error(error)
       } finally {
@@ -86,17 +113,22 @@ export default function EventsPage() {
       }
     }
     void run()
-  }, [])
+  }, [status])
 
   const upcoming = useMemo(() => events.filter((e) => e.status !== 'Event Ended'), [events])
   const past = useMemo(() => events.filter((e) => e.status === 'Event Ended'), [events])
 
   const totalAmount = useMemo(() => {
     if (!selectedEvent || !selectedEvent.isPaid) return 0
-    const adults = includeFamily ? adultsCount : 1
-    const children = includeFamily ? childrenCount : 0
+    const selectedFamily = familyMembers.filter((member) => selectedFamilyMemberIds.includes(member.id))
+    const familyAdults = selectedFamily.filter((member) => member.age == null || member.age >= 18).length
+    const familyChildren = selectedFamily.filter((member) => member.age != null && member.age < 18).length
+    const nonMemberAdults = nonMemberGuests.filter((guest) => guest.age >= 18).length
+    const nonMemberChildren = nonMemberGuests.filter((guest) => guest.age < 18).length
+    const adults = 1 + (includeFamily ? familyAdults + nonMemberAdults : 0)
+    const children = includeFamily ? familyChildren + nonMemberChildren : 0
     return adults * selectedEvent.adultPrice + children * selectedEvent.childPrice
-  }, [selectedEvent, includeFamily, adultsCount, childrenCount])
+  }, [selectedEvent, includeFamily, familyMembers, selectedFamilyMemberIds, nonMemberGuests])
 
   const registerForEvent = async () => {
     if (!selectedEvent) return
@@ -114,8 +146,8 @@ export default function EventsPage() {
         body: JSON.stringify({
           volunteering,
           includeFamily,
-          adultsCount,
-          childrenCount,
+          selectedFamilyMemberIds,
+          nonMemberGuests,
         }),
       })
       const data = (await res.json()) as { error?: string; message?: string }
@@ -233,8 +265,10 @@ export default function EventsPage() {
                       setMessage('')
                       setVolunteering(false)
                       setIncludeFamily(false)
-                      setAdultsCount(1)
-                      setChildrenCount(0)
+                      setSelectedFamilyMemberIds([])
+                      setNonMemberGuests([])
+                      setNewGuestName('')
+                      setNewGuestAge('')
                     }}
                     className="inline-block px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
                   >
@@ -362,27 +396,86 @@ export default function EventsPage() {
               </div>
 
               {includeFamily && (
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="text-sm text-slate-700">
-                    <span className="mb-1 block font-medium">Additional Adults</span>
-                    <input
-                      type="number"
-                      min={1}
-                      value={adultsCount}
-                      onChange={(e) => setAdultsCount(Math.max(1, Number(e.target.value)))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    />
-                  </label>
-                  <label className="text-sm text-slate-700">
-                    <span className="mb-1 block font-medium">Children</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={childrenCount}
-                      onChange={(e) => setChildrenCount(Math.max(0, Number(e.target.value)))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    />
-                  </label>
+                <div className="space-y-4">
+                  <div className="rounded-md border border-slate-200 p-3">
+                    <p className="text-sm font-medium text-slate-800 mb-2">Select Family Members</p>
+                    {familyMembers.length === 0 ? (
+                      <p className="text-xs text-slate-500">
+                        No family members in profile. Add them from Profile settings.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {familyMembers.map((member) => (
+                          <label key={member.id} className="flex items-center gap-2 text-sm rounded border border-slate-200 px-2 py-1.5">
+                            <input
+                              type="checkbox"
+                              checked={selectedFamilyMemberIds.includes(member.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedFamilyMemberIds((prev) => [...prev, member.id])
+                                } else {
+                                  setSelectedFamilyMemberIds((prev) => prev.filter((id) => id !== member.id))
+                                }
+                              }}
+                            />
+                            <span>{member.name} ({member.relationship}{member.age != null ? `, ${member.age}` : ''})</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-sm text-slate-700">
+                      <span className="mb-1 block font-medium">Guest Name</span>
+                      <input
+                        type="text"
+                        value={newGuestName}
+                        onChange={(e) => setNewGuestName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-700">
+                      <span className="mb-1 block font-medium">Guest Age</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={newGuestAge}
+                        onChange={(e) => setNewGuestAge(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = newGuestName.trim()
+                        const age = Number(newGuestAge)
+                        if (!name || !Number.isFinite(age) || age < 0) return
+                        setNonMemberGuests((prev) => [...prev, { name, age }])
+                        setNewGuestName('')
+                        setNewGuestAge('')
+                      }}
+                      className="col-span-2 px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800"
+                    >
+                      Add Non-member Guest
+                    </button>
+                    {nonMemberGuests.length > 0 && (
+                      <div className="col-span-2 space-y-2">
+                        {nonMemberGuests.map((guest, idx) => (
+                          <div key={`${guest.name}-${idx}`} className="flex items-center justify-between text-sm border border-slate-200 rounded-md px-3 py-2">
+                            <span>{guest.name} ({guest.age})</span>
+                            <button
+                              type="button"
+                              onClick={() => setNonMemberGuests((prev) => prev.filter((_, i) => i !== idx))}
+                              className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

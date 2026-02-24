@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { eventRegistrations, events, users } from '@/db/schema';
+import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -40,6 +40,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       email: users.email,
       volunteering: eventRegistrations.volunteering,
       includeFamily: eventRegistrations.includeFamily,
+      selectedFamilyMemberIds: eventRegistrations.selectedFamilyMemberIds,
+      nonMemberGuestDetails: eventRegistrations.nonMemberGuestDetails,
+      nonMemberAdultGuests: eventRegistrations.nonMemberAdultGuests,
+      nonMemberChildGuests: eventRegistrations.nonMemberChildGuests,
       adultsCount: eventRegistrations.adultsCount,
       childrenCount: eventRegistrations.childrenCount,
       totalAmount: eventRegistrations.totalAmount,
@@ -51,7 +55,39 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .innerJoin(users, eq(users.id, eventRegistrations.userId))
     .where(eq(eventRegistrations.eventId, id));
 
-  return NextResponse.json({ event, registrations }, { status: 200 });
+  const userIds = Array.from(new Set(registrations.map((r) => r.userId)));
+  const families = userIds.length
+    ? await db
+        .select({
+          id: familyMembers.id,
+          userId: familyMembers.userId,
+          name: familyMembers.name,
+          age: familyMembers.age,
+        })
+        .from(familyMembers)
+        .where(inArray(familyMembers.userId, userIds))
+    : [];
+
+  const familyById = new Map(families.map((f) => [f.id, f]));
+  const registrationsWithFamilyNames = registrations.map((r) => {
+    let selectedFamilyIds: string[] = [];
+    try {
+      const parsed = JSON.parse(r.selectedFamilyMemberIds || '[]') as unknown;
+      if (Array.isArray(parsed)) {
+        selectedFamilyIds = parsed.map((id) => String(id));
+      }
+    } catch {
+      selectedFamilyIds = [];
+    }
+
+    const selectedFamilyMembers = selectedFamilyIds
+      .map((id) => familyById.get(id))
+      .filter((member): member is { id: string; userId: string; name: string; age: number | null } => Boolean(member));
+
+    return { ...r, selectedFamilyMembers };
+  });
+
+  return NextResponse.json({ event, registrations: registrationsWithFamilyNames }, { status: 200 });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

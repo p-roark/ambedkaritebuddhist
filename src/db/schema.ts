@@ -8,6 +8,16 @@ export const users = sqliteTable('User', {
   name:         text('name').notNull(),
   email:        text('email').notNull().unique(),
   passwordHash: text('passwordHash').notNull(),
+  phone:        text('phone'),
+  altPhone:     text('altPhone'),
+  addressLine1: text('addressLine1'),
+  addressLine2: text('addressLine2'),
+  city:         text('city'),
+  province:     text('province'),
+  postalCode:   text('postalCode'),
+  education:    text('education'),
+  interests:    text('interests'),
+  notes:        text('notes'),
   role:         text('role').notNull().default('MEMBER'), // ADMIN | LEADER | MEMBER | STUDENT
   emailVerified: text('emailVerified'),                  // ISO date string
   image:        text('image'),
@@ -99,6 +109,10 @@ export const eventRegistrations = sqliteTable('EventRegistration', {
   userId:          text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
   volunteering:    integer('volunteering', { mode: 'boolean' }).notNull().default(false),
   includeFamily:   integer('includeFamily', { mode: 'boolean' }).notNull().default(false),
+  selectedFamilyMemberIds: text('selectedFamilyMemberIds').notNull().default('[]'),
+  nonMemberGuestDetails: text('nonMemberGuestDetails').notNull().default('[]'),
+  nonMemberAdultGuests: integer('nonMemberAdultGuests').notNull().default(0),
+  nonMemberChildGuests: integer('nonMemberChildGuests').notNull().default(0),
   adultsCount:     integer('adultsCount').notNull().default(1),
   childrenCount:   integer('childrenCount').notNull().default(0),
   totalAmount:     integer('totalAmount').notNull().default(0),
@@ -112,6 +126,21 @@ export const eventRegistrations = sqliteTable('EventRegistration', {
   eventUserUnique: uniqueIndex('EventRegistration_event_user_key').on(t.eventId, t.userId),
 }));
 
+// --- Family members ----------------------------------------------------------
+
+export const familyMembers = sqliteTable('FamilyMember', {
+  id:          text('id').primaryKey(),
+  userId:      text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name:        text('name').notNull(),
+  relationship: text('relationship').notNull(),
+  age:         integer('age'),
+  notes:       text('notes'),
+  createdAt:   text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt:   text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  userIdx: index('FamilyMember_user_idx').on(t.userId),
+}));
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;
@@ -122,3 +151,5 @@ export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
 export type EventRegistration = typeof eventRegistrations.$inferSelect;
 export type NewEventRegistration = typeof eventRegistrations.$inferInsert;
+export type FamilyMember = typeof familyMembers.$inferSelect;
+export type NewFamilyMember = typeof familyMembers.$inferInsert;
