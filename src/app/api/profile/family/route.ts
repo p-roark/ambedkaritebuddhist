@@ -8,7 +8,10 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 async function getOrCreateUserId(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
+  });
   const email = token?.email;
   if (!email) return null;
 

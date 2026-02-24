@@ -22,7 +22,10 @@ export async function GET(request: Request) {
     return acc;
   }, {});
 
-  const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req: request as any,
+    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
+  });
   const email = token?.email;
 
   let registrations: Array<{

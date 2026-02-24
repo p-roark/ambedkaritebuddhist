@@ -8,7 +8,10 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
+  });
   const email = token?.email;
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
