@@ -86,105 +86,97 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900">Contact Information</h2>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Email</p>
-                <a
-                  href={`mailto:${contact?.email ?? ''}`}
-                  className="mt-1 block text-base text-primary-blue hover:text-primary-saffron transition-colors"
-                >
-                  {contact?.email ?? 'Not available'}
-                </a>
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Phone</p>
-                <a
-                  href={`tel:${contact?.phone ?? ''}`}
-                  className="mt-1 block text-base text-primary-blue hover:text-primary-saffron transition-colors"
-                >
-                  {contact?.phone ?? 'Not available'}
-                </a>
-              </div>
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-6">
+        <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50 to-orange-50 shadow-sm p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-slate-900">Contact Information</h2>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-xl bg-white border border-slate-200 p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Email</p>
+              <a
+                href={`mailto:${contact?.email ?? ''}`}
+                className="mt-1 block text-base text-primary-blue hover:text-primary-saffron transition-colors"
+              >
+                {contact?.email ?? 'Not available'}
+              </a>
+            </div>
+            <div className="rounded-xl bg-white border border-slate-200 p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Phone</p>
+              <a
+                href={`tel:${contact?.phone ?? ''}`}
+                className="mt-1 block text-base text-primary-blue hover:text-primary-saffron transition-colors"
+              >
+                {contact?.phone ?? 'Not available'}
+              </a>
             </div>
           </div>
-
-          <div className="lg:col-span-2">
-            <form onSubmit={onSubmit} className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 md:p-8 space-y-4">
-              <h2 className="text-2xl font-bold text-slate-900">Send a Message</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="text-sm text-slate-700">
-                  <span className="mb-1 block font-medium">Full Name</span>
-                  <input
-                    required
-                    value={form.name}
-                    onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                <label className="text-sm text-slate-700">
-                  <span className="mb-1 block font-medium">Email</span>
-                  <input
-                    required
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-              </div>
-
-              <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Phone (Optional)</span>
-                <input
-                  value={form.phone}
-                  onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-
-              <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Subject</span>
-                <input
-                  required
-                  value={form.subject}
-                  onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-
-              <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Message</span>
-                <textarea
-                  required
-                  rows={6}
-                  value={form.message}
-                  onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-
-              {message && <p className="text-sm text-blue-700">{message}</p>}
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2.5 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
-                >
-                  {submitting ? 'Sending...' : 'Send Message'}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
+
+        <form onSubmit={onSubmit} className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 md:p-8 space-y-4">
+          <h2 className="text-2xl font-bold text-slate-900">Send a Message</h2>
+
+          <label className="text-sm text-slate-700">
+            <span className="mb-1 block font-medium">Full Name</span>
+            <input
+              required
+              value={form.name}
+              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700">
+            <span className="mb-1 block font-medium">Email</span>
+            <input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700">
+            <span className="mb-1 block font-medium">Phone (Optional)</span>
+            <input
+              value={form.phone}
+              onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700">
+            <span className="mb-1 block font-medium">Subject</span>
+            <input
+              required
+              value={form.subject}
+              onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700">
+            <span className="mb-1 block font-medium">Message</span>
+            <textarea
+              required
+              rows={7}
+              value={form.message}
+              onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+
+          {message && <p className="text-sm text-blue-700">{message}</p>}
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-5 py-2.5 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
+            >
+              {submitting ? 'Sending...' : 'Send Message'}
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   );

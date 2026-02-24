@@ -46,6 +46,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('no such table: ContactMessage')) {
+      return NextResponse.json(
+        { error: 'Contact messages table is missing. Run D1 migrations and redeploy.' },
+        { status: 500 },
+      );
+    }
     console.error('Contact message create error:', error);
     return NextResponse.json({ error: 'Failed to submit message' }, { status: 500 });
   }

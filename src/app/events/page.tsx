@@ -58,19 +58,6 @@ export default function EventsPage() {
   const [newGuestAge, setNewGuestAge] = useState('')
   const [registering, setRegistering] = useState(false)
   const [message, setMessage] = useState('')
-  const [thumbPageByEvent, setThumbPageByEvent] = useState<Record<string, number>>({})
-
-  const PAGE_SIZE = 4
-  const parseImageKeys = (raw: string) => {
-    try {
-      const parsed = JSON.parse(raw || '[]') as unknown
-      if (!Array.isArray(parsed)) return [] as string[]
-      return parsed.map((key) => String(key))
-    } catch {
-      return [] as string[]
-    }
-  }
-  const imageSrc = (key: string) => `/api/events/image?key=${encodeURIComponent(key)}`
 
   const loadEvents = async () => {
     const res = await fetch('/api/events', { cache: 'no-store' })
@@ -211,44 +198,6 @@ export default function EventsPage() {
                 <p className="text-text-medium mb-4 leading-relaxed">
                   {event.description || 'Join our community for this event.'}
                 </p>
-                {(() => {
-                  const keys = parseImageKeys(event.eventImages)
-                  if (keys.length === 0) return null
-                  const currentPage = thumbPageByEvent[event.id] ?? 0
-                  const totalPages = Math.ceil(keys.length / PAGE_SIZE)
-                  const start = currentPage * PAGE_SIZE
-                  const slice = keys.slice(start, start + PAGE_SIZE)
-                  return (
-                    <div className="mb-4">
-                      <div className="grid grid-cols-2 gap-2">
-                        {slice.map((key) => (
-                          <div key={key} className="relative h-20 rounded-md overflow-hidden bg-gray-100">
-                            <Image src={imageSrc(key)} alt={event.title} fill className="object-cover" sizes="120px" />
-                          </div>
-                        ))}
-                      </div>
-                      {totalPages > 1 && (
-                        <div className="mt-2 flex items-center justify-between text-xs">
-                          <button
-                            onClick={() => setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.max(0, currentPage - 1) }))}
-                            disabled={currentPage === 0}
-                            className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
-                          >
-                            Prev
-                          </button>
-                          <span className="text-gray-500">Page {currentPage + 1} / {totalPages}</span>
-                          <button
-                            onClick={() => setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.min(totalPages - 1, currentPage + 1) }))}
-                            disabled={currentPage >= totalPages - 1}
-                            className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
-                          >
-                            Next
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
                 <p className="text-sm font-medium mb-6">{event.status}</p>
 
                 {registrationByEvent[event.id] ? (
@@ -291,12 +240,14 @@ export default function EventsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {past.map((event) => (
               (() => {
-                const keys = parseImageKeys(event.eventImages)
-                const currentPage = thumbPageByEvent[event.id] ?? 0
-                const totalPages = Math.ceil(Math.max(1, keys.length) / PAGE_SIZE)
-                const start = currentPage * PAGE_SIZE
-                const slice = keys.slice(start, start + PAGE_SIZE)
-                const hasGallery = keys.length > 0
+                const hasGallery = (() => {
+                  try {
+                    const parsed = JSON.parse(event.eventImages || '[]') as unknown
+                    return Array.isArray(parsed) && parsed.length > 0
+                  } catch {
+                    return false
+                  }
+                })()
 
                 const card = (
                   <div className={`group bg-white rounded-2xl overflow-hidden shadow-sm border border-background-light opacity-90 ${hasGallery ? 'hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer' : ''}`}>
@@ -313,42 +264,6 @@ export default function EventsPage() {
                       <h3 className="text-xl md:text-2xl font-bold text-text-dark mb-3">{event.title}</h3>
                       <p className="text-sm text-text-medium">{event.date} {event.time}</p>
                       <p className="text-sm text-text-medium">{event.location}</p>
-                      {slice.length > 0 && (
-                        <div className="mt-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            {slice.map((key) => (
-                              <div key={key} className="relative h-20 rounded-md overflow-hidden bg-gray-100">
-                                <Image src={imageSrc(key)} alt={event.title} fill className="object-cover" sizes="120px" />
-                              </div>
-                            ))}
-                          </div>
-                          {totalPages > 1 && (
-                            <div className="mt-2 flex items-center justify-between text-xs">
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.max(0, currentPage - 1) }))
-                                }}
-                                disabled={currentPage === 0}
-                                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
-                              >
-                                Prev
-                              </button>
-                              <span className="text-gray-500">Page {currentPage + 1} / {totalPages}</span>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.min(totalPages - 1, currentPage + 1) }))
-                                }}
-                                disabled={currentPage >= totalPages - 1}
-                                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
-                              >
-                                Next
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
                       {hasGallery && (
                         <p className="mt-3 text-sm font-semibold text-primary-blue">View Gallery</p>
                       )}
