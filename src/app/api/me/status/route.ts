@@ -3,17 +3,19 @@ import { getToken } from 'next-auth/jwt';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { users } from '@/db/schema';
+import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
     });
-    const email = token?.email;
+    const email = String(session?.user?.email ?? token?.email ?? '').trim().toLowerCase();
 
     if (!email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,11 +35,11 @@ export async function GET(request: NextRequest) {
       const userId = crypto.randomUUID();
       await db.insert(users).values({
         id: userId,
-        name: String(token?.name ?? 'Community Member'),
+        name: String(session?.user?.name ?? token?.name ?? 'Community Member'),
         email,
         passwordHash: '',
         role: 'MEMBER',
-        image: token?.picture ? String(token.picture) : null,
+        image: String(session?.user?.image ?? token?.picture ?? '') || null,
         emailVerified: now,
         createdAt: now,
         updatedAt: now,
