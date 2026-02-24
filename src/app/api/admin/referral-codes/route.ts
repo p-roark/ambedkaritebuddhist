@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { referralCodes, users } from '@/db/schema';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
-
-async function requireAdmin(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.email || token.role !== 'ADMIN') {
-    return null;
-  }
-  return token;
-}
 
 async function ensureOwnerId(email: string) {
   const db = getDb();
@@ -66,7 +58,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid maxUses' }, { status: 400 });
   }
 
-  const ownerId = await ensureOwnerId(String(token.email));
+  const ownerId = await ensureOwnerId(token.email);
   const db = getDb();
   const now = new Date().toISOString();
   const id = crypto.randomUUID();

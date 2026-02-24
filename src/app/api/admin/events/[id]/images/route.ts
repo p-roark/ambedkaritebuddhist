@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { events } from '@/db/schema';
+import { requireAdmin } from '@/lib/admin-auth';
 import { getEventImagesBucket, parseEventImageKeys } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 const MAX_IMAGES_PER_EVENT = 25;
-
-async function requireAdmin(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.email || token.role !== 'ADMIN') return null;
-  return token;
-}
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const token = await requireAdmin(request);

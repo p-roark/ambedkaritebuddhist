@@ -1,20 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-
-async function requireAdmin(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.email || token.role !== 'ADMIN') {
-    return null;
-  }
-  return token;
-}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const token = await requireAdmin(request);
