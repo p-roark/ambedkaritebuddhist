@@ -1,10 +1,7 @@
-import { NextAuthOptions } from 'next-auth';
+import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { users } from '@/db/schema';
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers:
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [
@@ -46,6 +43,12 @@ export const authOptions: NextAuthOptions = {
 
       // Look up user in D1 to get live role + membership status
       try {
+        const [{ eq }, { getDb }, { users }] = await Promise.all([
+          import('drizzle-orm'),
+          import('@/db'),
+          import('@/db/schema'),
+        ]);
+
         const db = getDb();
         const row = await db
           .select({ role: users.role, id: users.id })
@@ -80,4 +83,4 @@ export const authOptions: NextAuthOptions = {
   },
 
   pages: { signIn: '/auth/login' },
-};
+});
