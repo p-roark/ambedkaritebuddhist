@@ -73,13 +73,43 @@ export const referralCodes = sqliteTable('ReferralCode', {
 export const events = sqliteTable('Event', {
   id:        text('id').primaryKey(),
   title:     text('title').notNull(),
+  description: text('description').notNull().default(''),
+  coverImage: text('coverImage').notNull().default('/images/events/covers/dcpd.jpg'),
   date:      text('date').notNull(), // YYYY-MM-DD
+  time:      text('time').notNull().default('18:00'),
   location:  text('location').notNull(),
+  eventType: text('eventType').notNull().default('General'),
+  isPaid:    integer('isPaid', { mode: 'boolean' }).notNull().default(false),
+  adultPrice: integer('adultPrice').notNull().default(0),
+  childPrice: integer('childPrice').notNull().default(0),
+  eventImages: text('eventImages').notNull().default('[]'),
+  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   status:    text('status').notNull().default('Upcoming'), // Upcoming | Registration Started | Event Ended
   createdAt: text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updatedAt').notNull().default(sql`(datetime('now'))`),
 }, (t) => ({
   dateIdx: index('Event_date_idx').on(t.date),
+}));
+
+// ─── Event registrations ─────────────────────────────────────────────────────
+
+export const eventRegistrations = sqliteTable('EventRegistration', {
+  id:              text('id').primaryKey(),
+  eventId:         text('eventId').notNull().references(() => events.id, { onDelete: 'cascade' }),
+  userId:          text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  volunteering:    integer('volunteering', { mode: 'boolean' }).notNull().default(false),
+  includeFamily:   integer('includeFamily', { mode: 'boolean' }).notNull().default(false),
+  adultsCount:     integer('adultsCount').notNull().default(1),
+  childrenCount:   integer('childrenCount').notNull().default(0),
+  totalAmount:     integer('totalAmount').notNull().default(0),
+  paymentStatus:   text('paymentStatus').notNull().default('Unpaid'), // Unpaid | Paid
+  registrationStatus: text('registrationStatus').notNull().default('Pending Registration'), // Pending Registration | Confirmed | Rejected
+  createdAt:       text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt:       text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  eventIdx: index('EventRegistration_event_idx').on(t.eventId),
+  userIdx: index('EventRegistration_user_idx').on(t.userId),
+  eventUserUnique: uniqueIndex('EventRegistration_event_user_key').on(t.eventId, t.userId),
 }));
 
 // ─── Inferred types ───────────────────────────────────────────────────────────
@@ -90,3 +120,5 @@ export type ReferralCode   = typeof referralCodes.$inferSelect;
 export type NewReferralCode = typeof referralCodes.$inferInsert;
 export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
+export type EventRegistration = typeof eventRegistrations.$inferSelect;
+export type NewEventRegistration = typeof eventRegistrations.$inferInsert;

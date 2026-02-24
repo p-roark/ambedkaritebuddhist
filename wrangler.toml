@@ -8,3 +8,7 @@ binding       = "DB"
 database_name = "ambedkaritebuddhist"
 database_id   = "c1eda722-53f9-4bf5-93ab-bbdb5e98631b"
 migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "EVENT_IMAGES"
+bucket_name = "ambedkaritebuddhist-images"

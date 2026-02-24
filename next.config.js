@@ -2,6 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    localPatterns: [
+      {
+        pathname: '/api/events/image',
+      },
+      {
+        pathname: '/images/**',
+      },
+    ],
     remotePatterns: [
       {
         protocol: 'https',

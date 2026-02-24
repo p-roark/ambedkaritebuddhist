@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
@@ -19,8 +20,16 @@ type Member = {
 type EventItem = {
   id: string;
   title: string;
+  description: string;
+  coverImage: string;
   date: string;
+  time: string;
   location: string;
+  eventType: string;
+  isPaid: boolean;
+  adultPrice: number;
+  childPrice: number;
+  archived: boolean;
   status: EventStatus;
 };
 
@@ -44,6 +53,13 @@ const EVENT_STATUS_COLORS: Record<EventStatus, string> = {
   'Event Ended': 'bg-gray-200 text-gray-700',
 };
 
+const EVENT_COVER_OPTIONS = [
+  '/images/events/covers/dcpd.jpg',
+  '/images/events/covers/picnic.jpeg',
+  '/images/events/covers/mahaparinirvan-din.jpg',
+  '/images/events/covers/ambedkar-jayanti.jpg',
+];
+
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const seg = (n: number) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -61,9 +77,17 @@ export default function DashboardPage() {
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
 
   const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventDescription, setNewEventDescription] = useState('');
+  const [newEventCoverImage, setNewEventCoverImage] = useState(EVENT_COVER_OPTIONS[0]);
   const [newEventDate, setNewEventDate] = useState('');
+  const [newEventTime, setNewEventTime] = useState('18:00');
   const [newEventLocation, setNewEventLocation] = useState('');
+  const [newEventType, setNewEventType] = useState('');
+  const [newEventIsPaid, setNewEventIsPaid] = useState(false);
+  const [newEventAdultPrice, setNewEventAdultPrice] = useState(0);
+  const [newEventChildPrice, setNewEventChildPrice] = useState(0);
   const [newEventStatus, setNewEventStatus] = useState<EventStatus>('Upcoming');
+  const [newEventMessage, setNewEventMessage] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [maxUses, setMaxUses] = useState(10);
@@ -156,23 +180,46 @@ export default function DashboardPage() {
   };
 
   const handleAddEvent = async () => {
-    if (!newEventTitle.trim() || !newEventDate || !newEventLocation.trim()) return;
+    setNewEventMessage('');
+    if (!newEventTitle.trim() || !newEventDate || !newEventLocation.trim()) {
+      setNewEventMessage('Title, date, and location are required.');
+      return;
+    }
     const res = await fetch('/api/admin/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: newEventTitle.trim(),
+        description: newEventDescription.trim(),
+        coverImage: newEventCoverImage.trim(),
         date: newEventDate,
+        time: newEventTime,
         location: newEventLocation.trim(),
+        eventType: newEventType.trim(),
+        isPaid: newEventIsPaid,
+        adultPrice: newEventIsPaid ? newEventAdultPrice : 0,
+        childPrice: newEventIsPaid ? newEventChildPrice : 0,
         status: newEventStatus,
       }),
     });
-    if (!res.ok) return;
+    const data = (await res.json()) as { error?: string };
+    if (!res.ok) {
+      setNewEventMessage(data.error ?? 'Failed to add event');
+      return;
+    }
 
     setNewEventTitle('');
+    setNewEventDescription('');
+    setNewEventCoverImage(EVENT_COVER_OPTIONS[0]);
     setNewEventDate('');
+    setNewEventTime('18:00');
     setNewEventLocation('');
+    setNewEventType('');
+    setNewEventIsPaid(false);
+    setNewEventAdultPrice(0);
+    setNewEventChildPrice(0);
     setNewEventStatus('Upcoming');
+    setNewEventMessage('Event added successfully.');
     await loadEvents();
   };
 
@@ -181,6 +228,16 @@ export default function DashboardPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: eventId, status }),
+    });
+    if (!res.ok) return;
+    await loadEvents();
+  };
+
+  const handleArchiveToggle = async (eventId: string, archived: boolean) => {
+    const res = await fetch('/api/admin/events', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: eventId, archived }),
     });
     if (!res.ok) return;
     await loadEvents();
@@ -337,40 +394,130 @@ export default function DashboardPage() {
           <div className="space-y-8">
             <section className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Event</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <input
-                  type="text"
-                  value={newEventTitle}
-                  onChange={(e) => setNewEventTitle(e.target.value)}
-                  placeholder="Event title"
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="date"
-                  value={newEventDate}
-                  onChange={(e) => setNewEventDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={newEventLocation}
-                  onChange={(e) => setNewEventLocation(e.target.value)}
-                  placeholder="Location"
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <div className="flex gap-2">
+              {newEventMessage && (
+                <p className="mb-3 text-sm text-blue-700">{newEventMessage}</p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Event title</span>
+                  <input
+                    type="text"
+                    value={newEventTitle}
+                    onChange={(e) => setNewEventTitle(e.target.value)}
+                    placeholder="Event title"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Date</span>
+                  <input
+                    type="date"
+                    value={newEventDate}
+                    onChange={(e) => setNewEventDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Time</span>
+                  <input
+                    type="time"
+                    value={newEventTime}
+                    onChange={(e) => setNewEventTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Location</span>
+                  <input
+                    type="text"
+                    value={newEventLocation}
+                    onChange={(e) => setNewEventLocation(e.target.value)}
+                    placeholder="Location"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Event type</span>
+                  <input
+                    type="text"
+                    value={newEventType}
+                    onChange={(e) => setNewEventType(e.target.value)}
+                    placeholder="Event type"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Cover image</span>
                   <select
-                    value={newEventStatus}
-                    onChange={(e) => setNewEventStatus(e.target.value as EventStatus)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={newEventCoverImage}
+                    onChange={(e) => setNewEventCoverImage(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="Upcoming">Upcoming</option>
-                    <option value="Registration Started">Registration Started</option>
-                    <option value="Event Ended">Event Ended</option>
+                    {EVENT_COVER_OPTIONS.map((path) => (
+                      <option key={path} value={path}>
+                        {path.split('/').pop()}
+                      </option>
+                    ))}
                   </select>
+                </label>
+                <label className="md:col-span-3 text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Description</span>
+                  <textarea
+                    rows={3}
+                    value={newEventDescription}
+                    onChange={(e) => setNewEventDescription(e.target.value)}
+                    placeholder="Short event description for landing page card"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  <input
+                    type="checkbox"
+                    checked={newEventIsPaid}
+                    onChange={(e) => setNewEventIsPaid(e.target.checked)}
+                  />
+                  Paid Event
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Adult price</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={newEventAdultPrice}
+                    onChange={(e) => setNewEventAdultPrice(Number(e.target.value))}
+                    placeholder="Adult price"
+                    disabled={!newEventIsPaid}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Child price</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={newEventChildPrice}
+                    onChange={(e) => setNewEventChildPrice(Number(e.target.value))}
+                    placeholder="Child price"
+                    disabled={!newEventIsPaid}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  />
+                </label>
+                <div className="flex gap-2">
+                  <label className="flex-1 text-sm text-gray-700">
+                    <span className="mb-1 block font-medium">Event status</span>
+                    <select
+                      value={newEventStatus}
+                      onChange={(e) => setNewEventStatus(e.target.value as EventStatus)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Upcoming">Upcoming</option>
+                      <option value="Registration Started">Registration Started</option>
+                      <option value="Event Ended">Event Ended</option>
+                    </select>
+                  </label>
                   <button
                     onClick={handleAddEvent}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                    className="self-end px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
                   >
                     Add
                   </button>
@@ -384,7 +531,7 @@ export default function DashboardPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {['Event', 'Date', 'Location', 'Status'].map((h) => (
+                      {['Event', 'Date', 'Venue', 'Type', 'Pricing', 'Status', 'Details', 'Actions'].map((h) => (
                         <th
                           key={h}
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -398,13 +545,18 @@ export default function DashboardPage() {
                     {events.map((event) => (
                       <tr key={event.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 text-sm font-medium text-gray-900">{event.title}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{event.date}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{event.date} {event.time}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">{event.location}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{event.eventType}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {event.isPaid ? `Paid ($${event.adultPrice} adult / $${event.childPrice} child)` : 'Free'}
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <select
                               value={event.status}
                               onChange={(e) => handleEventStatusChange(event.id, e.target.value as EventStatus)}
+                              disabled={event.archived}
                               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                               <option value="Upcoming">Upcoming</option>
@@ -414,7 +566,29 @@ export default function DashboardPage() {
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${EVENT_STATUS_COLORS[event.status]}`}>
                               {event.status}
                             </span>
+                            {event.archived && (
+                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+                                Archived
+                              </span>
+                            )}
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Link href={`/dashboard/events/${event.id}`} className="px-3 py-1.5 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+                            Open
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleArchiveToggle(event.id, !event.archived)}
+                            className={`px-3 py-1.5 text-xs font-medium rounded ${
+                              event.archived
+                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                            }`}
+                          >
+                            {event.archived ? 'Unarchive' : 'Archive'}
+                          </button>
                         </td>
                       </tr>
                     ))}

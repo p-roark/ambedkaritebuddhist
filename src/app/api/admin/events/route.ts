@@ -32,8 +32,15 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json()) as {
     title?: string;
+    description?: string;
+    coverImage?: string;
     date?: string;
+    time?: string;
     location?: string;
+    eventType?: string;
+    isPaid?: boolean;
+    adultPrice?: number;
+    childPrice?: number;
     status?: EventStatus;
   };
 
@@ -53,8 +60,15 @@ export async function POST(request: NextRequest) {
   await db.insert(events).values({
     id,
     title: body.title.trim(),
+    description: String(body.description ?? '').trim(),
+    coverImage: String(body.coverImage ?? '/images/events/covers/dcpd.jpg').trim(),
     date: body.date,
+    time: String(body.time ?? '18:00').trim(),
     location: body.location.trim(),
+    eventType: String(body.eventType ?? 'General').trim(),
+    isPaid: Boolean(body.isPaid),
+    adultPrice: Number(body.adultPrice ?? 0),
+    childPrice: Number(body.childPrice ?? 0),
     status: body.status,
     createdAt: now,
     updatedAt: now,
@@ -70,21 +84,33 @@ export async function PATCH(request: NextRequest) {
   const body = (await request.json()) as {
     id?: string;
     status?: EventStatus;
+    archived?: boolean;
   };
 
-  if (!body.id || !body.status) {
+  if (!body.id || (typeof body.status === 'undefined' && typeof body.archived === 'undefined')) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
-  const validStatuses: EventStatus[] = ['Upcoming', 'Registration Started', 'Event Ended'];
-  if (!validStatuses.includes(body.status)) {
-    return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+  const patch: { status?: EventStatus; archived?: boolean; updatedAt: string } = {
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (typeof body.status !== 'undefined') {
+    const validStatuses: EventStatus[] = ['Upcoming', 'Registration Started', 'Event Ended'];
+    if (!validStatuses.includes(body.status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    }
+    patch.status = body.status;
+  }
+
+  if (typeof body.archived !== 'undefined') {
+    patch.archived = Boolean(body.archived);
   }
 
   const db = getDb();
   await db
     .update(events)
-    .set({ status: body.status, updatedAt: new Date().toISOString() })
+    .set(patch)
     .where(eq(events.id, body.id));
 
   return NextResponse.json({ ok: true }, { status: 200 });

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { AVAILABLE_BACKGROUNDS } from '@/lib/backgrounds'
+import { normalizeImagePath } from '@/lib/image-path'
 
 interface HeroProps {
   title: string
@@ -44,32 +45,19 @@ export function Hero({
         const randomBgIndex = Math.floor(Math.random() * AVAILABLE_BACKGROUNDS.length)
         setBackgroundImage(AVAILABLE_BACKGROUNDS[randomBgIndex])
 
-        // Load events and pick a random event with gallery image
-        const eventsRes = await fetch('/data/events.json')
-        type EventEntry = { images?: string[]; imageFolder?: string; title?: string; date?: string }
-        const eventsData = await eventsRes.json() as { upcomingEvents?: EventEntry[]; pastEvents?: EventEntry[] }
-        const allEvents = [
-          ...(eventsData.upcomingEvents || []),
-          ...(eventsData.pastEvents || [])
-        ]
-        
-        if (allEvents.length > 0) {
-          // Filter events that have gallery images
-          const eventsWithGallery = allEvents.filter((e) => e.images && e.images.length > 0)
-          if (eventsWithGallery.length > 0) {
-            const randomEventIndex = Math.floor(Math.random() * eventsWithGallery.length)
-            const selectedEvent = eventsWithGallery[randomEventIndex]
-            
-            // Pick a random image from the event's gallery
-            const images = selectedEvent.images!
-            const randomImageIndex = Math.floor(Math.random() * images.length)
-            const galleryImage = images[randomImageIndex]
-            const fullImagePath = `${selectedEvent.imageFolder ?? ''}${galleryImage}`
-            
-            setRandomEventImage(fullImagePath)
-            setRandomEventName(selectedEvent.title ?? '')
-            setRandomEventDate(selectedEvent.date ?? '')
-          }
+        // Load DB-backed events and pick one for the hero side image.
+        const eventsRes = await fetch('/api/events', { cache: 'no-store' })
+        const eventsData = await eventsRes.json() as {
+          events?: Array<{ title?: string; date?: string; coverImage?: string; status?: string }>
+        }
+        const allEvents = eventsData.events || []
+        const activeEvents = allEvents.filter((e) => e.status !== 'Event Ended' && e.coverImage)
+        if (activeEvents.length > 0) {
+          const randomEventIndex = Math.floor(Math.random() * activeEvents.length)
+          const selectedEvent = activeEvents[randomEventIndex]
+          setRandomEventImage(normalizeImagePath(selectedEvent.coverImage, ''))
+          setRandomEventName(selectedEvent.title ?? '')
+          setRandomEventDate(selectedEvent.date ?? '')
         }
       } catch (error) {
         console.error('Failed to load data:', error)
@@ -83,7 +71,7 @@ export function Hero({
 
   // Use a default image during SSR
   const displayOverlayImage = backgroundImage
-  const displayRightImage = randomEventImage
+  const displayRightImage = normalizeImagePath(randomEventImage || image || displayOverlayImage, '/images/backgrounds/ambedkar-1.jpg')
 
   if (isLoading || !backgroundImage) {
     return <div className={`${heightClass}`}></div>

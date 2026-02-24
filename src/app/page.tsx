@@ -4,18 +4,50 @@ import { useSession } from 'next-auth/react'
 import { Hero } from '@/components/sections/hero'
 import { MissionPreview } from '@/components/sections/mission-preview'
 import { EventsPreview } from '@/components/sections/events-preview'
+import { normalizeImagePath } from '@/lib/image-path'
 
 interface Event {
   id: string
   title: string
   date: string
-  dateFormatted?: string
   location: string
   attendees: string
   category: string
   description: string
   image: string
+  imageKeys?: string[]
   status?: 'past' | 'upcoming'
+  registrationStatus?: 'open' | 'closed' | 'not-started'
+}
+
+type DbEvent = {
+  id: string
+  title: string
+  description: string
+  coverImage: string
+  date: string
+  time: string
+  location: string
+  eventType: string
+  eventImages: string
+  status: 'Upcoming' | 'Registration Started' | 'Event Ended'
+}
+
+function formatEventDate(dateStr: string) {
+  const date = new Date(`${dateStr}T00:00:00`)
+  return Number.isNaN(date.getTime())
+    ? dateStr
+    : date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+function parseImageKeys(raw: string) {
+  try {
+    const parsed = JSON.parse(raw || '[]') as unknown
+    if (!Array.isArray(parsed)) return [] as string[]
+    return parsed.map((key) => String(key))
+  } catch {
+    return [] as string[]
+  }
 }
 
 export default function Home() {
@@ -50,20 +82,38 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const eventsRes = await fetch('/data/events.json')
-        const eventsData = await eventsRes.json() as { upcomingEvents?: Event[]; pastEvents?: Event[] }
-        
-        // Combine past and upcoming events
-        const allEvents = [
-          ...(eventsData.upcomingEvents || []),
-          ...(eventsData.pastEvents || [])
-        ]
+        const res = await fetch('/api/events', { cache: 'no-store' })
+        if (!res.ok) throw new Error('Failed to load events')
+        const data = (await res.json()) as {
+          events: DbEvent[]
+          registrations: unknown[]
+          registrationCounts?: Record<string, number>
+        }
+        const allEvents: Event[] = data.events.map((event) => ({
+          id: event.id,
+          title: event.title,
+          date: formatEventDate(event.date),
+          location: event.location,
+          attendees: `${data.registrationCounts?.[event.id] ?? 0} registered`,
+          category: event.eventType,
+          description: event.description || 'Join us for this community event.',
+          image: normalizeImagePath(event.coverImage),
+          imageKeys: parseImageKeys(event.eventImages),
+          status: event.status === 'Event Ended' ? 'past' : 'upcoming',
+          registrationStatus:
+            event.status === 'Registration Started'
+              ? 'open'
+              : event.status === 'Upcoming'
+                ? 'not-started'
+                : 'closed',
+        }))
         setEvents(allEvents)
-        
-        // Get the next upcoming event for the hero image
-        const upcomingEvent = allEvents.find((e) => e.dateFormatted && new Date(e.dateFormatted) > new Date())
-        if (upcomingEvent?.image) {
-          setHeroImage(upcomingEvent.image)
+
+        const upcomingEvent = data.events
+          .filter((e) => e.status !== 'Event Ended')
+          .sort((a, b) => a.date.localeCompare(b.date))[0]
+        if (upcomingEvent?.coverImage) {
+          setHeroImage(normalizeImagePath(upcomingEvent.coverImage))
         }
       } catch (error) {
         console.error('Failed to load events:', error)

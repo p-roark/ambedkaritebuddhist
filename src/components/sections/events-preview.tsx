@@ -13,6 +13,7 @@ interface EventCard {
   category: string
   description: string
   image: string
+  imageKeys?: string[]
   status?: 'past' | 'upcoming'
   registrationFormUrl?: string
   registrationStatus?: 'open' | 'closed' | 'not-started'
@@ -32,7 +33,10 @@ export function EventsPreview({
   events,
 }: EventsPreviewProps) {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [thumbPageByEvent, setThumbPageByEvent] = useState<Record<string, number>>({})
   const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null
+  const pageSize = 4
+  const toImageSrc = (key: string) => `/api/events/image?key=${encodeURIComponent(key)}`
 
   return (
     <section className="py-20 md:py-32 bg-white">
@@ -98,6 +102,46 @@ export function EventsPreview({
                 <p className="text-text-medium mb-6 leading-relaxed">
                   {event.description}
                 </p>
+                {event.imageKeys && event.imageKeys.length > 0 && (
+                  <div className="mb-6">
+                    {(() => {
+                      const currentPage = thumbPageByEvent[event.id] ?? 0
+                      const totalPages = Math.ceil(event.imageKeys!.length / pageSize)
+                      const start = currentPage * pageSize
+                      const slice = event.imageKeys!.slice(start, start + pageSize)
+                      return (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            {slice.map((key) => (
+                              <div key={key} className="relative h-20 rounded-md overflow-hidden bg-gray-100">
+                                <Image src={toImageSrc(key)} alt={event.title} fill className="object-cover" sizes="120px" />
+                              </div>
+                            ))}
+                          </div>
+                          {totalPages > 1 && (
+                            <div className="mt-2 flex items-center justify-between text-xs">
+                              <button
+                                onClick={() => setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.max(0, currentPage - 1) }))}
+                                disabled={currentPage === 0}
+                                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
+                              >
+                                Prev
+                              </button>
+                              <span className="text-gray-500">Page {currentPage + 1} / {totalPages}</span>
+                              <button
+                                onClick={() => setThumbPageByEvent((prev) => ({ ...prev, [event.id]: Math.min(totalPages - 1, currentPage + 1) }))}
+                                disabled={currentPage >= totalPages - 1}
+                                className="px-2 py-1 rounded border border-gray-300 disabled:opacity-40"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )
+                    })()}
+                  </div>
+                )}
 
                 {event.status === 'past' ? (
                   <Link
@@ -122,12 +166,21 @@ export function EventsPreview({
                   </button>
                 ) : (
                   <div className="flex gap-3">
-                    <button
-                      onClick={() => setSelectedEventId(event.id)}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
-                    >
-                      Register Now
-                    </button>
+                    {event.registrationFormUrl ? (
+                      <button
+                        onClick={() => setSelectedEventId(event.id)}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
+                      >
+                        Register Now
+                      </button>
+                    ) : (
+                      <Link
+                        href="/events"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
+                      >
+                        Register Now
+                      </Link>
+                    )}
                     <Link
                       href="/contact?type=volunteer"
                       className="flex-1 inline-block px-6 py-3 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200 text-center"
