@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { normalizeImagePath } from '@/lib/image-path'
 
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended'
@@ -45,6 +46,7 @@ function getRegistrationLabel(status: string) {
 
 export default function EventsPage() {
   const { status } = useSession()
+  const router = useRouter()
   const [events, setEvents] = useState<EventItem[]>([])
   const [registrationByEvent, setRegistrationByEvent] = useState<Record<string, { registrationStatus: string; paymentStatus: string }>>({})
   const [loading, setLoading] = useState(true)
@@ -120,7 +122,7 @@ export default function EventsPage() {
   const registerForEvent = async () => {
     if (!selectedEvent) return
     if (status !== 'authenticated') {
-      setMessage('Please sign in to register.')
+      router.push('/auth/login?callbackUrl=/events')
       return
     }
 
@@ -210,6 +212,10 @@ export default function EventsPage() {
                 ) : event.status === 'Registration Started' ? (
                   <button
                     onClick={() => {
+                      if (status !== 'authenticated') {
+                        router.push('/auth/login?callbackUrl=/events')
+                        return
+                      }
                       setSelectedEvent(event)
                       setMessage('')
                       setVolunteering(false)

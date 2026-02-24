@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 interface EventCard {
   id: string
@@ -32,8 +34,24 @@ export function EventsPreview({
   description,
   events,
 }: EventsPreviewProps) {
+  const { status } = useSession()
+  const router = useRouter()
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null
+
+  const handleRegisterClick = (event: EventCard) => {
+    if (status !== 'authenticated') {
+      router.push('/auth/login?callbackUrl=/events')
+      return
+    }
+
+    if (event.registrationFormUrl) {
+      setSelectedEventId(event.id)
+      return
+    }
+
+    router.push('/events')
+  }
 
   return (
     <section className="py-20 md:py-32 bg-white">
@@ -122,21 +140,12 @@ export function EventsPreview({
                   </button>
                 ) : (
                   <div className="flex gap-3">
-                    {event.registrationFormUrl ? (
-                      <button
-                        onClick={() => setSelectedEventId(event.id)}
-                        className="px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
-                      >
-                        Register Now
-                      </button>
-                    ) : (
-                      <Link
-                        href="/events"
-                        className="px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
-                      >
-                        Register Now
-                      </Link>
-                    )}
+                    <button
+                      onClick={() => handleRegisterClick(event)}
+                      className="px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
+                    >
+                      Register Now
+                    </button>
                   </div>
                 )}
               </div>
