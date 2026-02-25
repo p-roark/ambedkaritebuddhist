@@ -1,5 +1,4 @@
 import NextAuth from 'next-auth';
-import FacebookProvider from 'next-auth/providers/facebook';
 import GoogleProvider from 'next-auth/providers/google';
 
 const providers = [];
@@ -13,15 +12,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   );
 }
 
-if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
-  providers.push(
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-    }),
-  );
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
 
@@ -30,8 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     // Only allow OAuth sign-in with a real email
     async signIn({ user, account }) {
-      const allowedProviders = ['google', 'facebook'];
-      return allowedProviders.includes(account?.provider ?? '') && Boolean(user.email);
+      return account?.provider === 'google' && Boolean(user.email);
     },
 
     async jwt({ token }) {

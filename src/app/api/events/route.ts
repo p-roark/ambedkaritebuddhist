@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { and, desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { eventCoordinators, eventRegistrations, events, users } from '@/db/schema';
@@ -8,7 +7,7 @@ import { auth } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-export async function GET(request: Request) {
+export async function GET() {
   const db = getDb();
   const rows = await db
     .select()
@@ -24,11 +23,7 @@ export async function GET(request: Request) {
   }, {});
 
   const session = await auth();
-  const token = await getToken({
-    req: request as any,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-  const email = String(session?.user?.email ?? token?.email ?? '').trim().toLowerCase();
+  const email = String(session?.user?.email ?? '').trim().toLowerCase();
 
   let registrations: Array<{
     eventId: string;

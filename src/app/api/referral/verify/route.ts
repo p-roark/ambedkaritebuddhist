@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { referralCodes, users } from '@/db/schema';
@@ -13,14 +12,7 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    const sessionEmail = String(session?.user?.email ?? '').trim().toLowerCase();
-
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-    });
-    const tokenEmail = String(token?.email ?? '').trim().toLowerCase();
-    const email = sessionEmail || tokenEmail;
+    const email = String(session?.user?.email ?? '').trim().toLowerCase();
 
     if (!email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -50,13 +42,12 @@ export async function POST(request: NextRequest) {
         id: userId,
         name: pickDisplayName({
           sessionName: session?.user?.name,
-          tokenName: String(token?.name ?? ''),
           email,
         }),
         email,
         passwordHash: '',
         role: 'MEMBER',
-        image: token?.picture ? String(token.picture) : null,
+        image: String(session?.user?.image ?? '') || null,
         emailVerified: now,
         createdAt: now,
         updatedAt: now,

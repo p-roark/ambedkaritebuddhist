@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['next-auth', 'drizzle-orm'],
+  },
   images: {
     localPatterns: [
       {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq } from 'drizzle-orm';
-import { getToken } from 'next-auth/jwt';
 import { getDb } from '@/db';
 import { familyMembers, users } from '@/db/schema';
 import { auth } from '@/lib/auth';
@@ -9,13 +8,9 @@ import { pickDisplayName } from '@/lib/user-name';
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-async function getOrCreateUserId(request: NextRequest) {
+async function getOrCreateUserId() {
   const session = await auth();
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-  const email = String(session?.user?.email ?? token?.email ?? '').trim().toLowerCase();
+  const email = String(session?.user?.email ?? '').trim().toLowerCase();
   if (!email) return null;
 
   const db = getDb();
@@ -34,13 +29,12 @@ async function getOrCreateUserId(request: NextRequest) {
     id: userId,
     name: pickDisplayName({
       sessionName: session?.user?.name,
-      tokenName: String(token?.name ?? ''),
       email,
     }),
     email,
     passwordHash: '',
     role: 'MEMBER',
-    image: String(session?.user?.image ?? token?.picture ?? '') || null,
+    image: String(session?.user?.image ?? '') || null,
     emailVerified: now,
     createdAt: now,
     updatedAt: now,
@@ -49,8 +43,8 @@ async function getOrCreateUserId(request: NextRequest) {
   return userId;
 }
 
-export async function GET(request: NextRequest) {
-  const userId = await getOrCreateUserId(request);
+export async function GET(_request: NextRequest) {
+  const userId = await getOrCreateUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = getDb();
@@ -63,7 +57,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getOrCreateUserId(request);
+  const userId = await getOrCreateUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = (await request.json()) as {
@@ -96,7 +90,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const userId = await getOrCreateUserId(request);
+  const userId = await getOrCreateUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = (await request.json()) as {
@@ -125,7 +119,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const userId = await getOrCreateUserId(request);
+  const userId = await getOrCreateUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = (await request.json()) as { id?: string };

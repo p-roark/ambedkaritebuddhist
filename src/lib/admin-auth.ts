@@ -1,5 +1,4 @@
 import { and, eq } from 'drizzle-orm';
-import { getToken } from 'next-auth/jwt';
 import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getDb } from '@/db';
@@ -22,22 +21,14 @@ function getAdminEmails() {
     .filter(Boolean);
 }
 
-export async function requireAdmin(request: NextRequest): Promise<AdminContext | null> {
+export async function requireAdmin(_request: NextRequest): Promise<AdminContext | null> {
   const session = await auth();
-  const sessionEmail = String(session?.user?.email ?? '').trim().toLowerCase();
-  const sessionRole = String(session?.user?.role ?? '').trim().toUpperCase();
+  const email = String(session?.user?.email ?? '').trim().toLowerCase();
+  const role = String(session?.user?.role ?? '').trim().toUpperCase();
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-  const tokenEmail = String(token?.email ?? '').trim().toLowerCase();
-  const tokenRole = String(token?.role ?? '').trim().toUpperCase();
-
-  const email = sessionEmail || tokenEmail;
   if (!email) return null;
 
-  if (sessionRole === 'ADMIN' || tokenRole === 'ADMIN' || getAdminEmails().includes(email)) {
+  if (role === 'ADMIN' || getAdminEmails().includes(email)) {
     return { email };
   }
 
@@ -74,20 +65,9 @@ export async function requireAdminOrCoordinator(
     return { email: admin.email, isAdmin: true, userId: '' };
   }
 
-  // Use auth() first (NextAuth v5 compatible), fall back to getToken
   const session = await auth();
-  const sessionEmail = String(session?.user?.email ?? '').trim().toLowerCase();
-  const sessionUserId = String(session?.user?.id ?? '').trim();
-
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-  const tokenEmail = String(token?.email ?? '').trim().toLowerCase();
-  const tokenUserId = String(token?.sub ?? '').trim();
-
-  const email = sessionEmail || tokenEmail;
-  const userId = sessionUserId || tokenUserId;
+  const email = String(session?.user?.email ?? '').trim().toLowerCase();
+  const userId = String(session?.user?.id ?? '').trim();
 
   if (!email || !userId) return null;
 
@@ -114,20 +94,11 @@ export async function requireAdminOrCoordinator(
 }
 
 /**
- * Returns the authenticated user's DB id (sub) from the JWT token,
+ * Returns the authenticated user's DB id from the session,
  * without requiring admin role. Used for coordinator-only endpoints.
  */
-export async function getAuthenticatedUserId(request: NextRequest): Promise<string | null> {
-  // Use auth() first (NextAuth v5 compatible)
+export async function getAuthenticatedUserId(_request: NextRequest): Promise<string | null> {
   const session = await auth();
-  const sessionUserId = String(session?.user?.id ?? '').trim();
-  if (sessionUserId) return sessionUserId;
-
-  // Fallback to getToken
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-  const userId = String(token?.sub ?? '').trim();
+  const userId = String(session?.user?.id ?? '').trim();
   return userId || null;
 }

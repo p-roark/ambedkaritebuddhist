@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { and, eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
@@ -11,11 +10,7 @@ export const runtime = 'edge';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-  const email = String(session?.user?.email ?? token?.email ?? '').trim().toLowerCase();
+  const email = String(session?.user?.email ?? '').trim().toLowerCase();
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id: eventId } = await params;
@@ -54,13 +49,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       id: userId,
       name: pickDisplayName({
         sessionName: session?.user?.name,
-        tokenName: String(token?.name ?? ''),
         email,
       }),
       email,
       passwordHash: '',
       role: 'MEMBER',
-      image: String(session?.user?.image ?? token?.picture ?? '') || null,
+      image: String(session?.user?.image ?? '') || null,
       emailVerified: now,
       createdAt: now,
       updatedAt: now,

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
-import { getToken } from 'next-auth/jwt';
 import { auth } from '@/lib/auth';
 import { getDb } from '@/db';
 import { users, contactMessages } from '@/db/schema';
@@ -8,13 +7,9 @@ import { users, contactMessages } from '@/db/schema';
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const session = await auth();
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-  const email = String(session?.user?.email ?? token?.email ?? '').trim().toLowerCase();
+  const email = String(session?.user?.email ?? '').trim().toLowerCase();
 
   if (!email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
