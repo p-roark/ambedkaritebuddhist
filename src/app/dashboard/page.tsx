@@ -207,7 +207,6 @@ export default function DashboardPage() {
   }
   if (!session) return null;
   const isAdmin = session.user.role === 'ADMIN';
-  const isCoordinator = !isAdmin;
 
   const activeMembers = members.filter((m) => m.status === 'active');
   const inactiveMembers = members.filter((m) => m.status !== 'active');
