@@ -131,7 +131,7 @@ export default function DashboardPage() {
   }, [status, router]);
 
   const loadLeadership = async () => {
-    const res = await fetch('/api/admin/leadership', { cache: 'no-store' });
+    const res = await fetch('/api/admin/members?resource=leadership', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to load leadership');
     const data = (await res.json()) as { roles: LeadershipRole[] };
     setLeadershipRolesList(data.roles);
@@ -256,26 +256,30 @@ export default function DashboardPage() {
 
   const handleAddRole = async () => {
     if (!newRoleName.trim()) return;
-    await fetch('/api/admin/leadership', {
-      method: 'POST',
+    await fetch('/api/admin/members', {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roleName: newRoleName.trim() }),
+      body: JSON.stringify({ action: 'leadershipCreate', roleName: newRoleName.trim() }),
     });
     setNewRoleName('');
     await loadLeadership();
   };
 
   const handleUpdateRole = async (id: string, patch: { roleName?: string; userId?: string | null }) => {
-    await fetch('/api/admin/leadership', {
+    await fetch('/api/admin/members', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, ...patch }),
+      body: JSON.stringify({ action: 'leadershipUpdate', id, ...patch }),
     });
     await loadLeadership();
   };
 
   const handleDeleteRole = async (id: string) => {
-    await fetch(`/api/admin/leadership?id=${id}`, { method: 'DELETE' });
+    await fetch('/api/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'leadershipDelete', id }),
+    });
     await loadLeadership();
   };
 
@@ -287,15 +291,15 @@ export default function DashboardPage() {
     const a = leadershipRolesList[idx];
     const b = leadershipRolesList[swapIdx];
     await Promise.all([
-      fetch('/api/admin/leadership', {
+      fetch('/api/admin/members', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: a.id, displayOrder: b.displayOrder }),
+        body: JSON.stringify({ action: 'leadershipUpdate', id: a.id, displayOrder: b.displayOrder }),
       }),
-      fetch('/api/admin/leadership', {
+      fetch('/api/admin/members', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: b.id, displayOrder: a.displayOrder }),
+        body: JSON.stringify({ action: 'leadershipUpdate', id: b.id, displayOrder: a.displayOrder }),
       }),
     ]);
     await loadLeadership();

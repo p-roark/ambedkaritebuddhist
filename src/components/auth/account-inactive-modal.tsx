@@ -20,7 +20,7 @@ export function AccountInactiveModal() {
     setSending(true);
     setError('');
     try {
-      const res = await fetch('/api/activation-request', { method: 'POST' });
+      const res = await fetch('/api/me/status', { method: 'POST' });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
         setError(data.error ?? 'Failed to send request. Please try again.');

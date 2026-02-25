@@ -1,13 +1,35 @@
-import { NextResponse } from 'next/server';
-import { and, desc, eq } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { eventCoordinators, eventRegistrations, events, users } from '@/db/schema';
+import { eventCoordinators, eventRegistrations, events, leadershipRoles, users } from '@/db/schema';
 import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Public leadership resource — no auth required
+  const { searchParams } = new URL(request.url);
+  if (searchParams.get('resource') === 'leadership') {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: leadershipRoles.id,
+        roleName: leadershipRoles.roleName,
+        displayOrder: leadershipRoles.displayOrder,
+        userId: leadershipRoles.userId,
+        userName: users.name,
+        userEmail: users.email,
+        userPhone: users.phone,
+        userJoinedAt: users.createdAt,
+      })
+      .from(leadershipRoles)
+      .leftJoin(users, eq(leadershipRoles.userId, users.id))
+      .where(isNotNull(leadershipRoles.userId))
+      .orderBy(asc(leadershipRoles.displayOrder));
+    return NextResponse.json({ roles: rows }, { status: 200 });
+  }
+
   const db = getDb();
   const rows = await db
     .select()

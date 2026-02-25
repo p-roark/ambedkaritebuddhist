@@ -2,37 +2,6 @@
 
 import { useEffect, useState } from 'react'
 
-interface AboutData {
-  mission: {
-    title: string
-    description: string
-    points: Array<{
-      id: string
-      title: string
-      description: string
-    }>
-  }
-  values: Array<{
-    id: string
-    title: string
-    description: string
-    emoji: string
-  }>
-  history: {
-    title: string
-    description: string
-    milestones: Array<{
-      year: string
-      title: string
-      description: string
-    }>
-  }
-  team: {
-    title: string
-    description: string
-  }
-}
-
 interface LeadershipRole {
   id: string
   roleName: string
@@ -45,21 +14,15 @@ interface LeadershipRole {
 }
 
 export default function About() {
-  const [data, setData] = useState<AboutData | null>(null)
   const [leadership, setLeadership] = useState<LeadershipRole[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [aboutRes, leadershipRes] = await Promise.all([
-          fetch('/data/about.json'),
-          fetch('/api/leadership'),
-        ])
-        const aboutData: AboutData = await aboutRes.json()
-        const leadershipData = (await leadershipRes.json()) as { roles: LeadershipRole[] }
-        setData(aboutData)
-        setLeadership(leadershipData.roles)
+        const res = await fetch('/api/events?resource=leadership')
+        const data = (await res.json()) as { roles: LeadershipRole[] }
+        setLeadership(data.roles)
       } catch (error) {
         console.error('Failed to load about data:', error)
       } finally {
@@ -74,14 +37,6 @@ export default function About() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-lg text-text-medium">Loading...</p>
-      </div>
-    )
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-lg text-text-medium">Failed to load about page</p>
       </div>
     )
   }
@@ -101,16 +56,42 @@ export default function About() {
       {/* Mission Section */}
       <section id="mission" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="mb-16">
-          <h2 className="text-4xl font-bold text-text-dark mb-6">{data.mission.title}</h2>
-          <p className="text-lg text-text-medium leading-relaxed mb-12">{data.mission.description}</p>
+          <h2 className="text-4xl font-bold text-text-dark mb-6">Our Mission</h2>
+          <p className="text-lg text-text-medium leading-relaxed mb-12">
+            We are a nonprofit organization dedicated to building an inclusive digital home for
+            Ambedkarite Buddhists in Canada. We celebrate our heritage, support newcomers, and
+            promote the teachings of Dr. B.R. Ambedkar and Buddhism.
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {data.mission.points.map((point) => (
-              <div key={point.id} className="bg-background-light rounded-lg p-6">
-                <h3 className="text-xl font-bold text-primary-blue mb-3">{point.title}</h3>
-                <p className="text-text-medium">{point.description}</p>
-              </div>
-            ))}
+            <div className="bg-background-light rounded-lg p-6">
+              <h3 className="text-xl font-bold text-primary-blue mb-3">Community Building</h3>
+              <p className="text-text-medium">
+                Connecting Ambedkarite Buddhists across Canada to foster a strong, united community
+                rooted in the principles of equality, justice, and compassion.
+              </p>
+            </div>
+            <div className="bg-background-light rounded-lg p-6">
+              <h3 className="text-xl font-bold text-primary-blue mb-3">Supporting Newcomers</h3>
+              <p className="text-text-medium">
+                Providing resources, mentorship, and a welcoming network for those newly arrived in
+                Canada, helping them navigate their new home with confidence.
+              </p>
+            </div>
+            <div className="bg-background-light rounded-lg p-6">
+              <h3 className="text-xl font-bold text-primary-blue mb-3">Preserving Heritage</h3>
+              <p className="text-text-medium">
+                Celebrating and preserving Ambedkarite Buddhist culture, traditions, and the
+                transformative legacy of Dr. B.R. Ambedkar.
+              </p>
+            </div>
+            <div className="bg-background-light rounded-lg p-6">
+              <h3 className="text-xl font-bold text-primary-blue mb-3">Nonprofit Transparency</h3>
+              <p className="text-text-medium">
+                Operating with full transparency in our finances and governance, ensuring every
+                contribution serves the community&apos;s best interests.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -121,8 +102,15 @@ export default function About() {
           <h2 className="text-4xl font-bold text-text-dark mb-12 text-center">Our Core Values</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {data.values.map((value) => (
-              <div key={value.id} className="bg-white rounded-lg p-8 shadow-sm hover:shadow-lg transition-shadow">
+            {[
+              { emoji: '⚖️', title: 'Equality', description: 'Every member is equal. We stand against caste discrimination and champion human dignity for all.' },
+              { emoji: '☸️', title: 'Dhamma', description: "We walk the path of the Buddha as understood through Dr. Ambedkar's teachings of rationality and compassion." },
+              { emoji: '🤝', title: 'Brotherhood', description: 'We build bonds of solidarity among Ambedkarite Buddhists in Canada and around the world.' },
+              { emoji: '📚', title: 'Education', description: 'Knowledge is liberation. We promote education as the cornerstone of social transformation.' },
+              { emoji: '🪷', title: 'Compassion', description: 'We act with karuna — compassion — toward all beings, guiding our community service.' },
+              { emoji: '🌍', title: 'Inclusion', description: 'Our doors are open to all who respect our values. Diversity strengthens our community.' },
+            ].map((value) => (
+              <div key={value.title} className="bg-white rounded-lg p-8 shadow-sm hover:shadow-lg transition-shadow">
                 <div className="text-4xl mb-4">{value.emoji}</div>
                 <h3 className="text-xl font-bold text-text-dark mb-3">{value.title}</h3>
                 <p className="text-text-medium">{value.description}</p>
@@ -132,37 +120,14 @@ export default function About() {
         </div>
       </section>
 
-      {/* History Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-4xl font-bold text-text-dark mb-6 text-center">{data.history.title}</h2>
-        <p className="text-lg text-text-medium text-center mb-12 max-w-3xl mx-auto">{data.history.description}</p>
-
-        <div className="space-y-8">
-          {data.history.milestones.map((milestone, index) => (
-            <div key={milestone.year} className="flex gap-6">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-primary-saffron rounded-full flex items-center justify-center text-white font-bold">
-                  {milestone.year}
-                </div>
-                {index < data.history.milestones.length - 1 && (
-                  <div className="w-1 h-24 bg-primary-saffron/30 mt-4"></div>
-                )}
-              </div>
-              <div className="pb-8">
-                <h3 className="text-xl font-bold text-text-dark mb-2">{milestone.title}</h3>
-                <p className="text-text-medium">{milestone.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Leadership Section */}
       {leadership.length > 0 && (
         <section className="bg-background-light py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl font-bold text-text-dark mb-6 text-center">{data.team.title}</h2>
-            <p className="text-lg text-text-medium text-center mb-12 max-w-3xl mx-auto">{data.team.description}</p>
+            <h2 className="text-4xl font-bold text-text-dark mb-6 text-center">Our Leadership</h2>
+            <p className="text-lg text-text-medium text-center mb-12 max-w-3xl mx-auto">
+              Meet the dedicated volunteers who guide our community.
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {leadership.map((role) => (
