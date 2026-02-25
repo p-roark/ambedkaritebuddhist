@@ -137,7 +137,6 @@ export default function AdminEventPage() {
 
   useEffect(() => {
     if (!eventId || status !== 'authenticated') return;
-    const isAdminUser = session?.user?.role === 'ADMIN';
     let alive = true;
     const run = async () => {
       try {
