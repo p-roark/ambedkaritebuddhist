@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-export function Navigation() {
+export function Navigation({ shortName = 'ABC Canada' }: { shortName?: string }) {
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const [sessionState, setSessionState] = useState(session)
@@ -23,7 +23,7 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex-shrink-0 font-poppins font-bold text-xl md:text-2xl text-primary-blue">
-            ABC Canada
+            {shortName}
           </Link>
 
           <div className="hidden md:flex items-center space-x-1">
