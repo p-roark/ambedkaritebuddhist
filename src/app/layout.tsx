@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import AuthSessionProvider from '@/components/providers/session-provider'
 import { MembershipGate } from '@/components/auth/membership-gate'
+import { AccountInactiveModal } from '@/components/auth/account-inactive-modal'
 import '@/styles/variables.css'
 import '@/styles/globals.css'
 
@@ -52,6 +53,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           <Header />
           <MembershipGate />
+          <AccountInactiveModal />
           <main className="flex-grow">{children}</main>
           <Footer />
         </AuthSessionProvider>

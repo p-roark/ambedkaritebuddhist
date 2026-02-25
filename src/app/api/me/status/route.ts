@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const now = new Date().toISOString();
 
     let user = await db
-      .select({ id: users.id, role: users.role, referredBy: users.referredBy })
+      .select({ id: users.id, role: users.role, referredBy: users.referredBy, status: users.status, activationRequestStatus: users.activationRequestStatus })
       .from(users)
       .where(eq(users.email, email))
       .limit(1)
@@ -50,14 +50,14 @@ export async function GET(request: NextRequest) {
         updatedAt: now,
       });
 
-      user = { id: userId, role: 'MEMBER', referredBy: null };
+      user = { id: userId, role: 'MEMBER', referredBy: null, status: 'active', activationRequestStatus: 'none' };
     }
 
     const isMember =
       Boolean(user.referredBy) || user.role === 'ADMIN' || user.role === 'LEADER';
 
     return NextResponse.json(
-      { id: user.id, role: user.role, isMember },
+      { id: user.id, role: user.role, isMember, status: user.status, activationRequestStatus: user.activationRequestStatus },
       { status: 200 },
     );
   } catch (error) {

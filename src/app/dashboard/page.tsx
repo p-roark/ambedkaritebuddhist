@@ -7,13 +7,23 @@ import Link from 'next/link';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'members' | 'events' | 'referrals' | 'messages';
+type Tab = 'leadership' | 'members' | 'events' | 'referrals' | 'messages';
+
+type LeadershipRole = {
+  id: string;
+  roleName: string;
+  displayOrder: number;
+  userId: string | null;
+  userName: string | null;
+  userEmail: string | null;
+};
 
 type Member = {
   id: string;
   name: string;
   email: string;
   role: string;
+  status: string;
   joinedAt: string;
 };
 
@@ -50,6 +60,8 @@ type ContactMessage = {
   subject: string;
   message: string;
   status: 'PENDING' | 'RESOLVED';
+  type: 'CONTACT' | 'ACTIVATION_REQUEST';
+  userId: string | null;
   adminNote: string | null;
   createdAt: string;
   updatedAt: string;
@@ -83,8 +95,10 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<Tab>('members');
+  const [activeTab, setActiveTab] = useState<Tab>('leadership');
   const [loading, setLoading] = useState(true);
+  const [leadershipRolesList, setLeadershipRolesList] = useState<LeadershipRole[]>([]);
+  const [newRoleName, setNewRoleName] = useState('');
   const [members, setMembers] = useState<Member[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
@@ -105,7 +119,7 @@ export default function DashboardPage() {
   const [newEventStatus, setNewEventStatus] = useState<EventStatus>('Upcoming');
   const [newEventMessage, setNewEventMessage] = useState('');
 
-  const [confirmRemoveMemberId, setConfirmRemoveMemberId] = useState<string | null>(null);
+  const [confirmDeactivateMemberId, setConfirmDeactivateMemberId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [maxUses, setMaxUses] = useState(10);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -120,6 +134,13 @@ export default function DashboardPage() {
       router.push('/');
     }
   }, [status, session?.user?.role, router]);
+
+  const loadLeadership = async () => {
+    const res = await fetch('/api/admin/leadership', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load leadership');
+    const data = (await res.json()) as { roles: LeadershipRole[] };
+    setLeadershipRolesList(data.roles);
+  };
 
   const loadMembers = async () => {
     const res = await fetch('/api/admin/members', { cache: 'no-store' });
@@ -154,7 +175,7 @@ export default function DashboardPage() {
     let alive = true;
     const loadAll = async () => {
       try {
-        await Promise.all([loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
+        await Promise.all([loadLeadership(), loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
       } catch (error) {
         console.error(error);
       } finally {
@@ -177,14 +198,19 @@ export default function DashboardPage() {
   if (!session) return null;
   if (session.user.role !== 'ADMIN') return null;
 
+  const activeMembers = members.filter((m) => m.status === 'active');
+  const inactiveMembers = members.filter((m) => m.status !== 'active');
+  const activationRequests = messages.filter((m) => m.type === 'ACTIVATION_REQUEST' && m.status === 'PENDING');
+  const pendingMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'PENDING');
+  const resolvedMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'RESOLVED');
+
   const tabs: Array<{ id: Tab; label: string }> = [
-    { id: 'members', label: `Members (${members.length})` },
+    { id: 'leadership', label: `Leadership (${leadershipRolesList.length})` },
+    { id: 'members', label: `Members (${activeMembers.length} active${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
     { id: 'events', label: `Events (${events.length})` },
     { id: 'referrals', label: 'Referral Codes' },
-    { id: 'messages', label: `Messages (${messages.filter((m) => m.status === 'PENDING').length} pending)` },
+    { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
   ];
-  const pendingMessages = messages.filter((m) => m.status === 'PENDING');
-  const resolvedMessages = messages.filter((m) => m.status === 'RESOLVED');
 
   const handleRoleChange = async (memberId: string, role: Role) => {
     const res = await fetch('/api/admin/members', {
@@ -196,14 +222,71 @@ export default function DashboardPage() {
     await loadMembers();
   };
 
-  const handleRemoveMember = async (memberId: string) => {
+  const handleDeactivateMember = async (memberId: string) => {
     const res = await fetch('/api/admin/members', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'removeMember', userId: memberId }),
+      body: JSON.stringify({ action: 'deactivateMember', userId: memberId }),
     });
     if (!res.ok) return;
     await loadMembers();
+  };
+
+  const handleActivateMember = async (memberId: string) => {
+    const res = await fetch('/api/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'activateMember', userId: memberId }),
+    });
+    if (!res.ok) return;
+    await loadMembers();
+  };
+
+  const handleAddRole = async () => {
+    if (!newRoleName.trim()) return;
+    await fetch('/api/admin/leadership', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roleName: newRoleName.trim() }),
+    });
+    setNewRoleName('');
+    await loadLeadership();
+  };
+
+  const handleUpdateRole = async (id: string, patch: { roleName?: string; userId?: string | null }) => {
+    await fetch('/api/admin/leadership', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...patch }),
+    });
+    await loadLeadership();
+  };
+
+  const handleDeleteRole = async (id: string) => {
+    await fetch(`/api/admin/leadership?id=${id}`, { method: 'DELETE' });
+    await loadLeadership();
+  };
+
+  const handleMoveRole = async (id: string, direction: 'up' | 'down') => {
+    const idx = leadershipRolesList.findIndex((r) => r.id === id);
+    if (idx === -1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= leadershipRolesList.length) return;
+    const a = leadershipRolesList[idx];
+    const b = leadershipRolesList[swapIdx];
+    await Promise.all([
+      fetch('/api/admin/leadership', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: a.id, displayOrder: b.displayOrder }),
+      }),
+      fetch('/api/admin/leadership', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: b.id, displayOrder: a.displayOrder }),
+      }),
+    ]);
+    await loadLeadership();
   };
 
   const handleAddEvent = async () => {
@@ -366,34 +449,121 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'leadership' && (
+          <div className="space-y-6">
+            {/* Add new role */}
+            <section className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Leadership Role</h2>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void handleAddRole(); }}
+                  placeholder="e.g. President, Secretary, Treasurer…"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleAddRole}
+                  disabled={!newRoleName.trim()}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-40"
+                >
+                  Add Role
+                </button>
+              </div>
+            </section>
+
+            {/* Role list */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Leadership Roles</h2>
+              {leadershipRolesList.length === 0 ? (
+                <p className="text-sm text-gray-500">No roles yet. Add one above.</p>
+              ) : (
+                <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
+                  {leadershipRolesList.map((role, idx) => (
+                    <div key={role.id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                      {/* Role name */}
+                      <input
+                        value={role.roleName}
+                        onChange={(e) =>
+                          setLeadershipRolesList((prev) =>
+                            prev.map((r) => r.id === role.id ? { ...r, roleName: e.target.value } : r)
+                          )
+                        }
+                        onBlur={(e) => {
+                          if (e.target.value.trim() && e.target.value.trim() !== role.roleName)
+                            void handleUpdateRole(role.id, { roleName: e.target.value.trim() });
+                        }}
+                        className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+
+                      {/* Member assignment */}
+                      <select
+                        value={role.userId ?? ''}
+                        onChange={(e) => void handleUpdateRole(role.id, { userId: e.target.value || null })}
+                        className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">— Unassigned —</option>
+                        {activeMembers.map((m) => (
+                          <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
+                        ))}
+                      </select>
+
+                      {/* Reorder + delete */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => void handleMoveRole(role.id, 'up')}
+                          disabled={idx === 0}
+                          title="Move up"
+                          className="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => void handleMoveRole(role.id, 'down')}
+                          disabled={idx === leadershipRolesList.length - 1}
+                          title="Move down"
+                          className="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30"
+                        >
+                          ▼
+                        </button>
+                        <button
+                          onClick={() => void handleDeleteRole(role.id)}
+                          title="Remove role"
+                          className="p-1.5 rounded text-red-400 hover:text-red-700 hover:bg-red-50"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
         {activeTab === 'members' && (
           <div className="space-y-8">
+            {/* Active Members */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">All Members</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Members ({activeMembers.length})</h2>
               <div className="bg-white shadow rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       {['Member', 'Email', 'Role', 'Joined', 'Actions'].map((h) => (
-                        <th
-                          key={h}
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          {h}
-                        </th>
+                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {members.map((m) => {
+                    {activeMembers.map((m) => {
                       const isSelf = m.email.toLowerCase() === String(session.user.email ?? '').toLowerCase();
                       const normalizedRole: Role = m.role === 'ADMIN' ? 'ADMIN' : 'MEMBER';
-
                       return (
                         <tr key={m.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {m.name}
-                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{m.name}</td>
                           <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
@@ -401,9 +571,7 @@ export default function DashboardPage() {
                                 value={normalizedRole}
                                 onChange={(e) => handleRoleChange(m.id, e.target.value as Role)}
                                 disabled={isSelf}
-                                className={`px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                  isSelf ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
-                                }`}
+                                className={`px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSelf ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
                               >
                                 <option value="ADMIN">Admin</option>
                                 <option value="MEMBER">Member</option>
@@ -416,20 +584,72 @@ export default function DashboardPage() {
                           <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
                           <td className="px-6 py-4">
                             <button
-                              onClick={() => setConfirmRemoveMemberId(m.id)}
+                              onClick={() => setConfirmDeactivateMemberId(m.id)}
                               disabled={isSelf}
                               className={`px-3 py-1.5 text-xs font-medium rounded ${
                                 isSelf
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                               }`}
                             >
-                              Remove
+                              Deactivate
                             </button>
                           </td>
                         </tr>
                       );
                     })}
+                    {activeMembers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">No active members.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Inactive Members */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Inactive Members ({inactiveMembers.length})</h2>
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {['Member', 'Email', 'Status', 'Joined', 'Actions'].map((h) => (
+                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {inactiveMembers.map((m) => (
+                      <tr key={m.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{m.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            m.status === 'blocked'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {m.status === 'blocked' ? 'Blocked' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleActivateMember(m.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200"
+                          >
+                            Activate
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {inactiveMembers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">No inactive members.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -700,6 +920,61 @@ export default function DashboardPage() {
 
         {activeTab === 'messages' && (
           <div className="space-y-8">
+            {/* Activation Requests */}
+            {activationRequests.length > 0 && (
+              <section>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Activation Requests ({activationRequests.length})</h2>
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-amber-50">
+                      <tr>
+                        {['Member', 'Email', 'Requested', 'Actions'].map((h) => (
+                          <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {activationRequests.map((m) => (
+                        <tr key={m.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{m.name}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{m.createdAt}</td>
+                          <td className="px-6 py-4 space-x-2">
+                            <button
+                              onClick={async () => {
+                                await fetch('/api/admin/messages', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: m.id, action: 'accept' }),
+                                });
+                                await Promise.all([loadMessages(), loadMembers()]);
+                              }}
+                              className="px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={async () => {
+                                await fetch('/api/admin/messages', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: m.id, action: 'reject' }),
+                                });
+                                await Promise.all([loadMessages(), loadMembers()]);
+                              }}
+                              className="px-3 py-1.5 text-xs font-medium rounded bg-red-100 text-red-700 hover:bg-red-200"
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Messages</h2>
               <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -811,30 +1086,30 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {confirmRemoveMemberId && (
+      {confirmDeactivateMemberId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm">
             <div className="px-6 py-5">
-              <h3 className="text-base font-semibold text-gray-900 mb-2">Remove member?</h3>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Deactivate member?</h3>
               <p className="text-sm text-gray-600">
-                This will permanently delete the member&apos;s account and all associated data. This action cannot be undone.
+                This will deactivate the member&apos;s account. They will not be able to access the site until reactivated. The member can request reactivation, which you can approve or reject.
               </p>
             </div>
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
               <button
-                onClick={() => setConfirmRemoveMemberId(null)}
+                onClick={() => setConfirmDeactivateMemberId(null)}
                 className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={async () => {
-                  await handleRemoveMember(confirmRemoveMemberId);
-                  setConfirmRemoveMemberId(null);
+                  await handleDeactivateMember(confirmDeactivateMemberId);
+                  setConfirmDeactivateMemberId(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700"
               >
-                Remove
+                Deactivate
               </button>
             </div>
           </div>

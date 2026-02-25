@@ -30,42 +30,36 @@ interface AboutData {
   team: {
     title: string
     description: string
-    members: Array<{
-      id: string
-      role: string
-    }>
   }
 }
 
-interface Member {
+interface LeadershipRole {
   id: string
-  name: string
-  phone: string
-  email: string
-  joinedDate: string
-}
-
-interface MembersData {
-  members: Member[]
+  roleName: string
+  displayOrder: number
+  userId: string | null
+  userName: string | null
+  userEmail: string | null
+  userPhone: string | null
+  userJoinedAt: string | null
 }
 
 export default function About() {
   const [data, setData] = useState<AboutData | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
+  const [leadership, setLeadership] = useState<LeadershipRole[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadAboutData = async () => {
+    const loadData = async () => {
       try {
-        // Fetch about data
-        const aboutResponse = await fetch('/data/about.json')
-        const aboutData: AboutData = await aboutResponse.json()
+        const [aboutRes, leadershipRes] = await Promise.all([
+          fetch('/data/about.json'),
+          fetch('/api/leadership'),
+        ])
+        const aboutData: AboutData = await aboutRes.json()
+        const leadershipData = (await leadershipRes.json()) as { roles: LeadershipRole[] }
         setData(aboutData)
-
-        // Fetch members data
-        const membersResponse = await fetch('/data/members.json')
-        const membersData: MembersData = await membersResponse.json()
-        setMembers(membersData.members)
+        setLeadership(leadershipData.roles)
       } catch (error) {
         console.error('Failed to load about data:', error)
       } finally {
@@ -73,7 +67,7 @@ export default function About() {
       }
     }
 
-    loadAboutData()
+    void loadData()
   }, [])
 
   if (loading) {
@@ -163,40 +157,46 @@ export default function About() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="bg-background-light py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-text-dark mb-6 text-center">{data.team.title}</h2>
-          <p className="text-lg text-text-medium text-center mb-12 max-w-3xl mx-auto">{data.team.description}</p>
+      {/* Leadership Section */}
+      {leadership.length > 0 && (
+        <section className="bg-background-light py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl font-bold text-text-dark mb-6 text-center">{data.team.title}</h2>
+            <p className="text-lg text-text-medium text-center mb-12 max-w-3xl mx-auto">{data.team.description}</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {data.team.members.map((teamMember) => {
-              const member = members.find((m) => m.id === teamMember.id)
-              if (!member) return null
-
-              return (
-                <div key={member.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-shadow">
-                  <h3 className="text-lg font-bold text-text-dark mb-1">{teamMember.role}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {leadership.map((role) => (
+                <div key={role.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-shadow">
+                  <h3 className="text-lg font-bold text-text-dark mb-1">{role.roleName}</h3>
+                  <p className="text-base font-medium text-primary-blue mb-3">{role.userName}</p>
                   <div className="space-y-3 border-t border-gray-200 pt-4">
-                    <div>
-                      <p className="text-xs font-semibold text-text-medium">Email</p>
-                      <p className="text-sm text-text-dark">{member.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-text-medium">Phone</p>
-                      <p className="text-sm text-text-dark">{member.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-text-medium">Joined</p>
-                      <p className="text-sm text-text-dark">{member.joinedDate}</p>
-                    </div>
+                    {role.userEmail && (
+                      <div>
+                        <p className="text-xs font-semibold text-text-medium">Email</p>
+                        <p className="text-sm text-text-dark">{role.userEmail}</p>
+                      </div>
+                    )}
+                    {role.userPhone && (
+                      <div>
+                        <p className="text-xs font-semibold text-text-medium">Phone</p>
+                        <p className="text-sm text-text-dark">{role.userPhone}</p>
+                      </div>
+                    )}
+                    {role.userJoinedAt && (
+                      <div>
+                        <p className="text-xs font-semibold text-text-medium">Member since</p>
+                        <p className="text-sm text-text-dark">
+                          {new Date(role.userJoinedAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'long' })}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   )
 }

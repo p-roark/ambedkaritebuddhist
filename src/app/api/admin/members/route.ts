@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       name: users.name,
       email: users.email,
       role: users.role,
+      status: users.status,
       joinedAt: users.createdAt,
     })
     .from(users)
@@ -49,7 +50,7 @@ export async function PATCH(request: NextRequest) {
   if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = (await request.json()) as {
-    action?: 'setRole' | 'removeMember';
+    action?: 'setRole' | 'deactivateMember' | 'activateMember';
     userId?: string;
     role?: 'ADMIN' | 'MEMBER';
   };
@@ -63,7 +64,7 @@ export async function PATCH(request: NextRequest) {
   const now = new Date().toISOString();
 
   const targetUser = await db
-    .select({ email: users.email, role: users.role })
+    .select({ email: users.email, role: users.role, status: users.status })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1)
@@ -90,11 +91,32 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  if (action === 'removeMember') {
+  if (action === 'deactivateMember') {
     if (targetUser.role === 'ADMIN') {
-      return NextResponse.json({ error: 'Admins cannot remove other admins' }, { status: 400 });
+      return NextResponse.json({ error: 'Admins cannot deactivate other admins' }, { status: 400 });
     }
-    await db.delete(users).where(eq(users.id, userId));
+    await db
+      .update(users)
+      .set({
+        status: 'inactive',
+        activationRequestCount: 0,
+        activationRequestStatus: 'none',
+        updatedAt: now,
+      })
+      .where(eq(users.id, userId));
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  if (action === 'activateMember') {
+    await db
+      .update(users)
+      .set({
+        status: 'active',
+        activationRequestCount: 0,
+        activationRequestStatus: 'none',
+        updatedAt: now,
+      })
+      .where(eq(users.id, userId));
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 

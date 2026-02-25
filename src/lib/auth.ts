@@ -65,16 +65,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const db = getDb();
         const row = await db
-          .select({ role: users.role, id: users.id })
+          .select({ role: users.role, id: users.id, status: users.status, activationRequestStatus: users.activationRequestStatus })
           .from(users)
           .where(eq(users.email, tokenEmail))
           .limit(1)
           .then((r) => r[0]);
 
         if (row) {
-          token.role     = row.role;
-          token.isMember = true;
-          token.sub      = row.id;
+          token.role                    = row.role;
+          token.isMember                = true;
+          token.sub                     = row.id;
+          token.status                  = row.status;
+          token.activationRequestStatus = row.activationRequestStatus;
         } else {
           // New Google user — not yet in DB, needs referral code
           token.isMember = false;
@@ -88,9 +90,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async session({ session, token }) {
       if (token) {
-        session.user.id       = token.sub!;
-        session.user.role     = (token.role as string) ?? 'MEMBER';
-        session.user.isMember = Boolean(token.isMember);
+        session.user.id                     = token.sub!;
+        session.user.role                   = (token.role as string) ?? 'MEMBER';
+        session.user.isMember               = Boolean(token.isMember);
+        session.user.status                 = (token.status as string) ?? 'active';
+        session.user.activationRequestStatus = (token.activationRequestStatus as string) ?? 'none';
       }
       return session;
     },

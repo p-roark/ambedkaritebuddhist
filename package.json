@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "pages:build": "pnpm build && npx @cloudflare/next-on-pages",
+    "pages:build": "pnpm build && node -e \"const {execSync}=require('child_process');process.env.PATH=require('path').dirname(process.execPath)+';'+process.env.PATH;execSync('node node_modules/@cloudflare/next-on-pages/dist/cli.js',{stdio:'inherit',env:process.env})\"",
     "pages:dev": "pnpm pages:build && wrangler pages dev",
     "start": "next start",
     "lint": "next lint",

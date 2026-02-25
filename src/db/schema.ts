@@ -19,6 +19,9 @@ export const users = sqliteTable('User', {
   interests:    text('interests'),
   notes:        text('notes'),
   role:         text('role').notNull().default('MEMBER'), // ADMIN | LEADER | MEMBER | STUDENT
+  status:       text('status').notNull().default('active'), // active | inactive | blocked
+  activationRequestCount: integer('activationRequestCount').notNull().default(0),
+  activationRequestStatus: text('activationRequestStatus').notNull().default('none'), // none | pending | rejected
   emailVerified: text('emailVerified'),                  // ISO date string
   image:        text('image'),
   referredBy:   text('referredBy'),
@@ -151,12 +154,28 @@ export const contactMessages = sqliteTable('ContactMessage', {
   subject: text('subject').notNull(),
   message: text('message').notNull(),
   status: text('status').notNull().default('PENDING'), // PENDING | RESOLVED
+  type: text('type').notNull().default('CONTACT'), // CONTACT | ACTIVATION_REQUEST
+  userId: text('userId').references(() => users.id),
   adminNote: text('adminNote'),
   createdAt: text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updatedAt').notNull().default(sql`(datetime('now'))`),
 }, (t) => ({
   statusIdx: index('ContactMessage_status_idx').on(t.status),
   createdIdx: index('ContactMessage_createdAt_idx').on(t.createdAt),
+  typeIdx: index('ContactMessage_type_idx').on(t.type),
+}));
+
+// ─── Leadership roles ─────────────────────────────────────────────────────────
+
+export const leadershipRoles = sqliteTable('LeadershipRole', {
+  id:           text('id').primaryKey(),
+  roleName:     text('roleName').notNull(),
+  userId:       text('userId').references(() => users.id, { onDelete: 'set null' }),
+  displayOrder: integer('displayOrder').notNull().default(0),
+  createdAt:    text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt:    text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  orderIdx: index('LeadershipRole_displayOrder_idx').on(t.displayOrder),
 }));
 
 // ─── Inferred types ───────────────────────────────────────────────────────────

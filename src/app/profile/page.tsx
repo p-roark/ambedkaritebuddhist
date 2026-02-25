@@ -48,6 +48,7 @@ export default function ProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
 
@@ -195,47 +196,66 @@ export default function ProfilePage() {
               <span className="mb-1 block font-medium text-slate-700">Email</span>
               <input value={profile.email ?? ''} disabled className="w-full px-3 py-2 border border-slate-200 rounded-md bg-slate-100 text-slate-500" />
             </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Phone</span>
-              <input value={profile.phone ?? ''} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Alternate Phone</span>
-              <input value={profile.altPhone ?? ''} onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm md:col-span-2">
-              <span className="mb-1 block font-medium text-slate-700">Address Line 1</span>
-              <input value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm md:col-span-2">
-              <span className="mb-1 block font-medium text-slate-700">Address Line 2</span>
-              <input value={profile.addressLine2 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine2: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">City</span>
-              <input value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Province/State</span>
-              <input value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Postal Code</span>
-              <input value={profile.postalCode ?? ''} onChange={(e) => setProfile({ ...profile, postalCode: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm md:col-span-2">
-              <span className="mb-1 block font-medium text-slate-700">Education</span>
-              <input value={profile.education ?? ''} onChange={(e) => setProfile({ ...profile, education: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm md:col-span-2">
-              <span className="mb-1 block font-medium text-slate-700">Hobbies / Interests</span>
-              <input value={profile.interests ?? ''} onChange={(e) => setProfile({ ...profile, interests: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
-            <label className="text-sm md:col-span-2">
-              <span className="mb-1 block font-medium text-slate-700">Other Notes</span>
-              <textarea value={profile.notes ?? ''} onChange={(e) => setProfile({ ...profile, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
-            </label>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowDetails((v) => !v)}
+            className="mt-4 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            <svg
+              className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-90' : ''}`}
+              fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            {showDetails ? 'Hide details' : 'More details'}
+          </button>
+
+          {showDetails && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Phone</span>
+                <input value={profile.phone ?? ''} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Alternate Phone</span>
+                <input value={profile.altPhone ?? ''} onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Address Line 1</span>
+                <input value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Address Line 2</span>
+                <input value={profile.addressLine2 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine2: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">City</span>
+                <input value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Province/State</span>
+                <input value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Postal Code</span>
+                <input value={profile.postalCode ?? ''} onChange={(e) => setProfile({ ...profile, postalCode: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Education</span>
+                <input value={profile.education ?? ''} onChange={(e) => setProfile({ ...profile, education: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Hobbies / Interests</span>
+                <input value={profile.interests ?? ''} onChange={(e) => setProfile({ ...profile, interests: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Other Notes</span>
+                <textarea value={profile.notes ?? ''} onChange={(e) => setProfile({ ...profile, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border border-slate-300 rounded-md" />
+              </label>
+            </div>
+          )}
 
           <div className="mt-5 flex justify-end">
             <button onClick={saveProfile} className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
