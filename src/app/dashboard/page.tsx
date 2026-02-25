@@ -105,6 +105,7 @@ export default function DashboardPage() {
   const [newEventStatus, setNewEventStatus] = useState<EventStatus>('Upcoming');
   const [newEventMessage, setNewEventMessage] = useState('');
 
+  const [confirmRemoveMemberId, setConfirmRemoveMemberId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [maxUses, setMaxUses] = useState(10);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -415,7 +416,7 @@ export default function DashboardPage() {
                           <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
                           <td className="px-6 py-4">
                             <button
-                              onClick={() => handleRemoveMember(m.id)}
+                              onClick={() => setConfirmRemoveMemberId(m.id)}
                               disabled={isSelf}
                               className={`px-3 py-1.5 text-xs font-medium rounded ${
                                 isSelf
@@ -809,6 +810,36 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {confirmRemoveMemberId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm">
+            <div className="px-6 py-5">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Remove member?</h3>
+              <p className="text-sm text-gray-600">
+                This will permanently delete the member&apos;s account and all associated data. This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+              <button
+                onClick={() => setConfirmRemoveMemberId(null)}
+                className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await handleRemoveMember(confirmRemoveMemberId);
+                  setConfirmRemoveMemberId(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedMessage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
