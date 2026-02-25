@@ -9,10 +9,10 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold text-text-dark mb-3 font-poppins">Sign In</h2>
-          <p className="text-text-medium text-lg">Continue with Google to access your community account</p>
+          <p className="text-text-medium text-lg">Continue with Google or Facebook to access your community account</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        <div className="bg-white rounded-2xl shadow-lg p-8 space-y-4">
           <button
             type="button"
             onClick={() => signIn('google', { callbackUrl: '/' })}
@@ -25,6 +25,17 @@ export default function LoginPage() {
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
             </svg>
             Sign in with Google
+          </button>
+
+          <button
+            type="button"
+            disabled
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#1877F2] rounded-lg text-white font-semibold opacity-50 cursor-not-allowed"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.791-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
+            </svg>
+            Sign in with Facebook
           </button>
         </div>
 
