@@ -50,8 +50,14 @@ export default function AdminEventPage() {
   const params = useParams<{ id: string }>();
   const eventId = params.id;
 
+  type CoordinatorInfo = { userId: string; name: string; email: string };
+  type ActiveMember = { id: string; name: string; email: string };
+
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<EventDetail | null>(null);
+  const [coordinators, setCoordinators] = useState<CoordinatorInfo[]>([]);
+  const [activeMembers, setActiveMembers] = useState<ActiveMember[]>([]);
+  const [addCoordinatorId, setAddCoordinatorId] = useState('');
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [savingEvent, setSavingEvent] = useState(false);
   const [eventMessage, setEventMessage] = useState('');
@@ -96,17 +102,13 @@ export default function AdminEventPage() {
     if (status === 'unauthenticated') router.push('/auth/login');
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
-      router.push('/');
-    }
-  }, [status, session?.user?.role, router]);
-
   const loadData = async () => {
     const res = await fetch(`/api/admin/events/${eventId}`, { cache: 'no-store' });
+    if (res.status === 403) { router.push('/'); return; }
     if (!res.ok) throw new Error('Failed to load event');
-    const data = (await res.json()) as { event: EventDetail; registrations: Registration[] };
+    const data = (await res.json()) as { event: EventDetail; coordinators: CoordinatorInfo[]; registrations: Registration[]; isAdmin: boolean };
     setEvent(data.event);
+    setCoordinators(data.coordinators ?? []);
 
     let parsedImages: string[] = [];
     try {
@@ -134,11 +136,22 @@ export default function AdminEventPage() {
   };
 
   useEffect(() => {
-    if (!eventId || status !== 'authenticated' || session?.user?.role !== 'ADMIN') return;
+    if (!eventId || status !== 'authenticated') return;
+    const isAdminUser = session?.user?.role === 'ADMIN';
     let alive = true;
     const run = async () => {
       try {
-        await loadData();
+        const tasks: Promise<void>[] = [
+          loadData(),
+          fetch('/api/admin/members', { cache: 'no-store' })
+            .then((r) => r.json())
+            .then((d: unknown) => {
+              const { members } = d as { members: Array<{ id: string; name: string; email: string; status: string }> };
+              setActiveMembers(members.filter((m) => m.status === 'active'));
+            })
+            .catch(() => undefined),
+        ];
+        await Promise.all(tasks);
       } finally {
         if (alive) setLoading(false);
       }
@@ -160,6 +173,27 @@ export default function AdminEventPage() {
       body: JSON.stringify({ action: 'updateRegistration', registrationId, paymentStatus, registrationStatus }),
     });
     if (!res.ok) return;
+    await loadData();
+  };
+
+  const handleAddCoordinator = async () => {
+    if (!addCoordinatorId || !eventId) return;
+    await fetch(`/api/admin/events/${eventId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'addCoordinator', userId: addCoordinatorId }),
+    });
+    setAddCoordinatorId('');
+    await loadData();
+  };
+
+  const handleRemoveCoordinator = async (userId: string) => {
+    if (!eventId) return;
+    await fetch(`/api/admin/events/${eventId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'removeCoordinator', userId }),
+    });
     await loadData();
   };
 
@@ -245,7 +279,8 @@ export default function AdminEventPage() {
       </div>
     );
   }
-  if (!session || session.user.role !== 'ADMIN' || !event) return null;
+  const isAdmin = session?.user?.role === 'ADMIN';
+  if (!session || !event) return null;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -378,6 +413,54 @@ export default function AdminEventPage() {
             </button>
           </div>
         </div>
+
+        {/* Coordinators section — admin or coordinator */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Coordinators</h2>
+
+            {coordinators.length === 0 ? (
+              <p className="text-sm text-slate-500 mb-4">No coordinators assigned.</p>
+            ) : (
+              <ul className="mb-4 space-y-2">
+                {coordinators.map((c) => (
+                  <li key={c.userId} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2">
+                    <div>
+                      <span className="text-sm font-medium text-slate-900">{c.name}</span>
+                      <span className="ml-2 text-xs text-slate-500">{c.email}</span>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveCoordinator(c.userId)}
+                      className="px-3 py-1 text-xs font-medium rounded bg-red-100 text-red-700 hover:bg-red-200"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="flex gap-2">
+              <select
+                value={addCoordinatorId}
+                onChange={(e) => setAddCoordinatorId(e.target.value)}
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">— Select a member to add —</option>
+                {activeMembers
+                  .filter((m) => !coordinators.some((c) => c.userId === m.id))
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
+                  ))}
+              </select>
+              <button
+                onClick={handleAddCoordinator}
+                disabled={!addCoordinatorId}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-40"
+              >
+                Add Coordinator
+              </button>
+            </div>
+          </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200">

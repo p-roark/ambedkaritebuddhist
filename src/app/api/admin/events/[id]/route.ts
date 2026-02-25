@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
-import { requireAdmin } from '@/lib/admin-auth';
+import { eventCoordinators, eventRegistrations, events, familyMembers, users } from '@/db/schema';
+import { requireAdminOrCoordinator } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = await requireAdmin(request);
-  if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
   const { id } = await params;
+  const auth = await requireAdminOrCoordinator(request, id);
+  if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   const db = getDb();
 
   const event = await db
@@ -23,6 +23,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .then((rows) => rows[0]);
 
   if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+
+  // Fetch coordinators for this event
+  const coords = await db
+    .select({
+      userId: users.id,
+      name: users.name,
+      email: users.email,
+    })
+    .from(eventCoordinators)
+    .innerJoin(users, eq(eventCoordinators.userId, users.id))
+    .where(eq(eventCoordinators.eventId, id));
 
   const registrations = await db
     .select({
@@ -66,29 +77,34 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const parsed = JSON.parse(r.selectedFamilyMemberIds || '[]') as unknown;
       if (Array.isArray(parsed)) {
-        selectedFamilyIds = parsed.map((id) => String(id));
+        selectedFamilyIds = parsed.map((fid) => String(fid));
       }
     } catch {
       selectedFamilyIds = [];
     }
 
     const selectedFamilyMembers = selectedFamilyIds
-      .map((id) => familyById.get(id))
+      .map((fid) => familyById.get(fid))
       .filter((member): member is { id: string; userId: string; name: string; age: number | null } => Boolean(member));
 
     return { ...r, selectedFamilyMembers };
   });
 
-  return NextResponse.json({ event, registrations: registrationsWithFamilyNames }, { status: 200 });
+  return NextResponse.json({
+    event,
+    coordinators: coords,
+    registrations: registrationsWithFamilyNames,
+    isAdmin: auth.isAdmin,
+  }, { status: 200 });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = await requireAdmin(request);
-  if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
   const { id } = await params;
+  const auth = await requireAdminOrCoordinator(request, id);
+  if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   const body = (await request.json()) as {
-    action?: 'updateEvent' | 'updateRegistration';
+    action?: 'updateEvent' | 'updateRegistration' | 'addCoordinator' | 'removeCoordinator';
     title?: string;
     description?: string;
     coverImage?: string;
@@ -101,6 +117,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     childPrice?: number;
     status?: EventStatus;
     eventImages?: string[];
+    userId?: string;
     registrationId?: string;
     paymentStatus?: 'Paid' | 'Unpaid';
     registrationStatus?: 'Pending Registration' | 'Confirmed' | 'Rejected';
@@ -108,6 +125,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const db = getDb();
 
+  // addCoordinator — admin or coordinator
+  if (body.action === 'addCoordinator') {
+    if (!body.userId) return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+    await db
+      .insert(eventCoordinators)
+      .values({ eventId: id, userId: body.userId })
+      .onConflictDoNothing();
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  // removeCoordinator — admin or coordinator
+  if (body.action === 'removeCoordinator') {
+    if (!body.userId) return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+    await db
+      .delete(eventCoordinators)
+      .where(and(
+        eq(eventCoordinators.eventId, id),
+        eq(eventCoordinators.userId, body.userId),
+      ));
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  // updateEvent — admin or coordinator
   if (body.action === 'updateEvent' || (!body.registrationId && body.status)) {
     const validStatuses: EventStatus[] = ['Upcoming', 'Registration Started', 'Event Ended'];
     if (!body.status || !validStatuses.includes(body.status)) {
@@ -143,6 +183,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
+  // updateRegistration — admin or coordinator
   if (!body.registrationId) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }

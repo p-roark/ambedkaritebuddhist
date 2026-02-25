@@ -1,16 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, isNotNull, ne, or } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { users } from '@/db/schema';
-import { requireAdmin } from '@/lib/admin-auth';
+import { eventCoordinators, users } from '@/db/schema';
+import { getAuthenticatedUserId, requireAdmin } from '@/lib/admin-auth';
 import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
-  const token = await requireAdmin(request);
-  if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const isAdmin = await requireAdmin(request);
+
+  // Also allow coordinators (any user who coordinates at least one event)
+  if (!isAdmin) {
+    const userId = await getAuthenticatedUserId(request);
+    if (!userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const db = getDb();
+    const coord = await db
+      .select({ eventId: eventCoordinators.eventId })
+      .from(eventCoordinators)
+      .where(eq(eventCoordinators.userId, userId))
+      .limit(1)
+      .then((rows) => rows[0]);
+    if (!coord) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   const db = getDb();
   const members = await db

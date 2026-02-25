@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { events } from '@/db/schema';
-import { requireAdmin } from '@/lib/admin-auth';
+import { requireAdminOrCoordinator } from '@/lib/admin-auth';
 import { getEventImagesBucket, parseEventImageKeys } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
@@ -21,10 +21,9 @@ function inferImageContentType(filename: string) {
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = await requireAdmin(request);
-  if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
   const { id } = await params;
+  const auth = await requireAdminOrCoordinator(request, id);
+  if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const db = getDb();
   const bucket = getEventImagesBucket();
 
@@ -73,10 +72,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = await requireAdmin(request);
-  if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
   const { id } = await params;
+  const auth = await requireAdminOrCoordinator(request, id);
+  if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const db = getDb();
   const bucket = getEventImagesBucket();
 

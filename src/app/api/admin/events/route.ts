@@ -1,21 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { events } from '@/db/schema';
-import { requireAdmin } from '@/lib/admin-auth';
+import { events, eventCoordinators, users } from '@/db/schema';
+import { requireAdmin, getAuthenticatedUserId } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 
-export async function GET(request: NextRequest) {
-  const token = await requireAdmin(request);
-  if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+type CoordinatorInfo = { id: string; name: string };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function attachCoordinators(
+  db: any,
+  eventRows: Array<{ id: string }>,
+): Promise<Map<string, CoordinatorInfo[]>> {
+  const map = new Map<string, CoordinatorInfo[]>();
+  if (eventRows.length === 0) return map;
+
+  const eventIds = eventRows.map((e) => e.id);
+  const coords = await db
+    .select({
+      eventId: eventCoordinators.eventId,
+      userId: users.id,
+      name: users.name,
+    })
+    .from(eventCoordinators)
+    .innerJoin(users, eq(eventCoordinators.userId, users.id))
+    .where(inArray(eventCoordinators.eventId, eventIds));
+
+  for (const c of coords) {
+    if (!map.has(c.eventId)) map.set(c.eventId, []);
+    map.get(c.eventId)!.push({ id: c.userId, name: c.name });
+  }
+  return map;
+}
+
+export async function GET(request: NextRequest) {
   const db = getDb();
-  const rows = await db.select().from(events).orderBy(desc(events.date));
-  return NextResponse.json({ events: rows }, { status: 200 });
+
+  // Admin: return all events
+  const admin = await requireAdmin(request);
+  if (admin) {
+    const rows = await db.select().from(events).orderBy(desc(events.date));
+    const coordMap = await attachCoordinators(db, rows);
+    return NextResponse.json({
+      events: rows.map((e) => ({ ...e, coordinators: coordMap.get(e.id) ?? [] })),
+    }, { status: 200 });
+  }
+
+  // Coordinator: return only their assigned events
+  const userId = await getAuthenticatedUserId(request);
+  if (!userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const myCoords = await db
+    .select({ eventId: eventCoordinators.eventId })
+    .from(eventCoordinators)
+    .where(eq(eventCoordinators.userId, userId));
+
+  if (myCoords.length === 0) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const myEventIds = myCoords.map((c) => c.eventId);
+  const rows = await db
+    .select()
+    .from(events)
+    .where(inArray(events.id, myEventIds))
+    .orderBy(desc(events.date));
+
+  const coordMap = await attachCoordinators(db, rows);
+  return NextResponse.json({
+    events: rows.map((e) => ({ ...e, coordinators: coordMap.get(e.id) ?? [] })),
+  }, { status: 200 });
 }
 
 export async function POST(request: NextRequest) {
@@ -34,6 +90,7 @@ export async function POST(request: NextRequest) {
     adultPrice?: number;
     childPrice?: number;
     status?: EventStatus;
+    coordinatorIds?: string[];
   };
 
   if (!body.title || !body.date || !body.location || !body.status) {
@@ -65,6 +122,14 @@ export async function POST(request: NextRequest) {
     createdAt: now,
     updatedAt: now,
   });
+
+  // Insert coordinators
+  const coordIds = (body.coordinatorIds ?? []).filter(Boolean);
+  if (coordIds.length > 0) {
+    await db.insert(eventCoordinators).values(
+      coordIds.map((userId) => ({ eventId: id, userId })),
+    );
+  }
 
   return NextResponse.json({ id }, { status: 201 });
 }
@@ -100,10 +165,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const db = getDb();
-  await db
-    .update(events)
-    .set(patch)
-    .where(eq(events.id, body.id));
+  await db.update(events).set(patch).where(eq(events.id, body.id));
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }

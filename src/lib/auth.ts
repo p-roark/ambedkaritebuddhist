@@ -57,7 +57,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // Look up user in D1 to get live role + membership status
       try {
-        const [{ eq }, { getDb }, { users }] = await Promise.all([
+        const [{ eq }, { getDb }, { users, eventCoordinators }] = await Promise.all([
           import('drizzle-orm'),
           import('@/db'),
           import('@/db/schema'),
@@ -77,9 +77,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.sub                     = row.id;
           token.status                  = row.status;
           token.activationRequestStatus = row.activationRequestStatus;
+
+          // Check if this user is a coordinator of any event
+          const coordRows = await db
+            .select({ eventId: eventCoordinators.eventId })
+            .from(eventCoordinators)
+            .where(eq(eventCoordinators.userId, row.id))
+            .limit(1);
+          token.isCoordinator = coordRows.length > 0;
         } else {
           // New Google user — not yet in DB, needs referral code
           token.isMember = false;
+          token.isCoordinator = false;
         }
       } catch {
         // D1 not configured yet — keep defaults, don't block auth
@@ -95,6 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.isMember               = Boolean(token.isMember);
         session.user.status                 = (token.status as string) ?? 'active';
         session.user.activationRequestStatus = (token.activationRequestStatus as string) ?? 'none';
+        session.user.isCoordinator          = Boolean(token.isCoordinator);
       }
       return session;
     },

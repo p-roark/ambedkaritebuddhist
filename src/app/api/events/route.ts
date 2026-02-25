@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { and, desc, eq } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { eventRegistrations, events, users } from '@/db/schema';
+import { eventCoordinators, eventRegistrations, events, users } from '@/db/schema';
 import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     registrationStatus: string;
     paymentStatus: string;
   }> = [];
+  let coordinatedEventIds: string[] = [];
 
   if (email) {
     const dbUser = await db
@@ -53,8 +54,14 @@ export async function GET(request: Request) {
         })
         .from(eventRegistrations)
         .where(and(eq(eventRegistrations.userId, dbUser.id)));
+
+      const coordRows = await db
+        .select({ eventId: eventCoordinators.eventId })
+        .from(eventCoordinators)
+        .where(eq(eventCoordinators.userId, dbUser.id));
+      coordinatedEventIds = coordRows.map((r) => r.eventId);
     }
   }
 
-  return NextResponse.json({ events: rows, registrations, registrationCounts }, { status: 200 });
+  return NextResponse.json({ events: rows, registrations, registrationCounts, coordinatedEventIds }, { status: 200 });
 }

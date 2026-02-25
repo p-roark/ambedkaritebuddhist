@@ -41,6 +41,7 @@ type EventItem = {
   childPrice: number;
   archived: boolean;
   status: EventStatus;
+  coordinators: Array<{ id: string; name: string }>;
 };
 
 type ReferralCode = {
@@ -129,12 +130,6 @@ export default function DashboardPage() {
     if (status === 'unauthenticated') router.push('/auth/login');
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
-      router.push('/');
-    }
-  }, [status, session?.user?.role, router]);
-
   const loadLeadership = async () => {
     const res = await fetch('/api/admin/leadership', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to load leadership');
@@ -171,11 +166,26 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (status !== 'authenticated' || session?.user?.role !== 'ADMIN') return;
+    if (status !== 'authenticated') return;
+    const isAdmin = session?.user?.role === 'ADMIN';
     let alive = true;
     const loadAll = async () => {
       try {
-        await Promise.all([loadLeadership(), loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
+        if (isAdmin) {
+          await Promise.all([loadLeadership(), loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
+        } else {
+          // Non-admin: try loading events — API returns 403 if not a coordinator
+          const res = await fetch('/api/admin/events', { cache: 'no-store' });
+          if (!res.ok) {
+            if (alive) router.push('/');
+            return;
+          }
+          const data = (await res.json()) as { events: EventItem[] };
+          if (alive) {
+            setEvents(data.events);
+            setActiveTab('events');
+          }
+        }
       } catch (error) {
         console.error(error);
       } finally {
@@ -196,7 +206,8 @@ export default function DashboardPage() {
     );
   }
   if (!session) return null;
-  if (session.user.role !== 'ADMIN') return null;
+  const isAdmin = session.user.role === 'ADMIN';
+  const isCoordinator = !isAdmin;
 
   const activeMembers = members.filter((m) => m.status === 'active');
   const inactiveMembers = members.filter((m) => m.status !== 'active');
@@ -204,13 +215,15 @@ export default function DashboardPage() {
   const pendingMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'PENDING');
   const resolvedMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'RESOLVED');
 
-  const tabs: Array<{ id: Tab; label: string }> = [
-    { id: 'leadership', label: `Leadership (${leadershipRolesList.length})` },
-    { id: 'members', label: `Members (${activeMembers.length} active${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
-    { id: 'events', label: `Events (${events.length})` },
-    { id: 'referrals', label: 'Referral Codes' },
-    { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
-  ];
+  const tabs: Array<{ id: Tab; label: string }> = isAdmin
+    ? [
+        { id: 'leadership', label: `Leadership (${leadershipRolesList.length})` },
+        { id: 'members', label: `Members (${activeMembers.length} active${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
+        { id: 'events', label: `Events (${events.length})` },
+        { id: 'referrals', label: 'Referral Codes' },
+        { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
+      ]
+    : [{ id: 'events', label: `My Events (${events.length})` }];
 
   const handleRoleChange = async (memberId: string, role: Role) => {
     const res = await fetch('/api/admin/members', {
@@ -421,8 +434,8 @@ export default function DashboardPage() {
           <h1 className="text-xl font-bold text-gray-900">Community Dashboard</h1>
           <p className="text-sm text-gray-500">
             {session.user.name} ·{' '}
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${ROLE_COLORS.ADMIN}`}>
-              ADMIN
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isAdmin ? ROLE_COLORS.ADMIN : 'bg-blue-100 text-blue-800'}`}>
+              {isAdmin ? 'ADMIN' : 'COORDINATOR'}
             </span>
           </p>
         </div>
@@ -659,6 +672,7 @@ export default function DashboardPage() {
 
         {activeTab === 'events' && (
           <div className="space-y-8">
+            {isAdmin && (
             <section className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Event</h2>
               {newEventMessage && (
@@ -791,14 +805,16 @@ export default function DashboardPage() {
                 </div>
               </div>
             </section>
+            )}
 
+            {isAdmin ? (
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">All Events</h2>
               <div className="bg-white shadow rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {['Event', 'Date', 'Venue', 'Type', 'Pricing', 'Status', 'Details', 'Actions'].map((h) => (
+                      {['Event', 'Date', 'Venue', 'Type', 'Pricing', 'Coordinator', 'Status', 'Details', 'Actions'].map((h) => (
                         <th
                           key={h}
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -817,6 +833,11 @@ export default function DashboardPage() {
                         <td className="px-6 py-4 text-sm text-gray-500">{event.eventType}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">
                           {event.isPaid ? `Paid ($${event.adultPrice} adult / $${event.childPrice} child)` : 'Free'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {event.coordinators.length > 0
+                            ? event.coordinators.map((c) => c.name).join(', ')
+                            : <span className="text-gray-300">—</span>}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -863,6 +884,47 @@ export default function DashboardPage() {
                 </table>
               </div>
             </section>
+            ) : (
+            /* Coordinator view — simplified events list */
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">My Events</h2>
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {['Event', 'Date', 'Location', 'Status', 'Actions'].map((h) => (
+                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {events.map((event) => (
+                      <tr key={event.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{event.title}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{event.date} {event.time}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{event.location}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${EVENT_STATUS_COLORS[event.status]}`}>
+                            {event.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Link href={`/dashboard/events/${event.id}`} className="px-3 py-1.5 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+                            Open
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                    {events.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">No events assigned.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            )}
           </div>
         )}
 

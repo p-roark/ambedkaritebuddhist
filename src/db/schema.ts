@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, uniqueIndex, index, primaryKey } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // ─── Users ────────────────────────────────────────────────────────────────────
@@ -163,6 +163,17 @@ export const contactMessages = sqliteTable('ContactMessage', {
   statusIdx: index('ContactMessage_status_idx').on(t.status),
   createdIdx: index('ContactMessage_createdAt_idx').on(t.createdAt),
   typeIdx: index('ContactMessage_type_idx').on(t.type),
+}));
+
+// ─── Event coordinators (junction) ───────────────────────────────────────────
+
+export const eventCoordinators = sqliteTable('EventCoordinator', {
+  eventId: text('eventId').notNull().references(() => events.id, { onDelete: 'cascade' }),
+  userId:  text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+}, (t) => ({
+  pk:       primaryKey({ columns: [t.eventId, t.userId] }),
+  eventIdx: index('EventCoordinator_event_idx').on(t.eventId),
+  userIdx:  index('EventCoordinator_user_idx').on(t.userId),
 }));
 
 // ─── Leadership roles ─────────────────────────────────────────────────────────
