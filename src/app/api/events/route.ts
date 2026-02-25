@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { eventCoordinators, eventRegistrations, events, leadershipRoles, users } from '@/db/schema';
+import { eventCoordinators, eventRegistrations, events, leadershipRoles, organizationSettings, users } from '@/db/schema';
 import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +10,35 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   // Public leadership resource — no auth required
   const { searchParams } = new URL(request.url);
+  if (searchParams.get('resource') === 'org-settings') {
+    const db = getDb();
+    const row = await db
+      .select()
+      .from(organizationSettings)
+      .where(eq(organizationSettings.id, 'main'))
+      .limit(1)
+      .then((rows) => rows[0]);
+    // Return row or sensible defaults if not seeded yet
+    return NextResponse.json({
+      settings: row ?? {
+        id: 'main',
+        orgName: 'Ambedkarite Buddhist Organization Canada',
+        shortName: 'ABC Canada',
+        email: 'info@ambedkaritebuddhist.ca',
+        phone: null,
+        altPhone: null,
+        addressLine1: null,
+        addressLine2: null,
+        city: null,
+        province: null,
+        postalCode: null,
+        country: 'Canada',
+        website: null,
+        description: null,
+      },
+    }, { status: 200 });
+  }
+
   if (searchParams.get('resource') === 'leadership') {
     const db = getDb();
     const rows = await db

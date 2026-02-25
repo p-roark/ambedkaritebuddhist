@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, asc, eq, isNotNull, ne, or } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { eventCoordinators, leadershipRoles, users } from '@/db/schema';
+import { eventCoordinators, leadershipRoles, organizationSettings, users } from '@/db/schema';
 import { getAuthenticatedUserId, requireAdmin } from '@/lib/admin-auth';
 import { pickDisplayName } from '@/lib/user-name';
 
@@ -83,13 +83,27 @@ export async function PATCH(request: NextRequest) {
   if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = (await request.json()) as {
-    action?: 'setRole' | 'deactivateMember' | 'activateMember' | 'leadershipCreate' | 'leadershipUpdate' | 'leadershipDelete';
+    action?: 'setRole' | 'deactivateMember' | 'activateMember' | 'leadershipCreate' | 'leadershipUpdate' | 'leadershipDelete' | 'updateOrgSettings';
     userId?: string;
     role?: 'ADMIN' | 'MEMBER';
     // leadership fields
     id?: string;
     roleName?: string;
     displayOrder?: number;
+    // org settings fields
+    orgName?: string;
+    shortName?: string;
+    email?: string;
+    phone?: string;
+    altPhone?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    province?: string;
+    postalCode?: string;
+    country?: string;
+    website?: string;
+    description?: string;
   };
 
   const { action } = body;
@@ -128,6 +142,29 @@ export async function PATCH(request: NextRequest) {
     if ('userId' in body) patch.userId = (body as { userId?: string | null }).userId ?? null;
     if (body.displayOrder !== undefined) patch.displayOrder = body.displayOrder;
     await db.update(leadershipRoles).set(patch).where(eq(leadershipRoles.id, body.id));
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  if (action === 'updateOrgSettings') {
+    await db
+      .update(organizationSettings)
+      .set({
+        orgName: String(body.orgName ?? '').trim() || 'Ambedkarite Buddhist Organization Canada',
+        shortName: String(body.shortName ?? '').trim() || 'ABC Canada',
+        email: String(body.email ?? '').trim() || 'info@ambedkaritebuddhist.ca',
+        phone: String(body.phone ?? '').trim() || null,
+        altPhone: String(body.altPhone ?? '').trim() || null,
+        addressLine1: String(body.addressLine1 ?? '').trim() || null,
+        addressLine2: String(body.addressLine2 ?? '').trim() || null,
+        city: String(body.city ?? '').trim() || null,
+        province: String(body.province ?? '').trim() || null,
+        postalCode: String(body.postalCode ?? '').trim() || null,
+        country: String(body.country ?? '').trim() || 'Canada',
+        website: String(body.website ?? '').trim() || null,
+        description: String(body.description ?? '').trim() || null,
+        updatedAt: now,
+      })
+      .where(eq(organizationSettings.id, 'main'));
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 

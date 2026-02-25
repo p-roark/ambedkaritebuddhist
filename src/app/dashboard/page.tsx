@@ -7,7 +7,23 @@ import Link from 'next/link';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'leadership' | 'members' | 'events' | 'referrals' | 'messages';
+type Tab = 'leadership' | 'members' | 'events' | 'referrals' | 'messages' | 'settings';
+
+type OrgSettings = {
+  orgName: string;
+  shortName: string;
+  email: string;
+  phone: string;
+  altPhone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+  website: string;
+  description: string;
+};
 
 type LeadershipRole = {
   id: string;
@@ -126,9 +142,36 @@ export default function DashboardPage() {
   const [generatedCode, setGeneratedCode] = useState('');
   const [copied, setCopied] = useState(false);
 
+  const emptyOrgSettings: OrgSettings = { orgName: '', shortName: '', email: '', phone: '', altPhone: '', addressLine1: '', addressLine2: '', city: '', province: '', postalCode: '', country: 'Canada', website: '', description: '' };
+  const [orgSettingsForm, setOrgSettingsForm] = useState<OrgSettings>(emptyOrgSettings);
+  const [orgSettingsSaving, setOrgSettingsSaving] = useState(false);
+  const [orgSettingsMessage, setOrgSettingsMessage] = useState('');
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
   }, [status, router]);
+
+  const loadOrgSettings = async () => {
+    const res = await fetch('/api/events?resource=org-settings', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = (await res.json()) as { settings: Record<string, string | null> };
+    const s = data.settings;
+    setOrgSettingsForm({
+      orgName: s.orgName ?? '',
+      shortName: s.shortName ?? '',
+      email: s.email ?? '',
+      phone: s.phone ?? '',
+      altPhone: s.altPhone ?? '',
+      addressLine1: s.addressLine1 ?? '',
+      addressLine2: s.addressLine2 ?? '',
+      city: s.city ?? '',
+      province: s.province ?? '',
+      postalCode: s.postalCode ?? '',
+      country: s.country ?? 'Canada',
+      website: s.website ?? '',
+      description: s.description ?? '',
+    });
+  };
 
   const loadLeadership = async () => {
     const res = await fetch('/api/admin/members?resource=leadership', { cache: 'no-store' });
@@ -172,7 +215,7 @@ export default function DashboardPage() {
     const loadAll = async () => {
       try {
         if (isAdmin) {
-          await Promise.all([loadLeadership(), loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
+          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
         } else {
           // Non-admin: try loading events — API returns 403 if not a coordinator
           const res = await fetch('/api/admin/events', { cache: 'no-store' });
@@ -221,6 +264,7 @@ export default function DashboardPage() {
         { id: 'events', label: `Events (${events.length})` },
         { id: 'referrals', label: 'Referral Codes' },
         { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
+        { id: 'settings', label: 'Settings' },
       ]
     : [{ id: 'events', label: `My Events (${events.length})` }];
 
@@ -408,6 +452,19 @@ export default function DashboardPage() {
     });
     if (!res.ok) return;
     await loadReferralCodes();
+  };
+
+  const handleSaveOrgSettings = async () => {
+    setOrgSettingsSaving(true);
+    setOrgSettingsMessage('');
+    const res = await fetch('/api/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'updateOrgSettings', ...orgSettingsForm }),
+    });
+    setOrgSettingsSaving(false);
+    setOrgSettingsMessage(res.ok ? 'Settings saved.' : 'Failed to save settings.');
+    if (res.ok) await loadOrgSettings();
   };
 
   const updateMessage = async (id: string, patch: { status?: 'PENDING' | 'RESOLVED'; adminNote?: string }) => {
@@ -1145,6 +1202,83 @@ export default function DashboardPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="max-w-2xl space-y-6">
+            <section className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Organization Details</h2>
+              <div className="space-y-4">
+                {([
+                  { key: 'orgName', label: 'Organization Name' },
+                  { key: 'shortName', label: 'Short Name / Display Name' },
+                  { key: 'email', label: 'Email Address', type: 'email' },
+                  { key: 'phone', label: 'Phone Number' },
+                  { key: 'altPhone', label: 'Alternative Phone' },
+                  { key: 'website', label: 'Website URL' },
+                ] as Array<{ key: keyof OrgSettings; label: string; type?: string }>).map(({ key, label, type }) => (
+                  <label key={key} className="block">
+                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                    <input
+                      type={type ?? 'text'}
+                      value={orgSettingsForm[key]}
+                      onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </label>
+                ))}
+
+                <fieldset className="border border-gray-200 rounded-md p-4">
+                  <legend className="text-sm font-medium text-gray-700 px-1">Address</legend>
+                  <div className="space-y-3 mt-2">
+                    {([
+                      { key: 'addressLine1', label: 'Address Line 1' },
+                      { key: 'addressLine2', label: 'Address Line 2' },
+                      { key: 'city', label: 'City' },
+                      { key: 'province', label: 'Province' },
+                      { key: 'postalCode', label: 'Postal Code' },
+                      { key: 'country', label: 'Country' },
+                    ] as Array<{ key: keyof OrgSettings; label: string }>).map(({ key, label }) => (
+                      <label key={key} className="block">
+                        <span className="text-sm font-medium text-gray-700">{label}</span>
+                        <input
+                          type="text"
+                          value={orgSettingsForm[key]}
+                          onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-gray-700">Organization Description</span>
+                  <textarea
+                    rows={3}
+                    value={orgSettingsForm.description}
+                    onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, description: e.target.value }))}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-6 flex items-center gap-4">
+                <button
+                  onClick={handleSaveOrgSettings}
+                  disabled={orgSettingsSaving}
+                  className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {orgSettingsSaving ? 'Saving…' : 'Save Settings'}
+                </button>
+                {orgSettingsMessage && (
+                  <p className={`text-sm ${orgSettingsMessage.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>
+                    {orgSettingsMessage}
+                  </p>
+                )}
               </div>
             </section>
           </div>

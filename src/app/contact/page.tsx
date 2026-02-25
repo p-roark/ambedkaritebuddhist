@@ -2,17 +2,19 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 
-interface ContactInfo {
+interface OrgInfo {
   email: string;
-  phone: string;
-}
-
-interface ContactData {
-  contact: ContactInfo;
+  phone: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  country: string;
 }
 
 export default function ContactPage() {
-  const [contact, setContact] = useState<ContactInfo | null>(null);
+  const [org, setOrg] = useState<OrgInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
@@ -27,9 +29,9 @@ export default function ContactPage() {
   useEffect(() => {
     const loadContactData = async () => {
       try {
-        const response = await fetch('/data/contact.json');
-        const data = (await response.json()) as ContactData;
-        setContact(data.contact);
+        const response = await fetch('/api/events?resource=org-settings');
+        const data = (await response.json()) as { settings: OrgInfo };
+        setOrg(data.settings);
       } catch (error) {
         console.error('Failed to load contact info:', error);
       } finally {
@@ -93,21 +95,33 @@ export default function ContactPage() {
             <div className="rounded-xl bg-white border border-slate-200 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Email</p>
               <a
-                href={`mailto:${contact?.email ?? ''}`}
+                href={`mailto:${org?.email ?? ''}`}
                 className="mt-1 block text-base text-primary-blue hover:text-primary-saffron transition-colors"
               >
-                {contact?.email ?? 'Not available'}
+                {org?.email ?? 'Not available'}
               </a>
             </div>
-            <div className="rounded-xl bg-white border border-slate-200 p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Phone</p>
-              <a
-                href={`tel:${contact?.phone ?? ''}`}
-                className="mt-1 block text-base text-primary-blue hover:text-primary-saffron transition-colors"
-              >
-                {contact?.phone ?? 'Not available'}
-              </a>
-            </div>
+            {org?.phone && (
+              <div className="rounded-xl bg-white border border-slate-200 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Phone</p>
+                <a
+                  href={`tel:${org.phone}`}
+                  className="mt-1 block text-base text-primary-blue hover:text-primary-saffron transition-colors"
+                >
+                  {org.phone}
+                </a>
+              </div>
+            )}
+            {(org?.addressLine1 ?? org?.city) && (
+              <div className="rounded-xl bg-white border border-slate-200 p-4 sm:col-span-2">
+                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Address</p>
+                <p className="mt-1 text-base text-slate-700">
+                  {[org?.addressLine1, org?.addressLine2, org?.city, org?.province, org?.postalCode, org?.country]
+                    .filter(Boolean)
+                    .join(', ')}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

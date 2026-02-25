@@ -189,6 +189,26 @@ export const leadershipRoles = sqliteTable('LeadershipRole', {
   orderIdx: index('LeadershipRole_displayOrder_idx').on(t.displayOrder),
 }));
 
+// ─── Organization settings (singleton row, id = 'main') ──────────────────────
+
+export const organizationSettings = sqliteTable('OrganizationSettings', {
+  id:           text('id').primaryKey(),
+  orgName:      text('orgName').notNull().default('Ambedkarite Buddhist Organization Canada'),
+  shortName:    text('shortName').notNull().default('ABC Canada'),
+  email:        text('email').notNull().default('info@ambedkaritebuddhist.ca'),
+  phone:        text('phone'),
+  altPhone:     text('altPhone'),
+  addressLine1: text('addressLine1'),
+  addressLine2: text('addressLine2'),
+  city:         text('city'),
+  province:     text('province'),
+  postalCode:   text('postalCode'),
+  country:      text('country').notNull().default('Canada'),
+  website:      text('website'),
+  description:  text('description'),
+  updatedAt:    text('updatedAt').notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;
@@ -203,3 +223,4 @@ export type FamilyMember = typeof familyMembers.$inferSelect;
 export type NewFamilyMember = typeof familyMembers.$inferInsert;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type NewContactMessage = typeof contactMessages.$inferInsert;
+export type OrganizationSettings = typeof organizationSettings.$inferSelect;
