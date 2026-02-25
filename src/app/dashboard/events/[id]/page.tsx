@@ -278,7 +278,6 @@ export default function AdminEventPage() {
       </div>
     );
   }
-  const isAdmin = session?.user?.role === 'ADMIN';
   if (!session || !event) return null;
 
   return (
