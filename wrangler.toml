@@ -9,6 +9,16 @@ database_name = "ambedkaritebuddhist"
 database_id   = "c1eda722-53f9-4bf5-93ab-bbdb5e98631b"
 migrations_dir = "migrations"
 
+[[d1_databases]]
+binding        = "DB-PROD"
+database_name  = "ambedkaritebuddhist-prod"
+database_id    = "2c11d70c-8eae-404f-a163-6b830f9b4e51"
+migrations_dir = "migrations"
+
 [[r2_buckets]]
-binding = "EVENT_IMAGES"
+binding     = "EVENT_IMAGES"
 bucket_name = "ambedkaritebuddhist-images"
+
+[[r2_buckets]]
+binding     = "EVENT_IMAGES_PROD"
+bucket_name = "ambedkaritebuddhist-images-prod"

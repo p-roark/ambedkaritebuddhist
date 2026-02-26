@@ -1,8 +1,15 @@
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './schema';
 
+type CfEnv = {
+  DEPLOYMENT?: string;
+  DB?: D1Database;
+  'DB-PROD'?: D1Database;
+};
+
 /**
  * Returns a Drizzle client bound to the Cloudflare D1 database.
+ * Picks DB-PROD when env.DEPLOYMENT === 'prod', otherwise DB.
  *
  * The __cloudflareContext global is injected by:
  *   - setupDevPlatform() during `next dev` (reads wrangler.toml locally)
@@ -14,25 +21,27 @@ export function getDb() {
   const cloudflareRequestContextSymbol = Symbol.for('__cloudflare-request-context__');
   const requestContext = (
     globalThis as unknown as {
-      [key: symbol]: { env?: { DB?: D1Database } } | undefined;
+      [key: symbol]: { env?: CfEnv } | undefined;
     }
   )[cloudflareRequestContextSymbol];
 
-  const d1FromRequest = requestContext?.env?.DB;
+  const envFromRequest = requestContext?.env;
 
   const globalContext = (
     globalThis as unknown as {
-      __cloudflareContext?: { env?: { DB?: D1Database } };
+      __cloudflareContext?: { env?: CfEnv };
     }
   ).__cloudflareContext;
 
-  const d1 = d1FromRequest ?? globalContext?.env?.DB;
+  const env = envFromRequest ?? globalContext?.env;
+  const isProd = (env?.DEPLOYMENT ?? 'dev') === 'prod';
+  const d1 = isProd ? env?.['DB-PROD'] : env?.['DB'];
 
   if (!d1) {
     throw new Error(
-      'D1 binding not found. ' +
-      'Locally: make sure wrangler.toml has your database_name + database_id, then run `pnpm dev` (setupDevPlatform wires it up). ' +
-      'In production: verify the DB binding is set in Cloudflare Pages settings.'
+      `D1 binding not found (DEPLOYMENT=${isProd ? 'prod' : 'dev'}). ` +
+      'Locally: make sure wrangler.toml has your database_name + database_id, then run `pnpm dev`. ' +
+      'In production: verify the DB / DB-PROD binding is set in Cloudflare Pages settings.'
     );
   }
 

@@ -1,23 +1,33 @@
+type CfEnv = {
+  DEPLOYMENT?: string;
+  EVENT_IMAGES?: R2Bucket;
+  EVENT_IMAGES_PROD?: R2Bucket;
+};
+
 export function getEventImagesBucket() {
   const cloudflareRequestContextSymbol = Symbol.for('__cloudflare-request-context__');
   const requestContext = (
     globalThis as unknown as {
-      [key: symbol]: { env?: { EVENT_IMAGES?: R2Bucket } } | undefined;
+      [key: symbol]: { env?: CfEnv } | undefined;
     }
   )[cloudflareRequestContextSymbol];
 
-  const r2FromRequest = requestContext?.env?.EVENT_IMAGES;
+  const envFromRequest = requestContext?.env;
 
   const globalContext = (
     globalThis as unknown as {
-      __cloudflareContext?: { env?: { EVENT_IMAGES?: R2Bucket } };
+      __cloudflareContext?: { env?: CfEnv };
     }
   ).__cloudflareContext;
 
-  const bucket = r2FromRequest ?? globalContext?.env?.EVENT_IMAGES;
+  const env = envFromRequest ?? globalContext?.env;
+  const isProd = (env?.DEPLOYMENT ?? 'dev') === 'prod';
+  const bucket = isProd ? env?.EVENT_IMAGES_PROD : env?.EVENT_IMAGES;
+
   if (!bucket) {
     throw new Error(
-      'R2 binding not found. Add EVENT_IMAGES in wrangler.toml and Cloudflare Pages settings.',
+      `R2 binding not found (DEPLOYMENT=${isProd ? 'prod' : 'dev'}). ` +
+      'Add EVENT_IMAGES / EVENT_IMAGES_PROD in wrangler.toml and Cloudflare Pages settings.',
     );
   }
 
@@ -35,4 +45,3 @@ export function parseEventImageKeys(raw: string | null | undefined): string[] {
     return [];
   }
 }
-
