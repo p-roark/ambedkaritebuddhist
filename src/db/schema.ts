@@ -119,6 +119,9 @@ export const eventRegistrations = sqliteTable('EventRegistration', {
   adultsCount:     integer('adultsCount').notNull().default(1),
   childrenCount:   integer('childrenCount').notNull().default(0),
   totalAmount:     integer('totalAmount').notNull().default(0),
+  paidAmount:      integer('paidAmount').notNull().default(0),
+  refundDue:       integer('refundDue').notNull().default(0),
+  paymentHistory:  text('paymentHistory').notNull().default('[]'),
   paymentStatus:   text('paymentStatus').notNull().default('Unpaid'), // Unpaid | Paid
   registrationStatus: text('registrationStatus').notNull().default('Pending Registration'), // Pending Registration | Confirmed | Rejected
   createdAt:       text('createdAt').notNull().default(sql`(datetime('now'))`),

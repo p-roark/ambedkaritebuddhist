@@ -8,6 +8,33 @@ import { auth } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  const email = String(session?.user?.email ?? '').trim().toLowerCase();
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { id: eventId } = await params;
+  const db = getDb();
+
+  const user = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1)
+    .then((r) => r[0]);
+
+  if (!user) return NextResponse.json({ registration: null });
+
+  const registration = await db
+    .select()
+    .from(eventRegistrations)
+    .where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.userId, user.id)))
+    .limit(1)
+    .then((r) => r[0] ?? null);
+
+  return NextResponse.json({ registration }, { status: 200 });
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
@@ -113,13 +140,45 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const now = new Date().toISOString();
 
   const existing = await db
-    .select({ id: eventRegistrations.id })
+    .select({
+      id: eventRegistrations.id,
+      paymentStatus: eventRegistrations.paymentStatus,
+      totalAmount: eventRegistrations.totalAmount,
+      refundDue: eventRegistrations.refundDue,
+    })
     .from(eventRegistrations)
     .where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.userId, user.id)))
     .limit(1)
     .then((rows) => rows[0]);
 
   if (existing) {
+    // If the member already has a confirmed payment, apply same paidAmount logic as admin edit:
+    // paidAmount = totalAmount + accumulated refundDue
+    const alreadyPaid = existing.paymentStatus === 'Paid';
+    const paidAmount = Number(existing.totalAmount) + Number(existing.refundDue ?? 0);
+    const runningRefund = alreadyPaid ? paidAmount - totalAmount : -1;
+
+    let newPaymentStatus: string;
+    let newRegistrationStatus: string;
+    let newRefundDue: number;
+
+    if (alreadyPaid && runningRefund > 0) {
+      // Reduced attendees — keep Paid/Confirmed, record refund owed
+      newPaymentStatus = 'Paid';
+      newRegistrationStatus = existing.paymentStatus === 'Paid' ? 'Confirmed' : 'Pending Registration';
+      newRefundDue = runningRefund;
+    } else if (alreadyPaid && runningRefund === 0) {
+      // Exact same total — keep Paid, clear refund
+      newPaymentStatus = 'Paid';
+      newRegistrationStatus = 'Confirmed';
+      newRefundDue = 0;
+    } else {
+      // Not paid, or total increased beyond what was paid — reset to Unpaid
+      newPaymentStatus = event.isPaid ? 'Unpaid' : 'Paid';
+      newRegistrationStatus = 'Pending Registration';
+      newRefundDue = 0;
+    }
+
     await db
       .update(eventRegistrations)
       .set({
@@ -132,11 +191,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         adultsCount: effectiveAdults,
         childrenCount: effectiveChildren,
         totalAmount,
-        paymentStatus: event.isPaid ? 'Unpaid' : 'Paid',
-        registrationStatus: 'Pending Registration',
+        refundDue: newRefundDue,
+        paymentStatus: newPaymentStatus,
+        registrationStatus: newRegistrationStatus,
         updatedAt: now,
       })
       .where(eq(eventRegistrations.id, existing.id));
+
+    return NextResponse.json({
+      message: newPaymentStatus === 'Paid' ? 'Registration updated.' : 'Pending Registration',
+      totalAmount,
+      refundDue: newRefundDue,
+    }, { status: 200 });
   } else {
     await db.insert(eventRegistrations).values({
       id: crypto.randomUUID(),

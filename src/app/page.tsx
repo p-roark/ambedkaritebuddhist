@@ -18,6 +18,9 @@ interface Event {
   imageKeys?: string[]
   status?: 'past' | 'upcoming'
   registrationStatus?: 'open' | 'closed' | 'not-started'
+  userRegistrationStatus?: string
+  userPaymentStatus?: string
+  isCoordinator?: boolean
 }
 
 type DbEvent = {
@@ -86,9 +89,15 @@ export default function Home() {
         if (!res.ok) throw new Error('Failed to load events')
         const data = (await res.json()) as {
           events: DbEvent[]
-          registrations: unknown[]
+          registrations: Array<{ eventId: string; registrationStatus: string; paymentStatus: string }>
           registrationCounts?: Record<string, number>
+          coordinatedEventIds?: string[]
         }
+        const regMap: Record<string, { registrationStatus: string; paymentStatus: string }> = {}
+        for (const r of data.registrations ?? []) {
+          regMap[r.eventId] = { registrationStatus: r.registrationStatus, paymentStatus: r.paymentStatus }
+        }
+        const coordinatedSet = new Set(data.coordinatedEventIds ?? [])
         const allEvents: Event[] = data.events.map((event) => ({
           id: event.id,
           title: event.title,
@@ -106,6 +115,9 @@ export default function Home() {
               : event.status === 'Upcoming'
                 ? 'not-started'
                 : 'closed',
+          userRegistrationStatus: regMap[event.id]?.registrationStatus,
+          userPaymentStatus: regMap[event.id]?.paymentStatus,
+          isCoordinator: coordinatedSet.has(event.id),
         }))
         setEvents(allEvents)
 

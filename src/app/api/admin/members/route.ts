@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, asc, eq, isNotNull, ne, or } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { eventCoordinators, leadershipRoles, organizationSettings, users } from '@/db/schema';
+import { eventCoordinators, familyMembers, leadershipRoles, organizationSettings, users } from '@/db/schema';
 import { getAuthenticatedUserId, requireAdmin } from '@/lib/admin-auth';
 import { pickDisplayName } from '@/lib/user-name';
 
@@ -29,6 +29,31 @@ export async function GET(request: NextRequest) {
       .leftJoin(users, eq(leadershipRoles.userId, users.id))
       .orderBy(asc(leadershipRoles.displayOrder));
     return NextResponse.json({ roles: rows }, { status: 200 });
+  }
+
+  // Family members for a specific user: admin or coordinator
+  if (searchParams.get('resource') === 'family-members') {
+    const targetUserId = searchParams.get('userId');
+    if (!targetUserId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    if (!isAdmin) {
+      const userId = await getAuthenticatedUserId(request);
+      if (!userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      const db = getDb();
+      const coord = await db
+        .select({ eventId: eventCoordinators.eventId })
+        .from(eventCoordinators)
+        .where(eq(eventCoordinators.userId, userId))
+        .limit(1)
+        .then((rows) => rows[0]);
+      if (!coord) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const db = getDb();
+    const members = await db
+      .select()
+      .from(familyMembers)
+      .where(eq(familyMembers.userId, targetUserId))
+      .orderBy(asc(familyMembers.name));
+    return NextResponse.json({ familyMembers: members }, { status: 200 });
   }
 
   // Also allow coordinators (any user who coordinates at least one event)

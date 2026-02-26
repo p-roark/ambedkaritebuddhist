@@ -5,10 +5,20 @@ import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-export function Navigation({ shortName = 'ABC Canada' }: { shortName?: string }) {
+export function Navigation() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const [sessionState, setSessionState] = useState(session)
+  const [shortName, setShortName] = useState('ABC Canada')
+
+  useEffect(() => {
+    fetch('/api/events?resource=org-settings')
+      .then((r) => r.json() as Promise<{ settings?: { shortName?: string } }>)
+      .then((data) => {
+        if (data.settings?.shortName) setShortName(data.settings.shortName)
+      })
+      .catch(() => {})
+  }, [])
 
   const isActive = (href: string) => pathname === href
 

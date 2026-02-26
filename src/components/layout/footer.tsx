@@ -1,28 +1,40 @@
-import { eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { organizationSettings } from '@/db/schema';
+'use client'
 
-async function getOrgSettings() {
-  try {
-    const db = getDb();
-    return await db
-      .select({ orgName: organizationSettings.orgName, shortName: organizationSettings.shortName, email: organizationSettings.email, description: organizationSettings.description })
-      .from(organizationSettings)
-      .where(eq(organizationSettings.id, 'main'))
-      .limit(1)
-      .then((rows) => rows[0]);
-  } catch {
-    return null;
-  }
+import { useEffect, useState } from 'react'
+
+interface OrgSettings {
+  shortName: string
+  email: string
+  orgName: string
+  description: string
 }
 
-export async function Footer() {
-  const currentYear = new Date().getFullYear();
-  const org = await getOrgSettings();
-  const shortName = org?.shortName ?? 'ABC Canada';
-  const email = org?.email ?? 'info@ambedkaritebuddhist.ca';
-  const orgName = org?.orgName ?? 'Ambedkarite Buddhist Organization Canada';
-  const description = org?.description ?? 'Fostering unity, education, and social welfare.';
+const defaults: OrgSettings = {
+  shortName: 'ABC Canada',
+  email: 'info@ambedkaritebuddhist.ca',
+  orgName: 'Ambedkarite Buddhist Organization Canada',
+  description: 'Fostering unity, education, and social welfare.',
+}
+
+export function Footer() {
+  const currentYear = new Date().getFullYear()
+  const [org, setOrg] = useState<OrgSettings>(defaults)
+
+  useEffect(() => {
+    fetch('/api/events?resource=org-settings')
+      .then((r) => r.json() as Promise<{ settings?: Partial<OrgSettings> }>)
+      .then((data) => {
+        if (data.settings) {
+          setOrg({
+            shortName: data.settings.shortName ?? defaults.shortName,
+            email: data.settings.email ?? defaults.email,
+            orgName: data.settings.orgName ?? defaults.orgName,
+            description: data.settings.description ?? defaults.description,
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <footer className="bg-text-dark text-white py-12">
@@ -30,27 +42,27 @@ export async function Footer() {
         <div className="text-center space-y-4">
           {/* Logo/Name */}
           <div>
-            <h3 className="font-poppins text-xl font-bold mb-2 text-primary-saffron">🪷 {shortName}</h3>
+            <h3 className="font-poppins text-xl font-bold mb-2 text-primary-saffron">🪷 {org.shortName}</h3>
             <p className="text-gray-300 text-sm leading-relaxed font-noto-sans max-w-2xl mx-auto">
-              {description}
+              {org.description}
             </p>
           </div>
 
           {/* Contact */}
           <div className="pt-6 pb-6">
             <p className="text-gray-300 text-sm">
-              Email: <a href={`mailto:${email}`} className="hover:text-primary-saffron transition-colors">{email}</a>
+              Email: <a href={`mailto:${org.email}`} className="hover:text-primary-saffron transition-colors">{org.email}</a>
             </p>
           </div>
 
           {/* Copyright */}
           <div className="border-t border-gray-700 pt-6">
             <p className="text-gray-400 text-sm">
-              © {currentYear} {orgName}. All rights reserved.
+              © {currentYear} {org.orgName}. All rights reserved.
             </p>
           </div>
         </div>
       </div>
     </footer>
-  );
+  )
 }
