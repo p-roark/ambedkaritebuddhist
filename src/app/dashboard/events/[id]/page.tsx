@@ -21,6 +21,7 @@ type EventDetail = {
   adultPrice: number;
   childPrice: number;
   maxAttendees: number | null;
+  externalLink: string | null;
   eventImages: string;
   status: EventStatus;
 };
@@ -107,6 +108,7 @@ export default function AdminEventPage() {
     adultPrice: 0,
     childPrice: 0,
     maxAttendees: '' as string, // empty string = no limit
+    externalLink: '',
     status: 'Upcoming' as EventStatus,
     eventImages: [] as string[],
   });
@@ -162,6 +164,7 @@ export default function AdminEventPage() {
       adultPrice: Number(data.event.adultPrice ?? 0),
       childPrice: Number(data.event.childPrice ?? 0),
       maxAttendees: data.event.maxAttendees != null ? String(data.event.maxAttendees) : '',
+      externalLink: data.event.externalLink ?? '',
       status: data.event.status,
       eventImages: parsedImages,
     });
@@ -348,6 +351,7 @@ export default function AdminEventPage() {
           adultPrice: eventForm.isPaid ? Number(eventForm.adultPrice) : 0,
           childPrice: eventForm.isPaid ? Number(eventForm.childPrice) : 0,
           maxAttendees: eventForm.maxAttendees !== '' ? Number(eventForm.maxAttendees) : null,
+          externalLink: eventForm.externalLink.trim() || null,
         }),
       });
       const data = (await res.json()) as { error?: string };
@@ -531,6 +535,16 @@ export default function AdminEventPage() {
                 value={eventForm.maxAttendees}
                 onChange={(e) => setEventForm((prev) => ({ ...prev, maxAttendees: e.target.value }))}
                 placeholder="No limit"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+            <label className="text-sm text-slate-700">
+              <span className="mb-1 block font-medium">External Event Link</span>
+              <input
+                type="url"
+                value={eventForm.externalLink}
+                onChange={(e) => setEventForm((prev) => ({ ...prev, externalLink: e.target.value }))}
+                placeholder="https://... (optional)"
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </label>

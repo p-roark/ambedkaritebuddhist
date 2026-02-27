@@ -134,6 +134,7 @@ export default function DashboardPage() {
   const [newEventAdultPrice, setNewEventAdultPrice] = useState(0);
   const [newEventChildPrice, setNewEventChildPrice] = useState(0);
   const [newEventMaxAttendees, setNewEventMaxAttendees] = useState('');
+  const [newEventExternalLink, setNewEventExternalLink] = useState('');
   const [newEventStatus, setNewEventStatus] = useState<EventStatus>('Upcoming');
   const [newEventMessage, setNewEventMessage] = useState('');
 
@@ -371,6 +372,7 @@ export default function DashboardPage() {
         adultPrice: newEventIsPaid ? newEventAdultPrice : 0,
         childPrice: newEventIsPaid ? newEventChildPrice : 0,
         maxAttendees: newEventMaxAttendees !== '' ? Number(newEventMaxAttendees) : null,
+        externalLink: newEventExternalLink.trim() || null,
         status: newEventStatus,
       }),
     });
@@ -391,6 +393,7 @@ export default function DashboardPage() {
     setNewEventAdultPrice(0);
     setNewEventChildPrice(0);
     setNewEventMaxAttendees('');
+    setNewEventExternalLink('');
     setNewEventStatus('Upcoming');
     setNewEventMessage('Event added successfully.');
     await loadEvents();
@@ -854,6 +857,16 @@ export default function DashboardPage() {
                     value={newEventMaxAttendees}
                     onChange={(e) => setNewEventMaxAttendees(e.target.value)}
                     placeholder="No limit"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">External event link</span>
+                  <input
+                    type="url"
+                    value={newEventExternalLink}
+                    onChange={(e) => setNewEventExternalLink(e.target.value)}
+                    placeholder="https://... (optional)"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>

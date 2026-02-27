@@ -22,6 +22,7 @@ type EventItem = {
   adultPrice: number
   childPrice: number
   maxAttendees: number | null
+  externalLink: string | null
   eventImages: string
   status: EventStatus
 }
@@ -272,36 +273,43 @@ export default function EventsPage() {
                     <p className="flex items-center gap-1.5 line-clamp-1"><span>📍</span><span>{event.location}</span></p>
                   </div>
 
-                  {/* Price + event status */}
-                  <div className="mb-4 flex items-center gap-2 flex-wrap">
-                    {event.isPaid ? (
-                      <span className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-medium">
-                        ${event.adultPrice}/adult · ${event.childPrice}/child
-                      </span>
-                    ) : (
-                      <span className="text-xs px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full font-medium">Free</span>
-                    )}
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      event.status === 'Registration Started'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      {event.status === 'Registration Started' ? 'Registration Open' : 'Registration Coming Soon'}
-                    </span>
-                    {event.maxAttendees != null && (() => {
-                      const count = registrationCounts[event.id] ?? 0
-                      const remaining = event.maxAttendees - count
-                      return remaining > 0 ? (
-                        <span className="text-xs px-2.5 py-1 bg-slate-50 text-slate-600 border border-slate-200 rounded-full">
-                          {remaining} spot{remaining !== 1 ? 's' : ''} left
+                  {/* Price + event status (not shown for external events) */}
+                  {!event.externalLink && (
+                    <div className="mb-4 flex items-center gap-2 flex-wrap">
+                      {event.isPaid ? (
+                        <span className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-medium">
+                          ${event.adultPrice}/adult · ${event.childPrice}/child
                         </span>
                       ) : (
-                        <span className="text-xs px-2.5 py-1 bg-red-50 text-red-700 border border-red-100 rounded-full font-medium">
-                          Full
-                        </span>
-                      )
-                    })()}
-                  </div>
+                        <span className="text-xs px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full font-medium">Free</span>
+                      )}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                        event.status === 'Registration Started'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                          : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {event.status === 'Registration Started' ? 'Registration Open' : 'Registration Coming Soon'}
+                      </span>
+                      {event.maxAttendees != null && (() => {
+                        const count = registrationCounts[event.id] ?? 0
+                        const remaining = event.maxAttendees - count
+                        return remaining > 0 ? (
+                          <span className="text-xs px-2.5 py-1 bg-slate-50 text-slate-600 border border-slate-200 rounded-full">
+                            {remaining} spot{remaining !== 1 ? 's' : ''} left
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2.5 py-1 bg-red-50 text-red-700 border border-red-100 rounded-full font-medium">
+                            Full
+                          </span>
+                        )
+                      })()}
+                    </div>
+                  )}
+                  {event.externalLink && (
+                    <div className="mb-4">
+                      <span className="text-xs px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-medium">External Event</span>
+                    </div>
+                  )}
 
                   {/* Footer: Info + Actions */}
                   <div className="mt-auto flex items-center justify-between gap-2 flex-wrap">
@@ -313,7 +321,16 @@ export default function EventsPage() {
                     </button>
 
                     <div className="flex items-center gap-2 flex-wrap justify-end">
-                      {isCoordinator ? (
+                      {event.externalLink ? (
+                        <a
+                          href={event.externalLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs px-4 py-1.5 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-md transition-all"
+                        >
+                          View Event →
+                        </a>
+                      ) : isCoordinator ? (
                         <Link href={`/dashboard/events/${event.id}`} className="text-xs px-3 py-1.5 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors font-medium">
                           Manage
                         </Link>
