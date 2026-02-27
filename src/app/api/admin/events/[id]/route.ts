@@ -107,7 +107,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = (await request.json()) as {
-    action?: 'updateEvent' | 'updateRegistration' | 'addCoordinator' | 'removeCoordinator' | 'editRegistration' | 'addPayment' | 'addRefund';
+    action?: 'updateEvent' | 'updateRegistration' | 'confirmRegistration' | 'addCoordinator' | 'removeCoordinator' | 'editRegistration' | 'addPayment' | 'addRefund';
     title?: string;
     description?: string;
     coverImage?: string;
@@ -118,6 +118,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     isPaid?: boolean;
     adultPrice?: number;
     childPrice?: number;
+    maxAttendees?: number | null;
     status?: EventStatus;
     eventImages?: string[];
     userId?: string;
@@ -335,12 +336,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         isPaid: Boolean(body.isPaid),
         adultPrice: Number(body.adultPrice ?? 0),
         childPrice: Number(body.childPrice ?? 0),
+        maxAttendees: body.maxAttendees != null ? Number(body.maxAttendees) : null,
         status: body.status,
         eventImages: JSON.stringify(imageKeys),
         updatedAt: new Date().toISOString(),
       })
       .where(eq(events.id, id));
 
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  // confirmRegistration — for free events, sets registrationStatus = Confirmed
+  if (body.action === 'confirmRegistration') {
+    if (!body.registrationId) return NextResponse.json({ error: 'registrationId required' }, { status: 400 });
+    await db
+      .update(eventRegistrations)
+      .set({ registrationStatus: 'Confirmed', updatedAt: new Date().toISOString() })
+      .where(and(eq(eventRegistrations.id, body.registrationId), eq(eventRegistrations.eventId, id)));
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 

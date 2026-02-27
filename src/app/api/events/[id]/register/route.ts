@@ -62,6 +62,34 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Registration is not open for this event' }, { status: 400 });
   }
 
+  // Check max attendees (only for new registrations — existing ones are updates)
+  if (event.maxAttendees != null) {
+    const existingUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1)
+      .then((r) => r[0]);
+    const alreadyRegistered = existingUser
+      ? await db
+          .select({ id: eventRegistrations.id })
+          .from(eventRegistrations)
+          .where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.userId, existingUser.id)))
+          .limit(1)
+          .then((r) => r[0])
+      : null;
+    if (!alreadyRegistered) {
+      const totalRegistered = await db
+        .select({ id: eventRegistrations.id })
+        .from(eventRegistrations)
+        .where(eq(eventRegistrations.eventId, eventId))
+        .then((r) => r.length);
+      if (totalRegistered >= event.maxAttendees) {
+        return NextResponse.json({ error: 'This event has reached its maximum number of attendees' }, { status: 409 });
+      }
+    }
+  }
+
   let user = await db
     .select({ id: users.id })
     .from(users)

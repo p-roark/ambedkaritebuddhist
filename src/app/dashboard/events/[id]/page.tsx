@@ -20,6 +20,7 @@ type EventDetail = {
   isPaid: boolean;
   adultPrice: number;
   childPrice: number;
+  maxAttendees: number | null;
   eventImages: string;
   status: EventStatus;
 };
@@ -105,6 +106,7 @@ export default function AdminEventPage() {
     isPaid: false,
     adultPrice: 0,
     childPrice: 0,
+    maxAttendees: '' as string, // empty string = no limit
     status: 'Upcoming' as EventStatus,
     eventImages: [] as string[],
   });
@@ -159,6 +161,7 @@ export default function AdminEventPage() {
       isPaid: Boolean(data.event.isPaid),
       adultPrice: Number(data.event.adultPrice ?? 0),
       childPrice: Number(data.event.childPrice ?? 0),
+      maxAttendees: data.event.maxAttendees != null ? String(data.event.maxAttendees) : '',
       status: data.event.status,
       eventImages: parsedImages,
     });
@@ -279,6 +282,16 @@ export default function AdminEventPage() {
     await loadData();
   };
 
+  const confirmRegistration = async (registrationId: string) => {
+    if (!eventId) return;
+    await fetch(`/api/admin/events/${eventId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'confirmRegistration', registrationId }),
+    });
+    await loadData();
+  };
+
   const openPaymentModal = (reg: Registration, mode: 'payment' | 'refund') => {
     setPaymentModal({ reg, mode, amount: '', reference: '', saving: false, error: '' });
   };
@@ -334,6 +347,7 @@ export default function AdminEventPage() {
           ...eventForm,
           adultPrice: eventForm.isPaid ? Number(eventForm.adultPrice) : 0,
           childPrice: eventForm.isPaid ? Number(eventForm.childPrice) : 0,
+          maxAttendees: eventForm.maxAttendees !== '' ? Number(eventForm.maxAttendees) : null,
         }),
       });
       const data = (await res.json()) as { error?: string };
@@ -510,6 +524,17 @@ export default function AdminEventPage() {
               />
             </label>
             <label className="text-sm text-slate-700">
+              <span className="mb-1 block font-medium">Max Attendees</span>
+              <input
+                type="number"
+                min={1}
+                value={eventForm.maxAttendees}
+                onChange={(e) => setEventForm((prev) => ({ ...prev, maxAttendees: e.target.value }))}
+                placeholder="No limit"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+            <label className="text-sm text-slate-700">
               <span className="mb-1 block font-medium">Current Status</span>
               <select
                 value={eventForm.status}
@@ -586,7 +611,21 @@ export default function AdminEventPage() {
         {/* Registrations table */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">Registered Members ({registrations.length})</h2>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="text-lg font-semibold text-slate-900">Registered Members ({registrations.length})</h2>
+              {event.maxAttendees != null && (() => {
+                const remaining = event.maxAttendees - registrations.length;
+                return remaining > 0 ? (
+                  <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full font-medium">
+                    {remaining} spot{remaining !== 1 ? 's' : ''} remaining of {event.maxAttendees}
+                  </span>
+                ) : (
+                  <span className="text-xs px-2.5 py-1 bg-red-50 text-red-700 border border-red-100 rounded-full font-medium">
+                    Full ({event.maxAttendees}/{event.maxAttendees})
+                  </span>
+                );
+              })()}
+            </div>
             <p className="text-sm text-slate-600 mt-1">Total attendees: {totalAttendees}</p>
           </div>
           <div className="overflow-x-auto">
@@ -670,6 +709,14 @@ export default function AdminEventPage() {
                         >
                           Edit
                         </button>
+                        {!event.isPaid && r.registrationStatus !== 'Confirmed' && (
+                          <button
+                            onClick={() => void confirmRegistration(r.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200"
+                          >
+                            Confirm
+                          </button>
+                        )}
                         {event.isPaid && (
                           <>
                             <button

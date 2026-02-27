@@ -21,6 +21,7 @@ type EventItem = {
   isPaid: boolean
   adultPrice: number
   childPrice: number
+  maxAttendees: number | null
   eventImages: string
   status: EventStatus
 }
@@ -66,6 +67,7 @@ export default function EventsPage() {
   const router = useRouter()
   const [events, setEvents] = useState<EventItem[]>([])
   const [registrationByEvent, setRegistrationByEvent] = useState<Record<string, { registrationStatus: string; paymentStatus: string }>>({})
+  const [registrationCounts, setRegistrationCounts] = useState<Record<string, number>>({})
   const [coordinatedEventIds, setCoordinatedEventIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -95,9 +97,11 @@ export default function EventsPage() {
     const data = (await res.json()) as {
       events: EventItem[]
       registrations: Array<{ eventId: string; registrationStatus: string; paymentStatus: string }>
+      registrationCounts?: Record<string, number>
       coordinatedEventIds?: string[]
     }
     setEvents(data.events)
+    setRegistrationCounts(data.registrationCounts ?? {})
     setCoordinatedEventIds(data.coordinatedEventIds ?? [])
     const statusMap: Record<string, { registrationStatus: string; paymentStatus: string }> = {}
     for (const reg of data.registrations || []) {
@@ -284,6 +288,19 @@ export default function EventsPage() {
                     }`}>
                       {event.status === 'Registration Started' ? 'Registration Open' : 'Registration Coming Soon'}
                     </span>
+                    {event.maxAttendees != null && (() => {
+                      const count = registrationCounts[event.id] ?? 0
+                      const remaining = event.maxAttendees - count
+                      return remaining > 0 ? (
+                        <span className="text-xs px-2.5 py-1 bg-slate-50 text-slate-600 border border-slate-200 rounded-full">
+                          {remaining} spot{remaining !== 1 ? 's' : ''} left
+                        </span>
+                      ) : (
+                        <span className="text-xs px-2.5 py-1 bg-red-50 text-red-700 border border-red-100 rounded-full font-medium">
+                          Full
+                        </span>
+                      )
+                    })()}
                   </div>
 
                   {/* Footer: Info + Actions */}

@@ -96,6 +96,7 @@ export const events = sqliteTable('Event', {
   adultPrice: integer('adultPrice').notNull().default(0),
   childPrice: integer('childPrice').notNull().default(0),
   eventImages: text('eventImages').notNull().default('[]'),
+  maxAttendees: integer('maxAttendees'), // null = no limit
   archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   status:    text('status').notNull().default('Upcoming'), // Upcoming | Registration Started | Event Ended
   createdAt: text('createdAt').notNull().default(sql`(datetime('now'))`),
