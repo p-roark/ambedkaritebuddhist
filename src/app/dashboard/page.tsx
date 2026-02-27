@@ -133,6 +133,7 @@ export default function DashboardPage() {
   const [newEventIsPaid, setNewEventIsPaid] = useState(false);
   const [newEventAdultPrice, setNewEventAdultPrice] = useState(0);
   const [newEventChildPrice, setNewEventChildPrice] = useState(0);
+  const [newEventMaxAttendees, setNewEventMaxAttendees] = useState('');
   const [newEventStatus, setNewEventStatus] = useState<EventStatus>('Upcoming');
   const [newEventMessage, setNewEventMessage] = useState('');
 
@@ -369,6 +370,7 @@ export default function DashboardPage() {
         isPaid: newEventIsPaid,
         adultPrice: newEventIsPaid ? newEventAdultPrice : 0,
         childPrice: newEventIsPaid ? newEventChildPrice : 0,
+        maxAttendees: newEventMaxAttendees !== '' ? Number(newEventMaxAttendees) : null,
         status: newEventStatus,
       }),
     });
@@ -388,6 +390,7 @@ export default function DashboardPage() {
     setNewEventIsPaid(false);
     setNewEventAdultPrice(0);
     setNewEventChildPrice(0);
+    setNewEventMaxAttendees('');
     setNewEventStatus('Upcoming');
     setNewEventMessage('Event added successfully.');
     await loadEvents();
@@ -841,6 +844,17 @@ export default function DashboardPage() {
                     placeholder="Child price"
                     disabled={!newEventIsPaid}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Max attendees</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={newEventMaxAttendees}
+                    onChange={(e) => setNewEventMaxAttendees(e.target.value)}
+                    placeholder="No limit"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
                 <div className="flex gap-2">

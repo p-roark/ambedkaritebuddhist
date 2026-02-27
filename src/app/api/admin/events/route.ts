@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
     isPaid?: boolean;
     adultPrice?: number;
     childPrice?: number;
+    maxAttendees?: number | null;
     status?: EventStatus;
     coordinatorIds?: string[];
   };
@@ -118,6 +119,7 @@ export async function POST(request: NextRequest) {
     isPaid: Boolean(body.isPaid),
     adultPrice: Number(body.adultPrice ?? 0),
     childPrice: Number(body.childPrice ?? 0),
+    maxAttendees: body.maxAttendees != null ? Number(body.maxAttendees) : null,
     status: body.status,
     createdAt: now,
     updatedAt: now,
