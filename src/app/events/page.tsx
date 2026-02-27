@@ -423,7 +423,9 @@ export default function EventsPage() {
                   <div className="space-y-1.5 text-sm text-text-medium">
                     <p>📅 {infoData.event.date} · ⏰ {infoData.event.time}</p>
                     <p>📍 {infoData.event.location}</p>
-                    <p>💰 {infoData.event.isPaid ? `$${infoData.event.adultPrice}/adult · $${infoData.event.childPrice}/child` : 'Free event'}</p>
+                    {!infoData.event.externalLink && (
+                      <p>💰 {infoData.event.isPaid ? `$${infoData.event.adultPrice}/adult · $${infoData.event.childPrice}/child` : 'Free event'}</p>
+                    )}
                   </div>
                   {infoData.event.description && (
                     <div className="border-t pt-4">
