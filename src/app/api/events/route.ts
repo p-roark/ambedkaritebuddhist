@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const event = await db.select().from(events).where(eq(events.id, eventId)).limit(1).then((r) => r[0]);
     if (!event) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const coordinators = await db
-      .select({ userId: eventCoordinators.userId, userName: users.name })
+      .select({ userId: eventCoordinators.userId, userName: users.name, userEmail: users.email, userPhone: users.phone })
       .from(eventCoordinators)
       .innerJoin(users, eq(users.id, eventCoordinators.userId))
       .where(eq(eventCoordinators.eventId, eventId));

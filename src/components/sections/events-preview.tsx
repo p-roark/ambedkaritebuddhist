@@ -22,6 +22,7 @@ interface EventCard {
   userRegistrationStatus?: string
   userPaymentStatus?: string
   isCoordinator?: boolean
+  externalLink?: string | null
 }
 
 interface EventsPreviewProps {
@@ -43,8 +44,9 @@ type InfoData = {
     isPaid: boolean
     adultPrice: number
     childPrice: number
+    externalLink: string | null
   }
-  coordinators: Array<{ userId: string; userName: string }>
+  coordinators: Array<{ userId: string; userName: string; userEmail: string | null; userPhone: string | null }>
 }
 
 function InfoIcon() {
@@ -134,7 +136,9 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
 
                 {/* Event status chip */}
                 <div className="mb-4">
-                  {event.status === 'past' ? (
+                  {event.externalLink ? (
+                    <span className="text-xs px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-medium">External Event</span>
+                  ) : event.status === 'past' ? (
                     <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full font-medium">Event Ended</span>
                   ) : (
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
@@ -159,7 +163,16 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                   </button>
 
                   <div className="flex items-center gap-2 flex-wrap justify-end">
-                    {event.status === 'past' ? (
+                    {event.externalLink ? (
+                      <a
+                        href={event.externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs px-4 py-1.5 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-md transition-all"
+                      >
+                        View Event →
+                      </a>
+                    ) : event.status === 'past' ? (
                       <Link
                         href={`/gallery?event=${event.id}`}
                         className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
@@ -250,10 +263,12 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                   <div className="space-y-1.5 text-sm text-text-medium">
                     <p>📅 {infoData.event.date} · ⏰ {infoData.event.time}</p>
                     <p>📍 {infoData.event.location}</p>
-                    <p>💰 {infoData.event.isPaid
-                      ? `$${infoData.event.adultPrice}/adult · $${infoData.event.childPrice}/child`
-                      : 'Free event'}
-                    </p>
+                    {!infoData.event.externalLink && (
+                      <p>💰 {infoData.event.isPaid
+                        ? `$${infoData.event.adultPrice}/adult · $${infoData.event.childPrice}/child`
+                        : 'Free event'}
+                      </p>
+                    )}
                   </div>
                   {infoData.event.description && (
                     <div className="border-t pt-4">
@@ -265,8 +280,14 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                       <p className="text-sm font-semibold text-text-dark mb-2">Event Coordinators</p>
                       <ul className="space-y-1">
                         {infoData.coordinators.map((c) => (
-                          <li key={c.userId} className="text-sm text-text-medium flex items-center gap-2">
-                            <span>👤</span>{c.userName}
+                          <li key={c.userId} className="text-sm text-text-medium space-y-0.5">
+                            <p className="font-medium text-text-dark flex items-center gap-1.5"><span>👤</span>{c.userName}</p>
+                            {c.userEmail && (
+                              <p className="pl-6"><a href={`mailto:${c.userEmail}`} className="hover:underline text-primary-blue">{c.userEmail}</a></p>
+                            )}
+                            {c.userPhone && (
+                              <p className="pl-6"><a href={`tel:${c.userPhone}`} className="hover:underline">{c.userPhone}</a></p>
+                            )}
                           </li>
                         ))}
                       </ul>

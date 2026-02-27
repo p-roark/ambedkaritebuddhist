@@ -41,7 +41,7 @@ type NonMemberGuest = {
 
 type InfoData = {
   event: EventItem
-  coordinators: Array<{ userId: string; userName: string }>
+  coordinators: Array<{ userId: string; userName: string; userEmail: string | null; userPhone: string | null }>
 }
 
 type FullRegistration = {
@@ -437,8 +437,14 @@ export default function EventsPage() {
                       <p className="text-sm font-semibold text-text-dark mb-2">Event Coordinators</p>
                       <ul className="space-y-1">
                         {infoData.coordinators.map((c) => (
-                          <li key={c.userId} className="text-sm text-text-medium flex items-center gap-2">
-                            <span>👤</span>{c.userName}
+                          <li key={c.userId} className="text-sm text-text-medium space-y-0.5">
+                            <p className="font-medium text-text-dark flex items-center gap-1.5"><span>👤</span>{c.userName}</p>
+                            {c.userEmail && (
+                              <p className="pl-6"><a href={`mailto:${c.userEmail}`} className="hover:underline text-primary-blue">{c.userEmail}</a></p>
+                            )}
+                            {c.userPhone && (
+                              <p className="pl-6"><a href={`tel:${c.userPhone}`} className="hover:underline">{c.userPhone}</a></p>
+                            )}
                           </li>
                         ))}
                       </ul>

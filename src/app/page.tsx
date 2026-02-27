@@ -21,6 +21,7 @@ interface Event {
   userRegistrationStatus?: string
   userPaymentStatus?: string
   isCoordinator?: boolean
+  externalLink?: string | null
 }
 
 type DbEvent = {
@@ -33,6 +34,7 @@ type DbEvent = {
   location: string
   eventType: string
   eventImages: string
+  externalLink: string | null
   status: 'Upcoming' | 'Registration Started' | 'Event Ended'
 }
 
@@ -98,7 +100,7 @@ export default function Home() {
           regMap[r.eventId] = { registrationStatus: r.registrationStatus, paymentStatus: r.paymentStatus }
         }
         const coordinatedSet = new Set(data.coordinatedEventIds ?? [])
-        const allEvents: Event[] = data.events.map((event) => ({
+        const allEvents: Event[] = data.events.filter((event) => event.status !== 'Event Ended').map((event) => ({
           id: event.id,
           title: event.title,
           date: formatEventDate(event.date),
@@ -118,6 +120,7 @@ export default function Home() {
           userRegistrationStatus: regMap[event.id]?.registrationStatus,
           userPaymentStatus: regMap[event.id]?.paymentStatus,
           isCoordinator: coordinatedSet.has(event.id),
+          externalLink: event.externalLink,
         }))
         setEvents(allEvents)
 
