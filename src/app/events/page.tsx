@@ -225,21 +225,31 @@ export default function EventsPage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-white flex items-center justify-center"><p className="text-lg text-text-medium">Loading events...</p></div>
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-blue" />
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-white">
-      <section className="bg-gradient-to-br from-primary-blue via-accent-purple to-accent-orange py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Events</h1>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto">Join our community events and celebrations</p>
+      <section
+        className="relative py-28 md:py-36 overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #2D4D9B 0%, #7F56D9 55%, #FF6B35 100%)' }}
+      >
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-white/5" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <p className="text-sm font-bold text-primary-saffron uppercase tracking-widest mb-4">Community</p>
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 font-poppins">Events</h1>
+          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">Join our community events and celebrations</p>
         </div>
       </section>
 
       {/* Upcoming Events */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl font-bold text-text-dark mb-8">Upcoming Events</h2>
+        <h2 className="text-2xl font-bold text-text-dark mb-8 font-poppins">Upcoming Events</h2>
         {upcoming.length === 0 && (
           <p className="text-text-medium">No upcoming events at this time. Check back soon.</p>
         )}
@@ -313,56 +323,54 @@ export default function EventsPage() {
                   )}
 
                   {/* Footer: Info + Actions */}
-                  <div className="mt-auto flex items-center justify-between gap-2 flex-wrap">
+                  <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
                     <button
                       onClick={() => openInfoModal(event.id)}
-                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 border-2 border-primary-blue text-primary-blue rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
+                      className="flex items-center gap-1 text-xs font-medium text-text-medium hover:text-primary-blue transition-colors"
                     >
                       <InfoIcon />Info
                     </button>
 
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <div className="flex items-center gap-2">
                       {event.externalLink ? (
                         <a
                           href={event.externalLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
+                          className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
                         >
                           View Event →
                         </a>
                       ) : (
                         <>
                           {isCoordinator && (
-                            <Link href={`/dashboard/events/${event.id}`} className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200">
+                            <Link href={`/dashboard/events/${event.id}`} className="text-xs px-3 py-2 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors">
                               Manage
                             </Link>
                           )}
                           {reg ? (
                             <>
-                              <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-                                reg.registrationStatus === 'Confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
-                                reg.registrationStatus === 'Rejected' ? 'bg-red-50 text-red-700 border border-red-200' :
-                                'bg-slate-100 text-slate-600 border border-slate-200'
+                              <span className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
+                                reg.registrationStatus === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                                reg.registrationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
                               }`}>
-                                {reg.registrationStatus === 'Confirmed' ? 'Registration Confirmed' :
-                                 reg.registrationStatus === 'Pending Registration' ? 'Registration Pending' :
+                                {reg.registrationStatus === 'Confirmed' ? '✓ Confirmed' :
+                                 reg.registrationStatus === 'Pending Registration' ? 'Pending' :
                                  reg.registrationStatus}
                               </span>
                               {event.status === 'Registration Started' && (
-                                <button onClick={() => openEditModal(event)} className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200">
-                                  Edit Registration
+                                <button onClick={() => openEditModal(event)} className="text-xs px-3 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors">
+                                  Edit
                                 </button>
                               )}
                             </>
                           ) : event.status === 'Registration Started' ? (
-                            <button onClick={() => openRegisterModal(event)} className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200">
+                            <button onClick={() => openRegisterModal(event)} className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors">
                               Register
                             </button>
                           ) : (
-                            <button disabled className="text-xs px-4 py-1.5 border-2 border-gray-200 text-gray-400 rounded-full cursor-not-allowed font-medium">
-                              Coming Soon
-                            </button>
+                            <span className="text-xs text-text-light font-medium">Coming Soon</span>
                           )}
                         </>
                       )}
@@ -378,7 +386,7 @@ export default function EventsPage() {
       {/* Past Events */}
       {past.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-gray-100">
-          <h2 className="text-3xl font-bold text-text-dark mb-8">Past Events</h2>
+          <h2 className="text-2xl font-bold text-text-dark mb-8 font-poppins">Past Events</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {past.map((event) => {
               const hasGallery = (() => {
@@ -462,7 +470,7 @@ export default function EventsPage() {
               )}
             </div>
             <div className="p-6 border-t flex justify-end">
-              <button onClick={() => { setInfoEventId(null); setInfoData(null) }} className="px-4 py-2 text-sm border rounded-md hover:bg-gray-50">Close</button>
+              <button onClick={() => { setInfoEventId(null); setInfoData(null) }} className="px-4 py-2 text-sm border border-slate-200 rounded-xl text-text-medium hover:bg-slate-50 transition-colors">Close</button>
             </div>
           </div>
         </div>
@@ -556,7 +564,7 @@ export default function EventsPage() {
                       setNonMemberGuests((prev) => [...prev, { name, age }])
                       setNewGuestName('')
                       setNewGuestAge('')
-                    }} className="col-span-2 px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800">
+                    }} className="col-span-2 px-3 py-2 text-sm rounded-xl bg-primary-blue text-white font-semibold hover:bg-primary-blue/90 transition-colors">
                       Add Non-member Guest
                     </button>
                     {nonMemberGuests.length > 0 && (
@@ -601,8 +609,8 @@ export default function EventsPage() {
             </div>
 
             <div className="p-6 border-t flex justify-end gap-3">
-              <button onClick={closeModal} className="px-4 py-2 text-sm border rounded-md hover:bg-gray-50">Close</button>
-              <button onClick={registerForEvent} disabled={registering} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
+              <button onClick={closeModal} className="px-4 py-2 text-sm border border-slate-200 rounded-xl text-text-medium hover:bg-slate-50 transition-colors">Close</button>
+              <button onClick={registerForEvent} disabled={registering} className="px-5 py-2 text-sm text-white bg-primary-blue rounded-xl font-bold hover:bg-primary-blue/90 disabled:opacity-50 transition-colors">
                 {registering ? 'Submitting...' : isEditMode ? 'Save Changes' : 'Submit Registration'}
               </button>
             </div>
