@@ -403,24 +403,24 @@ export default function EventsPage() {
       {/* Info Modal */}
       {infoEventId && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="px-6 py-4 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white">Event Details</h3>
-              <button onClick={() => { setInfoEventId(null); setInfoData(null) }} className="text-white/80 hover:text-white text-2xl leading-none">×</button>
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-8 py-5 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white">Event Details</h3>
+              <button onClick={() => { setInfoEventId(null); setInfoData(null) }} className="text-white/80 hover:text-white text-2xl font-semibold leading-none">×</button>
             </div>
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-8 overflow-y-auto flex-1">
               {loadingInfo ? (
                 <div className="text-center py-8 text-text-medium text-sm">Loading...</div>
               ) : infoData ? (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div>
-                    <h2 className="text-xl font-bold text-text-dark mb-2">{infoData.event.title}</h2>
+                    <h2 className="text-2xl font-bold text-text-dark mb-3">{infoData.event.title}</h2>
                     <div className="flex gap-2 flex-wrap">
                       <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">{infoData.event.eventType}</span>
                       <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full">{infoData.event.status}</span>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-sm text-text-medium">
+                  <div className="space-y-2 text-sm text-text-medium">
                     <p>📅 {infoData.event.date} · ⏰ {infoData.event.time}</p>
                     <p>📍 {infoData.event.location}</p>
                     {!infoData.event.externalLink && (
@@ -428,14 +428,14 @@ export default function EventsPage() {
                     )}
                   </div>
                   {infoData.event.description && (
-                    <div className="border-t pt-4">
+                    <div className="border-t pt-5">
                       <p className="text-sm text-text-dark leading-relaxed whitespace-pre-line">{infoData.event.description}</p>
                     </div>
                   )}
                   {infoData.coordinators.length > 0 && (
-                    <div className="border-t pt-4">
-                      <p className="text-sm font-semibold text-text-dark mb-2">Event Coordinators</p>
-                      <ul className="space-y-1">
+                    <div className="border-t pt-5">
+                      <p className="text-sm font-semibold text-text-dark mb-3">Event Coordinators</p>
+                      <ul className="space-y-2">
                         {infoData.coordinators.map((c) => (
                           <li key={c.userId} className="text-sm text-text-medium space-y-0.5">
                             <p className="font-medium text-text-dark flex items-center gap-1.5"><span>👤</span>{c.userName}</p>
@@ -455,7 +455,7 @@ export default function EventsPage() {
                 <div className="text-center py-8 text-red-500 text-sm">Unable to load event details.</div>
               )}
             </div>
-            <div className="p-4 border-t flex justify-end">
+            <div className="p-6 border-t flex justify-end">
               <button onClick={() => { setInfoEventId(null); setInfoData(null) }} className="px-4 py-2 text-sm border rounded-md hover:bg-gray-50">Close</button>
             </div>
           </div>
@@ -465,13 +465,13 @@ export default function EventsPage() {
       {/* Registration / Edit Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-5 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-center">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-8 py-5 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-center">
               <h3 className="text-xl font-bold text-white">{isEditMode ? 'Edit Registration: ' : 'Register: '}{selectedEvent.title}</h3>
               <button onClick={closeModal} className="text-white/90 hover:text-white text-2xl font-semibold leading-none">×</button>
             </div>
 
-            <div className="p-6 space-y-5 overflow-y-auto flex-1">
+            <div className="p-8 space-y-5 overflow-y-auto flex-1">
               {isEditMode && existingPaidAmount > 0 ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 space-y-1">
                   <p className="text-sm text-amber-800 font-medium">You have a confirmed registration</p>
