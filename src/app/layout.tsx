@@ -23,6 +23,7 @@ const notoSans = Noto_Sans({
 })
 
 export const metadata: Metadata = {
+  icons: { icon: '/icon.svg', shortcut: '/icon.svg' },
   title: 'Ambedkarite Buddhist Community - Canada',
   description: 'Welcome to the Ambedkarite Buddhist Community in Canada. Fostering unity, education, and social welfare based on the teachings of Dr. B.R. Ambedkar.',
   keywords: ['Ambedkar', 'Buddhism', 'Community', 'Canada', 'Social Welfare', 'Education'],
