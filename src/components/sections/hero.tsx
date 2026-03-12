@@ -74,7 +74,12 @@ export function Hero({
   const displayRightImage = normalizeImagePath(randomEventImage || image || displayOverlayImage, '/images/backgrounds/ambedkar-1.jpg')
 
   if (isLoading || !backgroundImage) {
-    return <div className={`${heightClass}`}></div>
+    return (
+      <div
+        className={`${heightClass} animate-pulse`}
+        style={{ background: 'linear-gradient(135deg, #2D4D9B 0%, #7F56D9 55%, #FF6B35 100%)' }}
+      />
+    )
   }
 
   if (layout === 'two-column' && image) {
