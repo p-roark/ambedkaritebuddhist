@@ -154,73 +154,74 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                 </div>
 
                 {/* Footer: Info + Action */}
-                <div className="mt-auto flex items-center justify-between gap-2 flex-wrap">
+                <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
                   <button
                     onClick={() => openInfoModal(event.id)}
-                    className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 border-2 border-primary-blue text-primary-blue rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200 flex-shrink-0"
+                    className="flex items-center gap-1 text-xs font-medium text-text-medium hover:text-primary-blue transition-colors flex-shrink-0"
                   >
                     <InfoIcon />Info
                   </button>
 
-                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                  <div className="flex items-center gap-2">
                     {event.externalLink ? (
                       <a
                         href={event.externalLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
+                        className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
                       >
                         View Event →
                       </a>
                     ) : event.status === 'past' ? (
                       <Link
                         href={`/gallery?event=${event.id}`}
-                        className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
+                        className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
                       >
                         View Photos
                       </Link>
-                    ) : event.isCoordinator ? (
-                      <Link
-                        href={`/dashboard/events/${event.id}`}
-                        className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
-                      >
-                        Manage
-                      </Link>
-                    ) : event.userRegistrationStatus ? (
+                    ) : (
                       <>
-                        <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-                          event.userRegistrationStatus === 'Confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
-                          event.userRegistrationStatus === 'Rejected' ? 'bg-red-50 text-red-700 border border-red-200' :
-                          'bg-slate-100 text-slate-600 border border-slate-200'
-                        }`}>
-                          {event.userRegistrationStatus === 'Confirmed' ? 'Registration Confirmed' :
-                           event.userRegistrationStatus === 'Pending Registration' ? 'Registration Pending' :
-                           event.userRegistrationStatus}
-                        </span>
-                        {event.registrationStatus === 'open' && (
+                        {event.isCoordinator && (
                           <Link
-                            href="/events"
-                            className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
+                            href={`/dashboard/events/${event.id}`}
+                            className="text-xs px-3 py-2 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors"
                           >
-                            Edit Registration
+                            Manage
                           </Link>
                         )}
+                        {event.userRegistrationStatus ? (
+                          <>
+                            <span className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
+                              event.userRegistrationStatus === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                              event.userRegistrationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-amber-100 text-amber-700'
+                            }`}>
+                              {event.userRegistrationStatus === 'Confirmed' ? '✓ Confirmed' :
+                               event.userRegistrationStatus === 'Pending Registration' ? 'Pending' :
+                               event.userRegistrationStatus}
+                            </span>
+                            {event.registrationStatus === 'open' && (
+                              <Link
+                                href="/events"
+                                className="text-xs px-3 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
+                              >
+                                Edit
+                              </Link>
+                            )}
+                          </>
+                        ) : event.registrationStatus === 'open' ? (
+                          <button
+                            onClick={handleRegisterClick}
+                            className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
+                          >
+                            Register
+                          </button>
+                        ) : event.registrationStatus === 'not-started' ? (
+                          <span className="text-xs text-text-light font-medium">Coming Soon</span>
+                        ) : (
+                          <span className="text-xs text-text-light font-medium">Closed</span>
+                        )}
                       </>
-                    ) : event.registrationStatus === 'open' ? (
-                      <button
-                        onClick={handleRegisterClick}
-                        className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
-                      >
-                        Register
-                      </button>
-                    ) : event.registrationStatus === 'not-started' ? (
-                      <button disabled className="text-xs px-4 py-1.5 border-2 border-gray-200 text-gray-400 font-medium rounded-full cursor-not-allowed">
-                        Coming Soon
-                      </button>
-                    ) : (
-                      <button disabled className="text-xs px-4 py-1.5 border-2 border-gray-200 text-gray-400 font-medium rounded-full cursor-not-allowed">
-                        Registration Closed
-                      </button>
                     )}
                   </div>
                 </div>
