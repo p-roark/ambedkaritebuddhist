@@ -22,6 +22,7 @@ type EventDetail = {
   childPrice: number;
   maxAttendees: number | null;
   externalLink: string | null;
+  paymentInstructions: string | null;
   eventImages: string;
   status: EventStatus;
 };
@@ -109,6 +110,7 @@ export default function AdminEventPage() {
     childPrice: 0,
     maxAttendees: '' as string, // empty string = no limit
     externalLink: '',
+    paymentInstructions: '',
     status: 'Upcoming' as EventStatus,
     eventImages: [] as string[],
   });
@@ -165,6 +167,7 @@ export default function AdminEventPage() {
       childPrice: Number(data.event.childPrice ?? 0),
       maxAttendees: data.event.maxAttendees != null ? String(data.event.maxAttendees) : '',
       externalLink: data.event.externalLink ?? '',
+      paymentInstructions: data.event.paymentInstructions ?? '',
       status: data.event.status,
       eventImages: parsedImages,
     });
@@ -352,6 +355,7 @@ export default function AdminEventPage() {
           childPrice: eventForm.isPaid ? Number(eventForm.childPrice) : 0,
           maxAttendees: eventForm.maxAttendees !== '' ? Number(eventForm.maxAttendees) : null,
           externalLink: eventForm.externalLink.trim() || null,
+          paymentInstructions: eventForm.isPaid ? eventForm.paymentInstructions.trim() || null : null,
         }),
       });
       const data = (await res.json()) as { error?: string };
@@ -546,6 +550,17 @@ export default function AdminEventPage() {
                 onChange={(e) => setEventForm((prev) => ({ ...prev, externalLink: e.target.value }))}
                 placeholder="https://... (optional)"
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+            <label className="text-sm text-slate-700 col-span-full">
+              <span className="mb-1 block font-medium">Payment Instructions</span>
+              <textarea
+                rows={2}
+                value={eventForm.paymentInstructions}
+                onChange={(e) => setEventForm((prev) => ({ ...prev, paymentInstructions: e.target.value }))}
+                disabled={!eventForm.isPaid}
+                placeholder="e.g. E-transfer to payments@abccanada.org with event name in the memo"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
               />
             </label>
             <label className="text-sm text-slate-700">
