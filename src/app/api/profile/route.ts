@@ -15,13 +15,20 @@ async function getOrCreateUserId() {
 
   const db = getDb();
   const existing = await db
-    .select({ id: users.id })
+    .select({ id: users.id, image: users.image })
     .from(users)
     .where(eq(users.email, email))
     .limit(1)
     .then((rows) => rows[0]);
 
-  if (existing) return existing.id;
+  if (existing) {
+    // Keep Google profile picture in sync on every login
+    const freshImage = String(session?.user?.image ?? '') || null;
+    if (freshImage && freshImage !== existing.image) {
+      await db.update(users).set({ image: freshImage, updatedAt: new Date().toISOString() }).where(eq(users.email, email));
+    }
+    return existing.id;
+  }
 
   const now = new Date().toISOString();
   const userId = crypto.randomUUID();
