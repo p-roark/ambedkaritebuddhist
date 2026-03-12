@@ -157,7 +157,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                 <div className="mt-auto flex items-center justify-between gap-2 flex-wrap">
                   <button
                     onClick={() => openInfoModal(event.id)}
-                    className="flex items-center gap-1.5 text-xs text-text-medium hover:text-primary-blue transition-colors border border-gray-200 hover:border-primary-blue rounded-full px-3 py-1.5 flex-shrink-0"
+                    className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 border-2 border-primary-blue text-primary-blue rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200 flex-shrink-0"
                   >
                     <InfoIcon />Info
                   </button>
@@ -168,7 +168,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                         href={event.externalLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs px-4 py-1.5 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-md transition-all"
+                        className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
                       >
                         View Event →
                       </a>
@@ -182,16 +182,16 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                     ) : event.isCoordinator ? (
                       <Link
                         href={`/dashboard/events/${event.id}`}
-                        className="text-xs px-3 py-1.5 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors font-medium"
+                        className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
                       >
                         Manage
                       </Link>
                     ) : event.userRegistrationStatus ? (
                       <>
                         <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-                          event.userRegistrationStatus === 'Confirmed' ? 'bg-green-50 text-green-700' :
-                          event.userRegistrationStatus === 'Rejected' ? 'bg-red-50 text-red-700' :
-                          'bg-slate-100 text-slate-600'
+                          event.userRegistrationStatus === 'Confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                          event.userRegistrationStatus === 'Rejected' ? 'bg-red-50 text-red-700 border border-red-200' :
+                          'bg-slate-100 text-slate-600 border border-slate-200'
                         }`}>
                           {event.userRegistrationStatus === 'Confirmed' ? 'Registration Confirmed' :
                            event.userRegistrationStatus === 'Pending Registration' ? 'Registration Pending' :
@@ -200,7 +200,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                         {event.registrationStatus === 'open' && (
                           <Link
                             href="/events"
-                            className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors font-medium"
+                            className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
                           >
                             Edit Registration
                           </Link>
@@ -209,16 +209,16 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                     ) : event.registrationStatus === 'open' ? (
                       <button
                         onClick={handleRegisterClick}
-                        className="text-xs px-4 py-1.5 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-md transition-all"
+                        className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
                       >
                         Register
                       </button>
                     ) : event.registrationStatus === 'not-started' ? (
-                      <button disabled className="text-xs px-4 py-1.5 bg-gray-100 text-gray-500 font-medium rounded-full cursor-not-allowed">
+                      <button disabled className="text-xs px-4 py-1.5 border-2 border-gray-200 text-gray-400 font-medium rounded-full cursor-not-allowed">
                         Coming Soon
                       </button>
                     ) : (
-                      <button disabled className="text-xs px-4 py-1.5 bg-gray-100 text-gray-500 font-medium rounded-full cursor-not-allowed">
+                      <button disabled className="text-xs px-4 py-1.5 border-2 border-gray-200 text-gray-400 font-medium rounded-full cursor-not-allowed">
                         Registration Closed
                       </button>
                     )}

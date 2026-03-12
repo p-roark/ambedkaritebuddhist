@@ -316,7 +316,7 @@ export default function EventsPage() {
                   <div className="mt-auto flex items-center justify-between gap-2 flex-wrap">
                     <button
                       onClick={() => openInfoModal(event.id)}
-                      className="flex items-center gap-1.5 text-xs text-text-medium hover:text-primary-blue transition-colors border border-gray-200 hover:border-primary-blue rounded-full px-3 py-1.5"
+                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 border-2 border-primary-blue text-primary-blue rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
                     >
                       <InfoIcon />Info
                     </button>
@@ -327,39 +327,44 @@ export default function EventsPage() {
                           href={event.externalLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs px-4 py-1.5 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-md transition-all"
+                          className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
                         >
                           View Event →
                         </a>
-                      ) : isCoordinator ? (
-                        <Link href={`/dashboard/events/${event.id}`} className="text-xs px-3 py-1.5 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors font-medium">
-                          Manage
-                        </Link>
-                      ) : reg ? (
+                      ) : (
                         <>
-                          <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-                            reg.registrationStatus === 'Confirmed' ? 'bg-green-50 text-green-700' :
-                            reg.registrationStatus === 'Rejected' ? 'bg-red-50 text-red-700' :
-                            'bg-slate-100 text-slate-600'
-                          }`}>
-                            {reg.registrationStatus === 'Confirmed' ? 'Registration Confirmed' :
-                             reg.registrationStatus === 'Pending Registration' ? 'Registration Pending' :
-                             reg.registrationStatus}
-                          </span>
-                          {event.status === 'Registration Started' && (
-                            <button onClick={() => openEditModal(event)} className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors font-medium">
-                              Edit Registration
+                          {isCoordinator && (
+                            <Link href={`/dashboard/events/${event.id}`} className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200">
+                              Manage
+                            </Link>
+                          )}
+                          {reg ? (
+                            <>
+                              <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
+                                reg.registrationStatus === 'Confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                                reg.registrationStatus === 'Rejected' ? 'bg-red-50 text-red-700 border border-red-200' :
+                                'bg-slate-100 text-slate-600 border border-slate-200'
+                              }`}>
+                                {reg.registrationStatus === 'Confirmed' ? 'Registration Confirmed' :
+                                 reg.registrationStatus === 'Pending Registration' ? 'Registration Pending' :
+                                 reg.registrationStatus}
+                              </span>
+                              {event.status === 'Registration Started' && (
+                                <button onClick={() => openEditModal(event)} className="text-xs px-3 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200">
+                                  Edit Registration
+                                </button>
+                              )}
+                            </>
+                          ) : event.status === 'Registration Started' ? (
+                            <button onClick={() => openRegisterModal(event)} className="text-xs px-4 py-1.5 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200">
+                              Register
+                            </button>
+                          ) : (
+                            <button disabled className="text-xs px-4 py-1.5 border-2 border-gray-200 text-gray-400 rounded-full cursor-not-allowed font-medium">
+                              Coming Soon
                             </button>
                           )}
                         </>
-                      ) : event.status === 'Registration Started' ? (
-                        <button onClick={() => openRegisterModal(event)} className="text-xs px-4 py-1.5 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-md transition-all">
-                          Register
-                        </button>
-                      ) : (
-                        <button disabled className="text-xs px-4 py-1.5 bg-gray-100 text-gray-500 rounded-full cursor-not-allowed font-medium">
-                          Coming Soon
-                        </button>
                       )}
                     </div>
                   </div>
