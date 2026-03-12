@@ -120,6 +120,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     childPrice?: number;
     maxAttendees?: number | null;
     externalLink?: string | null;
+    paymentInstructions?: string | null;
     status?: EventStatus;
     eventImages?: string[];
     userId?: string;
@@ -339,6 +340,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         childPrice: Number(body.childPrice ?? 0),
         maxAttendees: body.maxAttendees != null ? Number(body.maxAttendees) : null,
         externalLink: body.externalLink?.trim() || null,
+        paymentInstructions: body.paymentInstructions?.trim() || null,
         status: body.status,
         eventImages: JSON.stringify(imageKeys),
         updatedAt: new Date().toISOString(),

@@ -55,6 +55,7 @@ type EventItem = {
   isPaid: boolean;
   adultPrice: number;
   childPrice: number;
+  paymentInstructions: string | null;
   archived: boolean;
   status: EventStatus;
   coordinators: Array<{ id: string; name: string }>;
@@ -135,6 +136,7 @@ export default function DashboardPage() {
   const [newEventChildPrice, setNewEventChildPrice] = useState(0);
   const [newEventMaxAttendees, setNewEventMaxAttendees] = useState('');
   const [newEventExternalLink, setNewEventExternalLink] = useState('');
+  const [newEventPaymentInstructions, setNewEventPaymentInstructions] = useState('');
   const [newEventStatus, setNewEventStatus] = useState<EventStatus>('Upcoming');
   const [newEventMessage, setNewEventMessage] = useState('');
 
@@ -373,6 +375,7 @@ export default function DashboardPage() {
         childPrice: newEventIsPaid ? newEventChildPrice : 0,
         maxAttendees: newEventMaxAttendees !== '' ? Number(newEventMaxAttendees) : null,
         externalLink: newEventExternalLink.trim() || null,
+        paymentInstructions: newEventIsPaid ? newEventPaymentInstructions.trim() || null : null,
         status: newEventStatus,
       }),
     });
@@ -868,6 +871,17 @@ export default function DashboardPage() {
                     onChange={(e) => setNewEventExternalLink(e.target.value)}
                     placeholder="https://... (optional)"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="text-sm text-gray-700 md:col-span-3">
+                  <span className="mb-1 block font-medium">Payment instructions</span>
+                  <textarea
+                    rows={2}
+                    value={newEventPaymentInstructions}
+                    onChange={(e) => setNewEventPaymentInstructions(e.target.value)}
+                    disabled={!newEventIsPaid}
+                    placeholder="e.g. E-transfer to payments@abccanada.org with event name in the memo"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                   />
                 </label>
                 <div className="flex gap-2">

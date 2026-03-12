@@ -23,6 +23,7 @@ type EventItem = {
   childPrice: number
   maxAttendees: number | null
   externalLink: string | null
+  paymentInstructions: string | null
   eventImages: string
   status: EventStatus
 }
@@ -492,6 +493,13 @@ export default function EventsPage() {
                 <p className="text-sm text-blue-800 font-medium">You are already counted as 1 adult attendee.</p>
                 <p className="text-xs text-blue-700 mt-1">Add additional family members or guests below.</p>
               </div>
+
+              {selectedEvent.isPaid && selectedEvent.paymentInstructions && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-sm text-amber-800 font-semibold mb-1">💳 Payment Instructions</p>
+                  <p className="text-sm text-amber-900 whitespace-pre-line">{selectedEvent.paymentInstructions}</p>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="flex items-center gap-2 text-sm rounded-md border border-slate-200 px-3 py-2">

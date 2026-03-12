@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
     childPrice?: number;
     maxAttendees?: number | null;
     externalLink?: string | null;
+    paymentInstructions?: string | null;
     status?: EventStatus;
     coordinatorIds?: string[];
   };
@@ -122,6 +123,7 @@ export async function POST(request: NextRequest) {
     childPrice: Number(body.childPrice ?? 0),
     maxAttendees: body.maxAttendees != null ? Number(body.maxAttendees) : null,
     externalLink: body.externalLink?.trim() || null,
+    paymentInstructions: body.paymentInstructions?.trim() || null,
     status: body.status,
     createdAt: now,
     updatedAt: now,
