@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
         userName: users.name,
         userEmail: users.email,
         userPhone: users.phone,
+        userImage: users.image,
         userJoinedAt: users.createdAt,
       })
       .from(leadershipRoles)

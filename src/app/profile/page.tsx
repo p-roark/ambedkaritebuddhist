@@ -8,6 +8,7 @@ type Profile = {
   id: string;
   name: string;
   email: string;
+  image: string | null;
   phone: string | null;
   altPhone: string | null;
   addressLine1: string | null;
@@ -182,8 +183,23 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
-          <p className="text-sm text-slate-600 mt-1">Manage your contact details, education, interests, and family members.</p>
+          <div className="flex items-center gap-4 mb-5">
+            {profile.image ? (
+              <img
+                src={profile.image}
+                alt={profile.name}
+                className="w-16 h-16 rounded-full object-cover ring-2 ring-slate-200"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-primary-blue/10 flex items-center justify-center text-2xl font-bold text-primary-blue">
+                {profile.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
+              <p className="text-sm text-slate-600 mt-0.5">Manage your contact details, education, interests, and family members.</p>
+            </div>
+          </div>
 
           {message && <p className="mt-3 text-sm text-blue-700">{message}</p>}
 

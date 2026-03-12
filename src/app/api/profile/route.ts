@@ -63,6 +63,7 @@ export async function GET(_request: NextRequest) {
       education: users.education,
       interests: users.interests,
       notes: users.notes,
+      image: users.image,
     })
     .from(users)
     .where(eq(users.id, userId))

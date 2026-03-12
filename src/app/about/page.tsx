@@ -10,6 +10,7 @@ interface LeadershipRole {
   userName: string | null
   userEmail: string | null
   userPhone: string | null
+  userImage: string | null
   userJoinedAt: string | null
 }
 
@@ -131,7 +132,20 @@ export default function About() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {leadership.map((role) => (
-                <div key={role.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-shadow">
+                <div key={role.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-shadow text-center">
+                  <div className="flex justify-center mb-4">
+                    {role.userImage ? (
+                      <img
+                        src={role.userImage}
+                        alt={role.userName ?? ''}
+                        className="w-20 h-20 rounded-full object-cover ring-2 ring-primary-blue/20"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-primary-blue/10 flex items-center justify-center text-2xl font-bold text-primary-blue">
+                        {(role.userName ?? '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
                   <h3 className="text-lg font-bold text-text-dark mb-1">{role.roleName}</h3>
                   <p className="text-base font-medium text-primary-blue mb-3">{role.userName}</p>
                   <div className="space-y-3 border-t border-gray-200 pt-4">
