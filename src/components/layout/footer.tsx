@@ -42,7 +42,10 @@ export function Footer() {
         <div className="text-center space-y-4">
           {/* Logo/Name */}
           <div>
-            <h3 className="font-poppins text-xl font-bold mb-2 text-primary-saffron">🪷 {org.shortName}</h3>
+            <h3 className="font-poppins text-xl font-bold mb-2 text-primary-saffron flex items-center justify-center gap-2">
+              <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8 rounded-full" />
+              {org.shortName}
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed font-noto-sans max-w-2xl mx-auto">
               {org.description}
             </p>
