@@ -5,6 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
+
+const EVENT_COVER_OPTIONS = [
+  '/images/events/covers/dcpd.jpg',
+  '/images/events/covers/picnic.jpeg',
+  '/images/events/covers/mahaparinirvan-din.jpg',
+  '/images/events/covers/ambedkar-jayanti.jpg',
+];
 type RegistrationStatus = 'Pending Registration' | 'Confirmed' | 'Rejected';
 type PaymentStatus = 'Paid' | 'Unpaid';
 
@@ -492,13 +499,16 @@ export default function AdminEventPage() {
               />
             </label>
             <label className="text-sm text-slate-700 md:col-span-2">
-              <span className="mb-1 block font-medium">Cover Image URL or Path</span>
-              <input
-                type="text"
+              <span className="mb-1 block font-medium">Cover image</span>
+              <select
                 value={eventForm.coverImage}
                 onChange={(e) => setEventForm((prev) => ({ ...prev, coverImage: e.target.value }))}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                {EVENT_COVER_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt.split('/').pop()}</option>
+                ))}
+              </select>
             </label>
 
             <label className="flex items-center gap-2 px-3 py-2 border border-slate-300 rounded-md text-sm">
