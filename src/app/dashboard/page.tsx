@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'leadership' | 'members' | 'events' | 'referrals' | 'messages' | 'settings';
+type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings';
 
 type OrgSettings = {
   orgName: string;
@@ -85,6 +85,12 @@ type ContactMessage = {
   updatedAt: string;
 };
 
+type CoverImage = {
+  key: string;
+  name: string;
+  url: string;
+};
+
 const ROLE_COLORS: Record<Role, string> = {
   ADMIN: 'bg-red-100 text-red-800',
   MEMBER: 'bg-green-100 text-green-800',
@@ -95,13 +101,6 @@ const EVENT_STATUS_COLORS: Record<EventStatus, string> = {
   'Registration Started': 'bg-yellow-100 text-yellow-800',
   'Event Ended': 'bg-gray-200 text-gray-700',
 };
-
-const EVENT_COVER_OPTIONS = [
-  '/images/events/covers/dcpd.jpg',
-  '/images/events/covers/picnic.jpeg',
-  '/images/events/covers/mahaparinirvan-din.jpg',
-  '/images/events/covers/ambedkar-jayanti.jpg',
-];
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -123,10 +122,18 @@ export default function DashboardPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [messageNoteDraft, setMessageNoteDraft] = useState('');
+  const [coverImages, setCoverImages] = useState<CoverImage[]>([]);
+  const [coverImageUploading, setCoverImageUploading] = useState(false);
+  const [coverImageUploadName, setCoverImageUploadName] = useState('');
+  const [coverImageUploadFile, setCoverImageUploadFile] = useState<File | null>(null);
+  const [coverImageUploadError, setCoverImageUploadError] = useState('');
+  const [coverImageRenameKey, setCoverImageRenameKey] = useState<string | null>(null);
+  const [coverImageRenameDraft, setCoverImageRenameDraft] = useState('');
+  const [coverImageDeleteConfirmKey, setCoverImageDeleteConfirmKey] = useState<string | null>(null);
 
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDescription, setNewEventDescription] = useState('');
-  const [newEventCoverImage, setNewEventCoverImage] = useState(EVENT_COVER_OPTIONS[0]);
+  const [newEventCoverImage, setNewEventCoverImage] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventTime, setNewEventTime] = useState('18:00');
   const [newEventLocation, setNewEventLocation] = useState('');
@@ -212,6 +219,16 @@ export default function DashboardPage() {
     setMessages(data.messages);
   };
 
+  const loadCoverImages = async () => {
+    const res = await fetch('/api/admin/cover-images', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = (await res.json()) as { images: CoverImage[] };
+    setCoverImages(data.images);
+    if (data.images.length > 0) {
+      setNewEventCoverImage(data.images[0].key);
+    }
+  };
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     const isAdmin = session?.user?.role === 'ADMIN';
@@ -219,7 +236,7 @@ export default function DashboardPage() {
     const loadAll = async () => {
       try {
         if (isAdmin) {
-          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadReferralCodes(), loadMessages()]);
+          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadMessages()]);
         } else {
           // Non-admin: try loading events — API returns 403 if not a coordinator
           const res = await fetch('/api/admin/events', { cache: 'no-store' });
@@ -266,6 +283,7 @@ export default function DashboardPage() {
         { id: 'leadership', label: `Leadership (${leadershipRolesList.length})` },
         { id: 'members', label: `Members (${activeMembers.length} active${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
         { id: 'events', label: `Events (${events.length})` },
+        { id: 'cover-images', label: `Cover Images (${coverImages.length})` },
         { id: 'referrals', label: 'Referral Codes' },
         { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
         { id: 'settings', label: 'Settings' },
@@ -387,7 +405,7 @@ export default function DashboardPage() {
 
     setNewEventTitle('');
     setNewEventDescription('');
-    setNewEventCoverImage(EVENT_COVER_OPTIONS[0]);
+    setNewEventCoverImage(coverImages[0]?.key ?? '');
     setNewEventDate('');
     setNewEventTime('18:00');
     setNewEventLocation('');
@@ -803,11 +821,15 @@ export default function DashboardPage() {
                     onChange={(e) => setNewEventCoverImage(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    {EVENT_COVER_OPTIONS.map((path) => (
-                      <option key={path} value={path}>
-                        {path.split('/').pop()}
-                      </option>
-                    ))}
+                    {coverImages.length === 0 ? (
+                      <option value="">No cover images — add some in the Cover Images tab</option>
+                    ) : (
+                      coverImages.map((img) => (
+                        <option key={img.key} value={img.key}>
+                          {img.name}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </label>
                 <label className="md:col-span-3 text-sm text-gray-700">
@@ -1078,6 +1100,180 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'cover-images' && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-semibold text-gray-900">Cover Images</h2>
+
+            {/* Upload section */}
+            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-5">
+              <p className="font-medium text-gray-800 mb-3">Upload New Cover Image</p>
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+                <label className="flex-1 text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Name</span>
+                  <input
+                    type="text"
+                    value={coverImageUploadName}
+                    onChange={(e) => setCoverImageUploadName(e.target.value)}
+                    placeholder="e.g. Ambedkar Jayanti 2025"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+                <label className="flex-1 text-sm text-gray-700">
+                  <span className="mb-1 block font-medium">Image File</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCoverImageUploadFile(e.target.files?.[0] ?? null)}
+                    className="w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </label>
+                <button
+                  disabled={coverImageUploading || !coverImageUploadName || !coverImageUploadFile}
+                  onClick={async () => {
+                    if (!coverImageUploadFile || !coverImageUploadName) return;
+                    setCoverImageUploading(true);
+                    setCoverImageUploadError('');
+                    const form = new FormData();
+                    form.append('file', coverImageUploadFile);
+                    form.append('name', coverImageUploadName);
+                    const res = await fetch('/api/admin/cover-images', { method: 'POST', body: form });
+                    if (!res.ok) {
+                      const err = (await res.json()) as { error?: string };
+                      setCoverImageUploadError(err.error ?? 'Upload failed');
+                    } else {
+                      await loadCoverImages();
+                      setCoverImageUploadName('');
+                      setCoverImageUploadFile(null);
+                    }
+                    setCoverImageUploading(false);
+                  }}
+                  className="px-4 py-2 bg-blue-700 text-white rounded-md text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {coverImageUploading ? 'Uploading…' : 'Upload Image'}
+                </button>
+              </div>
+              {coverImageUploadError && (
+                <p className="mt-2 text-sm text-red-600">{coverImageUploadError}</p>
+              )}
+            </div>
+
+            {/* Image grid */}
+            {coverImages.length === 0 ? (
+              <p className="text-sm text-gray-500">No cover images yet. Upload one above.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {coverImages.map((img) => (
+                  <div
+                    key={img.key}
+                    className="border border-gray-200 rounded-lg overflow-hidden bg-white"
+                  >
+                    {/* Thumbnail */}
+                    <div className="h-28 bg-gray-100 overflow-hidden">
+                      <img
+                        src={img.url}
+                        alt={img.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="p-3">
+                      {coverImageRenameKey === img.key ? (
+                        /* Rename mode */
+                        <>
+                          <input
+                            type="text"
+                            value={coverImageRenameDraft}
+                            onChange={(e) => setCoverImageRenameDraft(e.target.value)}
+                            className="w-full px-2 py-1 border border-blue-400 rounded text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                if (!coverImageRenameDraft.trim()) return;
+                                const filename = img.key.split('/').pop()!;
+                                const res = await fetch(`/api/admin/cover-images/${encodeURIComponent(filename)}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ name: coverImageRenameDraft.trim() }),
+                                });
+                                if (res.ok) {
+                                  await loadCoverImages();
+                                  setCoverImageRenameKey(null);
+                                }
+                              }}
+                              className="flex-1 px-2 py-1 bg-blue-700 text-white rounded text-xs font-medium hover:bg-blue-800"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setCoverImageRenameKey(null)}
+                              className="flex-1 px-2 py-1 bg-gray-100 text-gray-700 border border-gray-300 rounded text-xs hover:bg-gray-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      ) : coverImageDeleteConfirmKey === img.key ? (
+                        /* Delete confirm mode */
+                        <>
+                          <p className="text-xs text-red-600 mb-2">Delete &ldquo;{img.name}&rdquo;?</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                const filename = img.key.split('/').pop()!;
+                                const res = await fetch(`/api/admin/cover-images/${encodeURIComponent(filename)}`, {
+                                  method: 'DELETE',
+                                });
+                                if (res.ok) {
+                                  await loadCoverImages();
+                                  setCoverImageDeleteConfirmKey(null);
+                                }
+                              }}
+                              className="flex-1 px-2 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700"
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={() => setCoverImageDeleteConfirmKey(null)}
+                              className="flex-1 px-2 py-1 bg-gray-100 text-gray-700 border border-gray-300 rounded text-xs hover:bg-gray-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        /* Default mode */
+                        <>
+                          <p className="text-sm font-medium text-gray-800 truncate mb-2">{img.name}</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setCoverImageRenameKey(img.key);
+                                setCoverImageRenameDraft(img.name);
+                              }}
+                              className="flex-1 px-2 py-1 bg-gray-100 text-gray-700 border border-gray-300 rounded text-xs hover:bg-gray-200"
+                            >
+                              Rename
+                            </button>
+                            <button
+                              onClick={() => setCoverImageDeleteConfirmKey(img.key)}
+                              className="flex-1 px-2 py-1 bg-red-50 text-red-600 border border-red-200 rounded text-xs hover:bg-red-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
