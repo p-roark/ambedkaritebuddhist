@@ -127,6 +127,7 @@ export default function DashboardPage() {
   const [coverImageUploadName, setCoverImageUploadName] = useState('');
   const [coverImageUploadFile, setCoverImageUploadFile] = useState<File | null>(null);
   const [coverImageUploadError, setCoverImageUploadError] = useState('');
+  const [coverImageInputKey, setCoverImageInputKey] = useState(0);
   const [coverImageRenameKey, setCoverImageRenameKey] = useState<string | null>(null);
   const [coverImageRenameDraft, setCoverImageRenameDraft] = useState('');
   const [coverImageDeleteConfirmKey, setCoverImageDeleteConfirmKey] = useState<string | null>(null);
@@ -224,7 +225,7 @@ export default function DashboardPage() {
     if (!res.ok) return;
     const data = (await res.json()) as { images: CoverImage[] };
     setCoverImages(data.images);
-    if (data.images.length > 0) {
+    if (data.images.length > 0 && !newEventCoverImage) {
       setNewEventCoverImage(data.images[0].key);
     }
   };
@@ -1124,6 +1125,7 @@ export default function DashboardPage() {
                 <label className="flex-1 text-sm text-gray-700">
                   <span className="mb-1 block font-medium">Image File</span>
                   <input
+                    key={coverImageInputKey}
                     type="file"
                     accept="image/*"
                     onChange={(e) => setCoverImageUploadFile(e.target.files?.[0] ?? null)}
@@ -1136,19 +1138,23 @@ export default function DashboardPage() {
                     if (!coverImageUploadFile || !coverImageUploadName) return;
                     setCoverImageUploading(true);
                     setCoverImageUploadError('');
-                    const form = new FormData();
-                    form.append('file', coverImageUploadFile);
-                    form.append('name', coverImageUploadName);
-                    const res = await fetch('/api/admin/cover-images', { method: 'POST', body: form });
-                    if (!res.ok) {
-                      const err = (await res.json()) as { error?: string };
-                      setCoverImageUploadError(err.error ?? 'Upload failed');
-                    } else {
-                      await loadCoverImages();
-                      setCoverImageUploadName('');
-                      setCoverImageUploadFile(null);
+                    try {
+                      const form = new FormData();
+                      form.append('file', coverImageUploadFile);
+                      form.append('name', coverImageUploadName);
+                      const res = await fetch('/api/admin/cover-images', { method: 'POST', body: form });
+                      if (!res.ok) {
+                        const err = (await res.json()) as { error?: string };
+                        setCoverImageUploadError(err.error ?? 'Upload failed');
+                      } else {
+                        await loadCoverImages();
+                        setCoverImageUploadName('');
+                        setCoverImageUploadFile(null);
+                        setCoverImageInputKey((k) => k + 1);
+                      }
+                    } finally {
+                      setCoverImageUploading(false);
                     }
-                    setCoverImageUploading(false);
                   }}
                   className="px-4 py-2 bg-blue-700 text-white rounded-md text-sm font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
