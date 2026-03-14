@@ -52,6 +52,9 @@ export async function POST(request: NextRequest) {
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
   if (!(file instanceof File)) return NextResponse.json({ error: 'File is required' }, { status: 400 });
   if (!file.type.startsWith('image/')) return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 });
+  if (file.size > 5 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Image must be under 5 MB' }, { status: 400 });
+  }
 
   const ext = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
   const key = `covers/${crypto.randomUUID()}.${ext}`;
