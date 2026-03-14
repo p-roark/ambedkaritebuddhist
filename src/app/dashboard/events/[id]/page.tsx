@@ -517,9 +517,14 @@ export default function AdminEventPage() {
                 {coverImages.length === 0 ? (
                   <option value={eventForm.coverImage}>{eventForm.coverImage || 'No cover images available'}</option>
                 ) : (
-                  coverImages.map((img) => (
-                    <option key={img.key} value={img.key}>{img.name}</option>
-                  ))
+                  <>
+                    {!coverImages.some((img) => img.key === eventForm.coverImage) && eventForm.coverImage && (
+                      <option value={eventForm.coverImage}>{eventForm.coverImage} (not in library)</option>
+                    )}
+                    {coverImages.map((img) => (
+                      <option key={img.key} value={img.key}>{img.name}</option>
+                    ))}
+                  </>
                 )}
               </select>
             </label>
