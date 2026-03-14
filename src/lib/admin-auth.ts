@@ -1,8 +1,5 @@
-import { and, eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getDb } from '@/db';
-import { users, eventCoordinators } from '@/db/schema';
 
 export type AdminContext = {
   email: string;
@@ -33,6 +30,11 @@ export async function requireAdmin(_request: NextRequest): Promise<AdminContext 
   }
 
   try {
+    const [{ eq }, { getDb }, { users }] = await Promise.all([
+      import('drizzle-orm'),
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     const db = getDb();
     const user = await db
       .select({ role: users.role })
@@ -72,6 +74,11 @@ export async function requireAdminOrCoordinator(
   if (!email || !userId) return null;
 
   try {
+    const [{ and, eq }, { getDb }, { eventCoordinators }] = await Promise.all([
+      import('drizzle-orm'),
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     const db = getDb();
     const coord = await db
       .select({ eventId: eventCoordinators.eventId })
