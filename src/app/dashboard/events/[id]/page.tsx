@@ -6,12 +6,12 @@ import { useEffect, useState } from 'react';
 
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 
-const EVENT_COVER_OPTIONS = [
-  '/images/events/covers/dcpd.jpg',
-  '/images/events/covers/picnic.jpeg',
-  '/images/events/covers/mahaparinirvan-din.jpg',
-  '/images/events/covers/ambedkar-jayanti.jpg',
-];
+type CoverImage = {
+  key: string;
+  name: string;
+  url: string;
+};
+
 type RegistrationStatus = 'Pending Registration' | 'Confirmed' | 'Rejected';
 type PaymentStatus = 'Paid' | 'Unpaid';
 
@@ -102,6 +102,7 @@ export default function AdminEventPage() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [editState, setEditState] = useState<EditState | null>(null);
+  const [coverImages, setCoverImages] = useState<CoverImage[]>([]);
   const [paymentModal, setPaymentModal] = useState<PaymentModalState | null>(null);
   const [historyModal, setHistoryModal] = useState<HistoryModalReg | null>(null);
   const [eventForm, setEventForm] = useState({
@@ -182,6 +183,13 @@ export default function AdminEventPage() {
     setRegistrations(data.registrations);
   };
 
+  const loadCoverImages = async () => {
+    const res = await fetch('/api/admin/cover-images', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = (await res.json()) as { images: CoverImage[] };
+    setCoverImages(data.images);
+  };
+
   useEffect(() => {
     if (!eventId || status !== 'authenticated') return;
     let alive = true;
@@ -189,6 +197,7 @@ export default function AdminEventPage() {
       try {
         const tasks: Promise<void>[] = [
           loadData(),
+          loadCoverImages(),
           fetch('/api/admin/members', { cache: 'no-store' })
             .then((r) => r.json())
             .then((d: unknown) => {
@@ -505,9 +514,13 @@ export default function AdminEventPage() {
                 onChange={(e) => setEventForm((prev) => ({ ...prev, coverImage: e.target.value }))}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {EVENT_COVER_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>{opt.split('/').pop()}</option>
-                ))}
+                {coverImages.length === 0 ? (
+                  <option value={eventForm.coverImage}>{eventForm.coverImage || 'No cover images available'}</option>
+                ) : (
+                  coverImages.map((img) => (
+                    <option key={img.key} value={img.key}>{img.name}</option>
+                  ))
+                )}
               </select>
             </label>
 
