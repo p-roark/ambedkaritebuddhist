@@ -197,7 +197,7 @@ export default function AdminEventPage() {
       try {
         const tasks: Promise<void>[] = [
           loadData(),
-          loadCoverImages(),
+          loadCoverImages().catch(() => undefined),
           fetch('/api/admin/members', { cache: 'no-store' })
             .then((r) => r.json())
             .then((d: unknown) => {
