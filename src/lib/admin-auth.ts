@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
 
 export type AdminContext = {
   email: string;
@@ -19,6 +18,7 @@ function getAdminEmails() {
 }
 
 export async function requireAdmin(_request: NextRequest): Promise<AdminContext | null> {
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
   const role = String(session?.user?.role ?? '').trim().toUpperCase();
@@ -67,6 +67,7 @@ export async function requireAdminOrCoordinator(
     return { email: admin.email, isAdmin: true, userId: '' };
   }
 
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
   const userId = String(session?.user?.id ?? '').trim();
@@ -105,6 +106,7 @@ export async function requireAdminOrCoordinator(
  * without requiring admin role. Used for coordinator-only endpoints.
  */
 export async function getAuthenticatedUserId(_request: NextRequest): Promise<string | null> {
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const userId = String(session?.user?.id ?? '').trim();
   return userId || null;
