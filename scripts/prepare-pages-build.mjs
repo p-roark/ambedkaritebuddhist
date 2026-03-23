@@ -21,7 +21,7 @@ const DEST = '.open-next/assets';
 cpSync(`${SRC}/worker.js`, `${DEST}/_worker.js`);
 
 // Copy internal modules the worker imports via relative paths
-const internalDirs = ['.build', 'middleware', 'server-functions'];
+const internalDirs = ['.build', 'cloudflare', 'middleware', 'server-functions'];
 for (const dir of internalDirs) {
   const src = `${SRC}/${dir}`;
   if (existsSync(src)) {
