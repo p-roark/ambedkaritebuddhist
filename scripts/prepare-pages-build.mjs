@@ -25,7 +25,7 @@ const internalDirs = ['.build', 'cloudflare', 'middleware', 'server-functions'];
 for (const dir of internalDirs) {
   const src = `${SRC}/${dir}`;
   if (existsSync(src)) {
-    cpSync(src, `${DEST}/${dir}`, { recursive: true });
+    cpSync(src, `${DEST}/${dir}`, { recursive: true, dereference: true });
   }
 }
 
