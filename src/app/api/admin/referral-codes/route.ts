@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { desc, eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { referralCodes, users } from '@/db/schema';
 import { requireAdmin } from '@/lib/admin-auth';
 import { nameFromEmail } from '@/lib/user-name';
 
@@ -9,6 +6,11 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 async function ensureOwnerId(email: string) {
+  const [{ eq }, { getDb }, { users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const existing = await db
     .select({ id: users.id })
@@ -44,6 +46,11 @@ export async function GET(request: NextRequest) {
   const token = await requireAdmin(request);
   if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+  const [{ desc }, { getDb }, { referralCodes }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const rows = await db.select().from(referralCodes).orderBy(desc(referralCodes.createdAt));
   return NextResponse.json({ referralCodes: rows }, { status: 200 });
@@ -60,6 +67,10 @@ export async function POST(request: NextRequest) {
   }
 
   const ownerId = await ensureOwnerId(token.email);
+  const [{ getDb }, { referralCodes }] = await Promise.all([
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
@@ -108,6 +119,11 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
+  const [{ eq }, { getDb }, { referralCodes }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   await db.update(referralCodes).set({ active: body.active }).where(eq(referralCodes.id, body.id));
   return NextResponse.json({ ok: true }, { status: 200 });

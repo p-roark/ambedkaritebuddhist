@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, inArray } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { eventCoordinators, eventRegistrations, events, familyMembers, users } from '@/db/schema';
 import { requireAdminOrCoordinator } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +10,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const auth = await requireAdminOrCoordinator(request, id);
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+  const [{ and, eq, inArray }, { getDb }, { eventCoordinators, eventRegistrations, events, familyMembers, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
 
   const event = await db
@@ -106,6 +108,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const auth = await requireAdminOrCoordinator(request, id);
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+  const [{ and, eq, inArray }, { getDb }, { eventCoordinators, eventRegistrations, events, familyMembers, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
+  const db = getDb();
+
   const body = (await request.json()) as {
     action?: 'updateEvent' | 'updateRegistration' | 'confirmRegistration' | 'addCoordinator' | 'removeCoordinator' | 'editRegistration' | 'addPayment' | 'addRefund';
     title?: string;
@@ -137,8 +146,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     amount?: number;
     referenceNumber?: string;
   };
-
-  const db = getDb();
 
   // addCoordinator — admin or coordinator
   if (body.action === 'addCoordinator') {

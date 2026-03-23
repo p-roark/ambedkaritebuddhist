@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/db';
-import { contactMessages } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -30,6 +28,10 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date().toISOString();
+    const [{ getDb }, { contactMessages }] = await Promise.all([
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     const db = getDb();
     await db.insert(contactMessages).values({
       id: crypto.randomUUID(),

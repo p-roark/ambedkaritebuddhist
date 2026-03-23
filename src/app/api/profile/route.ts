@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { users } from '@/db/schema';
-import { auth } from '@/lib/auth';
 import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 async function getOrCreateUserId() {
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
   if (!email) return null;
 
+  const [{ eq }, { getDb }, { users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const existing = await db
     .select({ id: users.id, image: users.image })
@@ -54,6 +56,11 @@ export async function GET(_request: NextRequest) {
   const userId = await getOrCreateUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const [{ eq }, { getDb }, { users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const profile = await db
     .select({
@@ -98,6 +105,11 @@ export async function PATCH(request: NextRequest) {
     notes?: string;
   };
 
+  const [{ eq }, { getDb }, { users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   await db
     .update(users)
@@ -119,4 +131,3 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

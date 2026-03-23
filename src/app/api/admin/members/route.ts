@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, asc, eq, isNotNull, ne, or } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { eventCoordinators, familyMembers, leadershipRoles, organizationSettings, users } from '@/db/schema';
 import { getAuthenticatedUserId, requireAdmin } from '@/lib/admin-auth';
 import { pickDisplayName } from '@/lib/user-name';
 
@@ -11,10 +8,16 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   const isAdmin = await requireAdmin(request);
 
-  // Leadership resource: admin-only
   const { searchParams } = new URL(request.url);
+
+  // Leadership resource: admin-only
   if (searchParams.get('resource') === 'leadership') {
     if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const [{ asc, eq }, { getDb }, { leadershipRoles, users }] = await Promise.all([
+      import('drizzle-orm'),
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     const db = getDb();
     const rows = await db
       .select({
@@ -35,6 +38,11 @@ export async function GET(request: NextRequest) {
   if (searchParams.get('resource') === 'family-members') {
     const targetUserId = searchParams.get('userId');
     if (!targetUserId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    const [{ asc, eq }, { getDb }, { eventCoordinators, familyMembers }] = await Promise.all([
+      import('drizzle-orm'),
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     if (!isAdmin) {
       const userId = await getAuthenticatedUserId(request);
       if (!userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -57,6 +65,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Also allow coordinators (any user who coordinates at least one event)
+  const [{ and, asc, eq, isNotNull, ne, or }, { getDb }, { eventCoordinators, familyMembers, leadershipRoles, organizationSettings, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   if (!isAdmin) {
     const userId = await getAuthenticatedUserId(request);
     if (!userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -136,6 +149,11 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
+  const [{ asc, eq }, { getDb }, { leadershipRoles, organizationSettings, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const now = new Date().toISOString();
 

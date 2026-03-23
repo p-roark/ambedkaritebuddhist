@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { events } from '@/db/schema';
 import { requireAdminOrCoordinator } from '@/lib/admin-auth';
 import { getEventImagesBucket, parseEventImageKeys } from '@/lib/r2';
 
@@ -24,6 +21,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const auth = await requireAdminOrCoordinator(request, id);
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const [{ eq }, { getDb }, { events }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const bucket = getEventImagesBucket();
 
@@ -75,6 +78,12 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   const auth = await requireAdminOrCoordinator(request, id);
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const [{ eq }, { getDb }, { events }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const bucket = getEventImagesBucket();
 
@@ -108,4 +117,3 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
   return NextResponse.json({ imageKeys: nextKeys }, { status: 200 });
 }
-

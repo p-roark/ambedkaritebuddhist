@@ -1,24 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { eventCoordinators, eventRegistrations, events, leadershipRoles, organizationSettings, users } from '@/db/schema';
-import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
-  // Public leadership resource — no auth required
   const { searchParams } = new URL(request.url);
+
+  const [{ and, asc, desc, eq, isNotNull }, { getDb }, { eventCoordinators, eventRegistrations, events, leadershipRoles, organizationSettings, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
+  const db = getDb();
+
+  // Public org-settings resource — no auth required
   if (searchParams.get('resource') === 'org-settings') {
-    const db = getDb();
     const row = await db
       .select()
       .from(organizationSettings)
       .where(eq(organizationSettings.id, 'main'))
       .limit(1)
       .then((rows) => rows[0]);
-    // Return row or sensible defaults if not seeded yet
     return NextResponse.json({
       settings: row ?? {
         id: 'main',
@@ -41,7 +43,6 @@ export async function GET(request: NextRequest) {
 
   const eventId = searchParams.get('id');
   if (eventId) {
-    const db = getDb();
     const event = await db.select().from(events).where(eq(events.id, eventId)).limit(1).then((r) => r[0]);
     if (!event) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const coordinators = await db
@@ -53,7 +54,6 @@ export async function GET(request: NextRequest) {
   }
 
   if (searchParams.get('resource') === 'leadership') {
-    const db = getDb();
     const rows = await db
       .select({
         id: leadershipRoles.id,
@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ roles: rows }, { status: 200 });
   }
 
-  const db = getDb();
   const rows = await db
     .select()
     .from(events)
@@ -87,6 +86,7 @@ export async function GET(request: NextRequest) {
     return acc;
   }, {});
 
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
 

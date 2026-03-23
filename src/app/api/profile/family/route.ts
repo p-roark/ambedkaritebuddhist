@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { familyMembers, users } from '@/db/schema';
-import { auth } from '@/lib/auth';
 import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 async function getOrCreateUserId() {
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
   if (!email) return null;
 
+  const [{ eq }, { getDb }, { users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const existing = await db
     .select({ id: users.id })
@@ -47,6 +49,11 @@ export async function GET(_request: NextRequest) {
   const userId = await getOrCreateUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const [{ eq }, { getDb }, { familyMembers }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const members = await db
     .select()
@@ -73,6 +80,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Name and relationship are required' }, { status: 400 });
   }
 
+  const [{ getDb }, { familyMembers }] = await Promise.all([
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const now = new Date().toISOString();
   await db.insert(familyMembers).values({
@@ -103,6 +114,11 @@ export async function PATCH(request: NextRequest) {
 
   if (!body.id) return NextResponse.json({ error: 'Member id is required' }, { status: 400 });
 
+  const [{ and, eq }, { getDb }, { familyMembers }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   await db
     .update(familyMembers)
@@ -125,6 +141,11 @@ export async function DELETE(request: NextRequest) {
   const body = (await request.json()) as { id?: string };
   if (!body.id) return NextResponse.json({ error: 'Member id is required' }, { status: 400 });
 
+  const [{ and, eq }, { getDb }, { familyMembers }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   await db
     .delete(familyMembers)
@@ -132,4 +153,3 @@ export async function DELETE(request: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

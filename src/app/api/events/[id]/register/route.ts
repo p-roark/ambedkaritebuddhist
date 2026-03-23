@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { eventRegistrations, events, familyMembers, users } from '@/db/schema';
 import { pickDisplayName } from '@/lib/user-name';
-import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id: eventId } = await params;
+  const [{ and, eq }, { getDb }, { eventRegistrations, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
 
   const user = await db
@@ -36,6 +38,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { auth } = await import('@/lib/auth');
   const session = await auth();
   const email = String(session?.user?.email ?? '').trim().toLowerCase();
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -48,6 +51,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     nonMemberGuests?: Array<{ name?: string; age?: number }>;
   };
 
+  const [{ and, eq, inArray }, { getDb }, { eventRegistrations, events, familyMembers, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
 
   const event = await db
@@ -180,8 +188,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .then((rows) => rows[0]);
 
   if (existing) {
-    // If the member already has a confirmed payment, apply same paidAmount logic as admin edit:
-    // paidAmount = totalAmount + accumulated refundDue
     const alreadyPaid = existing.paymentStatus === 'Paid';
     const paidAmount = Number(existing.totalAmount) + Number(existing.refundDue ?? 0);
     const runningRefund = alreadyPaid ? paidAmount - totalAmount : -1;
@@ -191,17 +197,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let newRefundDue: number;
 
     if (alreadyPaid && runningRefund > 0) {
-      // Reduced attendees — keep Paid/Confirmed, record refund owed
       newPaymentStatus = 'Paid';
       newRegistrationStatus = existing.paymentStatus === 'Paid' ? 'Confirmed' : 'Pending Registration';
       newRefundDue = runningRefund;
     } else if (alreadyPaid && runningRefund === 0) {
-      // Exact same total — keep Paid, clear refund
       newPaymentStatus = 'Paid';
       newRegistrationStatus = 'Confirmed';
       newRefundDue = 0;
     } else {
-      // Not paid, or total increased beyond what was paid — reset to Unpaid
       newPaymentStatus = event.isPaid ? 'Unpaid' : 'Paid';
       newRegistrationStatus = 'Pending Registration';
       newRefundDue = 0;

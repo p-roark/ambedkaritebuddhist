@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { desc, eq, inArray } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { events, eventCoordinators, users } from '@/db/schema';
 import { requireAdmin, getAuthenticatedUserId } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +15,11 @@ async function attachCoordinators(
 ): Promise<Map<string, CoordinatorInfo[]>> {
   const map = new Map<string, CoordinatorInfo[]>();
   if (eventRows.length === 0) return map;
+
+  const [{ eq, inArray }, { eventCoordinators, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db/schema'),
+  ]);
 
   const eventIds = eventRows.map((e) => e.id);
   const coords = await db
@@ -38,6 +40,11 @@ async function attachCoordinators(
 }
 
 export async function GET(request: NextRequest) {
+  const [{ desc, eq, inArray }, { getDb }, { events, eventCoordinators }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
 
   // Admin: return all events
@@ -105,6 +112,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
+  const [{ getDb }, { events, eventCoordinators }] = await Promise.all([
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
@@ -170,6 +181,11 @@ export async function PATCH(request: NextRequest) {
     patch.archived = Boolean(body.archived);
   }
 
+  const [{ eq }, { getDb }, { events }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   await db.update(events).set(patch).where(eq(events.id, body.id));
 

@@ -1,8 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { referralCodes, users } from '@/db/schema';
-import { auth } from '@/lib/auth';
 import { isValidReferralCodeFormat } from '@/lib/referral';
 import { pickDisplayName } from '@/lib/user-name';
 
@@ -11,6 +7,7 @@ export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
+    const { auth } = await import('@/lib/auth');
     const session = await auth();
     const email = String(session?.user?.email ?? '').trim().toLowerCase();
 
@@ -25,6 +22,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid referral code format' }, { status: 400 });
     }
 
+    const [{ and, eq, isNull, sql }, { getDb }, { referralCodes, users }] = await Promise.all([
+      import('drizzle-orm'),
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     const db = getDb();
 
     let dbUser = await db

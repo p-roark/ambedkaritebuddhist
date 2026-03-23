@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { desc, eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { contactMessages, users } from '@/db/schema';
 import { requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +8,11 @@ export async function GET(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+  const [{ desc }, { getDb }, { contactMessages }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const rows = await db
     .select()
@@ -35,6 +37,11 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Message id is required' }, { status: 400 });
   }
 
+  const [{ eq }, { getDb }, { contactMessages, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
   const db = getDb();
   const now = new Date().toISOString();
 

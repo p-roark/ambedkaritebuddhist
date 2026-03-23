@@ -1,8 +1,4 @@
 import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { getDb } from '@/db';
-import { users, contactMessages } from '@/db/schema';
-import { auth } from '@/lib/auth';
 import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +6,7 @@ export const runtime = 'edge';
 
 export async function GET() {
   try {
+    const { auth } = await import('@/lib/auth');
     const session = await auth();
     const email = String(session?.user?.email ?? '').trim().toLowerCase();
 
@@ -17,6 +14,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const [{ eq }, { getDb }, { users, contactMessages }] = await Promise.all([
+      import('drizzle-orm'),
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     const db = getDb();
     const now = new Date().toISOString();
 
@@ -62,6 +64,7 @@ export async function GET() {
 
 export async function POST() {
   try {
+    const { auth } = await import('@/lib/auth');
     const session = await auth();
     const email = String(session?.user?.email ?? '').trim().toLowerCase();
 
@@ -69,6 +72,11 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const [{ eq }, { getDb }, { users, contactMessages }] = await Promise.all([
+      import('drizzle-orm'),
+      import('@/db'),
+      import('@/db/schema'),
+    ]);
     const db = getDb();
 
     const user = await db
