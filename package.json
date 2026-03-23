@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "pages:build": "opennextjs-cloudflare build && npx esbuild .open-next/worker.js --bundle --outfile=.open-next/assets/_worker.js --format=esm --target=es2022 --conditions=workerd,worker --external:node:* --external:cloudflare:* --platform=neutral",
+    "pages:build": "opennextjs-cloudflare build && pnpm exec esbuild .open-next/worker.js --bundle --outfile=.open-next/assets/_worker.js --format=esm --target=es2022 --conditions=workerd,worker --external:node:* --external:cloudflare:* --platform=neutral",
     "pages:dev": "opennextjs-cloudflare preview",
     "start": "next start",
     "lint": "next lint",
@@ -40,6 +40,7 @@
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.16",
     "drizzle-kit": "^0.29.1",
+    "esbuild": "^0.27.4",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.0.10",
     "jsdom": "^23.0.0",
