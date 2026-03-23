@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "pages:build": "opennextjs-cloudflare build && esbuild .open-next/worker.js --bundle --outfile=.open-next/assets/_worker.js --format=esm --target=es2022 --conditions=workerd,worker --external:node:* --external:cloudflare:* --platform=neutral",
+    "pages:build": "opennextjs-cloudflare build && npx esbuild .open-next/worker.js --bundle --outfile=.open-next/assets/_worker.js --format=esm --target=es2022 --conditions=workerd,worker --external:node:* --external:cloudflare:* --platform=neutral",
     "pages:dev": "opennextjs-cloudflare preview",
     "start": "next start",
     "lint": "next lint",
