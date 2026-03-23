@@ -14,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const [{ eq }, { getDb }, { users, contactMessages }] = await Promise.all([
+    const [{ eq }, { getDb }, { users }] = await Promise.all([
       import('drizzle-orm'),
       import('@/db'),
       import('@/db/schema'),

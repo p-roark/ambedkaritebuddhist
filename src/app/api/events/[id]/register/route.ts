@@ -51,7 +51,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     nonMemberGuests?: Array<{ name?: string; age?: number }>;
   };
 
-  const [{ and, eq, inArray }, { getDb }, { eventRegistrations, events, familyMembers, users }] = await Promise.all([
+  const [{ and, eq }, { getDb }, { eventRegistrations, events, familyMembers, users }] = await Promise.all([
     import('drizzle-orm'),
     import('@/db'),
     import('@/db/schema'),

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const auth = await requireAdminOrCoordinator(request, id);
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const [{ and, eq, inArray }, { getDb }, { eventCoordinators, eventRegistrations, events, familyMembers, users }] = await Promise.all([
+  const [{ eq, inArray }, { getDb }, { eventCoordinators, eventRegistrations, events, familyMembers, users }] = await Promise.all([
     import('drizzle-orm'),
     import('@/db'),
     import('@/db/schema'),
@@ -108,7 +108,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const auth = await requireAdminOrCoordinator(request, id);
   if (!auth) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const [{ and, eq, inArray }, { getDb }, { eventCoordinators, eventRegistrations, events, familyMembers, users }] = await Promise.all([
+  const [{ and, eq, inArray }, { getDb }, { eventCoordinators, eventRegistrations, events, familyMembers }] = await Promise.all([
     import('drizzle-orm'),
     import('@/db'),
     import('@/db/schema'),

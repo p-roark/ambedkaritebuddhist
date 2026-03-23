@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Also allow coordinators (any user who coordinates at least one event)
-  const [{ and, asc, eq, isNotNull, ne, or }, { getDb }, { eventCoordinators, familyMembers, leadershipRoles, organizationSettings, users }] = await Promise.all([
+  const [{ and, eq, isNotNull, ne, or }, { getDb }, { eventCoordinators, users }] = await Promise.all([
     import('drizzle-orm'),
     import('@/db'),
     import('@/db/schema'),
