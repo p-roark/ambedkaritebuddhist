@@ -5,22 +5,8 @@ type CfEnv = {
 };
 
 export function getEventImagesBucket() {
-  const cloudflareRequestContextSymbol = Symbol.for('__cloudflare-request-context__');
-  const requestContext = (
-    globalThis as unknown as {
-      [key: symbol]: { env?: CfEnv } | undefined;
-    }
-  )[cloudflareRequestContextSymbol];
-
-  const envFromRequest = requestContext?.env;
-
-  const globalContext = (
-    globalThis as unknown as {
-      __cloudflareContext?: { env?: CfEnv };
-    }
-  ).__cloudflareContext;
-
-  const env = envFromRequest ?? globalContext?.env;
+  const { getCloudflareContext } = require('@opennextjs/cloudflare');
+  const env = (getCloudflareContext() as { env: CfEnv }).env;
   const isProd = (env?.DEPLOYMENT ?? 'dev') === 'prod';
   const bucket = isProd ? env?.EVENT_IMAGES_PROD : env?.EVENT_IMAGES;
 

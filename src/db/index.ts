@@ -11,29 +11,11 @@ type CfEnv = {
  * Returns a Drizzle client bound to the Cloudflare D1 database.
  * Picks DB-PROD when env.DEPLOYMENT === 'prod', otherwise DB.
  *
- * The __cloudflareContext global is injected by:
- *   - setupDevPlatform() during `next dev` (reads wrangler.toml locally)
- *   - The Cloudflare Pages runtime in production
- *
  * Call this inside API route handlers — not at module level.
  */
 export function getDb() {
-  const cloudflareRequestContextSymbol = Symbol.for('__cloudflare-request-context__');
-  const requestContext = (
-    globalThis as unknown as {
-      [key: symbol]: { env?: CfEnv } | undefined;
-    }
-  )[cloudflareRequestContextSymbol];
-
-  const envFromRequest = requestContext?.env;
-
-  const globalContext = (
-    globalThis as unknown as {
-      __cloudflareContext?: { env?: CfEnv };
-    }
-  ).__cloudflareContext;
-
-  const env = envFromRequest ?? globalContext?.env;
+  const { getCloudflareContext } = require('@opennextjs/cloudflare');
+  const env = (getCloudflareContext() as { env: CfEnv }).env;
   const isProd = (env?.DEPLOYMENT ?? 'dev') === 'prod';
   const d1 = isProd ? env?.['DB-PROD'] : env?.['DB'];
 

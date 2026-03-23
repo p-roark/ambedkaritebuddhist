@@ -23,13 +23,13 @@ const nextConfig = {
 };
 
 // Make Cloudflare bindings (D1, KV, R2…) available during `next dev`.
-// Reads wrangler.toml and emulates the D1 binding locally via miniflare.
+// Reads wrangler.toml and emulates bindings locally via miniflare.
 if (process.env.NODE_ENV === 'development') {
   try {
-    const { setupDevPlatform } = require('@cloudflare/next-on-pages/next-dev');
+    const { setupDevPlatform } = require('@opennextjs/cloudflare/api');
     setupDevPlatform().catch(console.error);
   } catch {
-    console.warn('[wrangler] @cloudflare/next-on-pages not found — run `pnpm install`');
+    console.warn('[opennextjs] @opennextjs/cloudflare not found — run `pnpm install`');
   }
 }
 
