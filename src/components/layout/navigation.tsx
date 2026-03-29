@@ -92,12 +92,6 @@ export function Navigation() {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center space-x-2">
-            <Link
-              href="/donate"
-              className="px-4 py-2 text-sm font-bold text-text-dark bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
-            >
-              Donate
-            </Link>
             {!sessionState ? (
               <Link
                 href="/auth/login"
@@ -120,14 +114,8 @@ export function Navigation() {
             )}
           </div>
 
-          {/* Mobile: Donate + hamburger */}
+          {/* Mobile: hamburger */}
           <div className="flex md:hidden items-center gap-2">
-            <Link
-              href="/donate"
-              className="px-3 py-1.5 text-xs font-bold text-text-dark bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
-            >
-              Donate
-            </Link>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
