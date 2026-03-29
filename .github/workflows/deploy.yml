@@ -5,7 +5,6 @@ on:
     branches:
       - release
       - feat/auth-system
-      - feat/auth-system-lazy-imports
 
 jobs:
   deploy:
@@ -32,5 +31,10 @@ jobs:
       - name: Build for Cloudflare Workers
         run: pnpm workers:build
 
-      - name: Deploy to Cloudflare Workers
+      - name: Deploy (production — www.ambedkaritebuddhist.org)
+        if: github.ref == 'refs/heads/release'
         run: pnpm dlx wrangler deploy
+
+      - name: Deploy (preview — ambedkaritebuddhist-preview.workers.dev)
+        if: github.ref != 'refs/heads/release'
+        run: pnpm dlx wrangler deploy --name ambedkaritebuddhist-preview

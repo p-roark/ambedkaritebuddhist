@@ -3,10 +3,6 @@ main = ".open-next/worker.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-routes = [
-  { pattern = "www.ambedkaritebuddhist.org/*", zone_id = "9bc8440c37914862225047396292cd29" }
-]
-
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
