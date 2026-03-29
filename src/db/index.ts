@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/d1';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import * as schema from './schema';
 
 type CfEnv = {
@@ -14,7 +15,6 @@ type CfEnv = {
  * Call this inside API route handlers — not at module level.
  */
 export function getDb() {
-  const { getCloudflareContext } = require('@opennextjs/cloudflare');
   const env = (getCloudflareContext() as { env: CfEnv }).env;
   const isProd = (env?.DEPLOYMENT ?? 'dev') === 'prod';
   const d1 = isProd ? env?.['DB-PROD'] : env?.['DB'];
