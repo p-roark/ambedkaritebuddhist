@@ -5,6 +5,7 @@ on:
     branches:
       - release
       - feat/auth-system
+      - feat/auth-system-lazy-imports
 
 jobs:
   deploy:
