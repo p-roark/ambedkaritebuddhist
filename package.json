@@ -23,7 +23,7 @@
     "db:seed:remote": "wrangler d1 execute DB --remote --file=./seeds/seed.sql"
   },
   "dependencies": {
-    "@opennextjs/cloudflare": "^1.17.1",
+    "@opennextjs/cloudflare": "^1.18.0",
     "drizzle-orm": "^0.38.3",
     "next": "^16.2.1",
     "next-auth": "5.0.0-beta.30",
