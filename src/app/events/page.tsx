@@ -383,6 +383,53 @@ export default function EventsPage() {
         </div>
       </section>
 
+      {/* Annual Calendar */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-gray-100">
+        <div className="mb-10">
+          <p className="text-sm font-bold text-primary-saffron uppercase tracking-widest mb-2">Every Year</p>
+          <h2 className="text-2xl font-bold text-text-dark font-poppins">Our Annual Calendar</h2>
+          <p className="text-text-medium mt-2">These sacred dates are central to our community every year.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            {
+              date: 'April 14',
+              title: 'Dr. Ambedkar Jayanti',
+              description: 'Celebrating the birth anniversary of Dr. B.R. Ambedkar',
+              color: 'from-primary-blue to-accent-purple',
+            },
+            {
+              date: 'May (varies)',
+              title: 'Vesak Day',
+              description: 'Birth, enlightenment, and passing of Lord Buddha',
+              color: 'from-accent-purple to-purple-600',
+            },
+            {
+              date: 'October 14',
+              title: 'Dhamma Chakra Pravartan Day',
+              description: 'The historic day Dr. Ambedkar embraced Buddhism in Nagpur, 1956',
+              color: 'from-accent-orange to-primary-saffron',
+            },
+            {
+              date: 'December 6',
+              title: 'Mahaparinirvan Diwas',
+              description: "Remembering Dr. Ambedkar's passing and recommitting to his mission",
+              color: 'from-primary-blue to-blue-800',
+            },
+          ].map((event) => (
+            <div key={event.title} className="rounded-2xl overflow-hidden shadow-sm border border-background-light">
+              <div className={`bg-gradient-to-br ${event.color} p-6 text-white`}>
+                <p className="text-xs font-bold uppercase tracking-widest text-white/80">{event.date}</p>
+                <h3 className="text-base font-bold mt-1">{event.title}</h3>
+              </div>
+              <div className="bg-white p-5">
+                <p className="text-text-medium text-sm leading-relaxed">{event.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Past Events */}
       {past.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-gray-100">

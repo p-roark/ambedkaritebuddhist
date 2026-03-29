@@ -28,6 +28,11 @@ export function Navigation() {
 
   const isAdmin = sessionState?.user?.role === 'ADMIN'
 
+  const navLinkClass = (href: string) =>
+    `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+      isActive(href) ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
+    }`
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,112 +43,37 @@ export function Navigation() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-1">
-            <Link
-              href="/"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-              }`}
-            >
-              Home
-            </Link>
-            {!sessionState ? (
+            <Link href="/" className={navLinkClass('/')}>Home</Link>
+            <Link href="/about" className={navLinkClass('/about')}>About</Link>
+            <Link href="/ambedkar" className={navLinkClass('/ambedkar')}>Dr. Ambedkar</Link>
+            <Link href="/events" className={navLinkClass('/events')}>Events</Link>
+            <Link href="/gallery" className={navLinkClass('/gallery')}>Gallery</Link>
+            <Link href="/contact" className={navLinkClass('/contact')}>Contact</Link>
+            {sessionState && (
               <>
-                <Link
-                  href="/about"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/about') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  About
-                </Link>
-                <Link
-                  href="/events"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/events') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  Events
-                </Link>
-                <Link
-                  href="/gallery"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/gallery') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  Gallery
-                </Link>
-                <Link
-                  href="/contact"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/contact') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  Contact
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/about"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/about') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  About
-                </Link>
-                <Link
-                  href="/events"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/events') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  Events
-                </Link>
-                <Link
-                  href="/gallery"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/gallery') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  Gallery
-                </Link>
-                <Link
-                  href="/contact"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/contact') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  Contact
-                </Link>
-                <Link
-                  href="/profile"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/profile') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                  }`}
-                >
-                  Profile
-                </Link>
+                <Link href="/profile" className={navLinkClass('/profile')}>Profile</Link>
                 {isAdmin && (
-                  <Link
-                    href="/dashboard"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/dashboard') ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
-                    }`}
-                  >
-                    Dashboard
-                  </Link>
+                  <Link href="/dashboard" className={navLinkClass('/dashboard')}>Dashboard</Link>
                 )}
               </>
             )}
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Donate button — always visible */}
+            <Link
+              href="/donate"
+              className="px-4 py-2 text-sm font-bold text-text-dark bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
+            >
+              Donate
+            </Link>
+
             {!sessionState ? (
               <Link
                 href="/auth/login"
                 className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
               >
-                Sign In
+                Member Login
               </Link>
             ) : (
               <>

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "pages:build": "opennextjs-cloudflare build && node scripts/prepare-pages-build.mjs",
+    "workers:build": "opennextjs-cloudflare build",
+    "workers:deploy": "opennextjs-cloudflare build && wrangler deploy",
     "pages:dev": "opennextjs-cloudflare preview",
     "start": "next start",
     "lint": "next lint",

@@ -24,15 +24,15 @@ const notoSans = Noto_Sans({
 
 export const metadata: Metadata = {
   icons: { icon: '/icon.svg', shortcut: '/icon.svg' },
-  title: 'Ambedkarite Buddhist Community - Canada',
-  description: 'Welcome to the Ambedkarite Buddhist Community in Canada. Fostering unity, education, and social welfare based on the teachings of Dr. B.R. Ambedkar.',
-  keywords: ['Ambedkar', 'Buddhism', 'Community', 'Canada', 'Social Welfare', 'Education'],
-  authors: [{ name: 'ABC Canada' }],
+  title: 'Ambedkarite Buddhist Community Of Canada (ABCC) | Ontario',
+  description: 'ABCC is a registered non-profit in Ontario for Ambedkarite Buddhist families. Practising the Dhamma, celebrating Dr. Ambedkar\'s legacy, and building community in Canada.',
+  keywords: ['Ambedkarite Buddhist Canada', 'Ambedkarite Buddhist community Ontario', 'Navayana Buddhist Canada', 'Dr Ambedkar Canada', 'Buddhist community Toronto', 'Vesak celebration Canada'],
+  authors: [{ name: 'ABCC' }],
   openGraph: {
     type: 'website',
     url: 'https://ambedkaritebuddhist.ca',
-    title: 'Ambedkarite Buddhist Community - Canada',
-    description: 'Fostering unity, education, and social welfare',
+    title: 'Ambedkarite Buddhist Community Of Canada (ABCC) | Ontario',
+    description: 'ABCC is a registered non-profit in Ontario for Ambedkarite Buddhist families. Practising the Dhamma, celebrating Dr. Ambedkar\'s legacy, and building community in Canada.',
     images: [
       {
         url: 'https://via.placeholder.com/1200x630',
