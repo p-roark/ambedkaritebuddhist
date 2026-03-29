@@ -51,10 +51,15 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="font-poppins text-xl font-bold text-primary-saffron flex items-center gap-2">
-              <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8 rounded-full" />
-              {org.shortName}
-            </h3>
+            <div className="flex items-center gap-2">
+              <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8 rounded-full flex-shrink-0" />
+              <h3 className="font-poppins font-bold text-primary-saffron leading-tight">
+                <span className="block text-base">{org.orgName.split('(')[0].trim()}</span>
+                {org.orgName.includes('(') && (
+                  <span className="block text-sm font-semibold text-primary-saffron/80">({org.orgName.split('(')[1]}</span>
+                )}
+              </h3>
+            </div>
             <p className="text-gray-300 text-sm leading-relaxed font-noto-sans">
               {org.description}
             </p>

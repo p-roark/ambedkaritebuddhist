@@ -9,14 +9,21 @@ export function Navigation() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const [sessionState, setSessionState] = useState(session)
-  const [shortName, setShortName] = useState('ABC Canada')
+  const [orgLine1, setOrgLine1] = useState('Ambedkarite Buddhist')
+  const [orgLine2, setOrgLine2] = useState('Community Of Canada (ABCC)')
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/events?resource=org-settings')
-      .then((r) => r.json() as Promise<{ settings?: { shortName?: string } }>)
+      .then((r) => r.json() as Promise<{ settings?: { shortName?: string; orgName?: string } }>)
       .then((data) => {
-        if (data.settings?.shortName) setShortName(data.settings.shortName)
+        const name = data.settings?.orgName ?? ''
+        if (!name) return
+        // Split at the midpoint on a word boundary for a balanced two-line display
+        const words = name.split(' ')
+        const mid = Math.ceil(words.length / 2)
+        setOrgLine1(words.slice(0, mid).join(' '))
+        setOrgLine2(words.slice(mid).join(' '))
       })
       .catch(() => {})
   }, [])
@@ -58,9 +65,12 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center gap-2 font-poppins font-bold text-xl md:text-2xl text-primary-blue">
-            <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8 rounded-full" />
-            {shortName}
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2 font-poppins font-bold text-primary-blue">
+            <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8 rounded-full flex-shrink-0" />
+            <span className="flex flex-col leading-tight">
+              <span className="text-base md:text-lg font-bold">{orgLine1}</span>
+              <span className="text-xs md:text-sm font-semibold text-primary-blue/80">{orgLine2}</span>
+            </span>
           </Link>
 
           {/* Desktop nav */}
