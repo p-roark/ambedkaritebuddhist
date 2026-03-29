@@ -33,21 +33,43 @@ export const metadata: Metadata = {
     url: 'https://ambedkaritebuddhist.ca',
     title: 'Ambedkarite Buddhist Community Of Canada (ABCC) | Ontario',
     description: 'ABCC is a registered non-profit in Ontario for Ambedkarite Buddhist families. Practising the Dhamma, celebrating Dr. Ambedkar\'s legacy, and building community in Canada.',
-    images: [
-      {
-        url: 'https://via.placeholder.com/1200x630',
-        width: 1200,
-        height: 630,
-      },
-    ],
+    images: [{ url: 'https://via.placeholder.com/1200x630', width: 1200, height: 630 }],
   },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function UnderConstruction() {
+  return (
+    <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
+      <body className="min-h-screen bg-gradient-to-br from-primary-blue via-accent-purple to-accent-orange flex items-center justify-center p-6 font-noto-sans">
+        <div className="text-center max-w-lg">
+          <div className="text-7xl mb-6">☸️</div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white font-poppins mb-4">
+            Coming Soon
+          </h1>
+          <p className="text-white/80 text-lg leading-relaxed mb-8">
+            We are building something meaningful for our community.<br />
+            Please check back soon.
+          </p>
+          <div className="inline-block px-6 py-3 bg-primary-saffron text-text-dark font-bold rounded-lg text-sm">
+            Ambedkarite Buddhist Community Of Canada
+          </div>
+          <p className="mt-6 text-white/60 text-sm">
+            Questions? Write to us at{' '}
+            <a href="mailto:info@ambedkaritebuddhist.org" className="text-primary-saffron hover:underline">
+              info@ambedkaritebuddhist.org
+            </a>
+          </p>
+        </div>
+      </body>
+    </html>
+  )
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  if (process.env.UNDER_CONSTRUCTION === 'true') {
+    return <UnderConstruction />
+  }
+
   return (
     <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
       <body className="flex flex-col min-h-screen bg-white text-text-dark font-noto-sans antialiased pt-20">
