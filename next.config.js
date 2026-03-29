@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    optimizePackageImports: ['next-auth', 'drizzle-orm'],
+    optimizePackageImports: ['drizzle-orm'],
   },
   images: {
     localPatterns: [
