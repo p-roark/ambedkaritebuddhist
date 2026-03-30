@@ -108,7 +108,7 @@ const WHAT_WE_DO = [
     icon: '👥',
     title: 'Fellowship & Membership',
     description: 'Connect with a vibrant network of Ambedkarite Buddhist families. Social gatherings, cultural programs, and a place to belong.',
-    link: '/membership',
+    link: '/auth/login',
   },
 ]
 
@@ -140,7 +140,8 @@ const CALENDAR_EVENTS = [
 ]
 
 export default function Home() {
-  const { status: _status } = useSession()
+  const { status } = useSession()
+  const isLoggedIn = status === 'authenticated'
   const [heroImage, setHeroImage] = useState<string>('')
   const [events, setEvents] = useState<Event[]>([])
   const [_isLoading, setIsLoading] = useState(true)
@@ -211,7 +212,7 @@ export default function Home() {
         overlayImage={heroImage}
         layout="two-column"
         buttons={[
-          { label: 'Join Our Community', href: '/membership', variant: 'primary' },
+          ...(!isLoggedIn ? [{ label: 'Join Our Community', href: '/auth/login', variant: 'primary' as const }] : []),
           { label: 'Upcoming Events', href: '/events', variant: 'secondary' },
         ]}
       />
@@ -331,17 +332,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA BANNER */}
-      <section className="py-16 bg-primary-saffron">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-text-dark font-poppins">
-            New to Canada? Looking for your Ambedkarite Buddhist community? You&apos;ve found us.
-          </h2>
-          <Link href="/membership" className="inline-block px-10 py-4 rounded-full font-bold text-lg bg-primary-blue text-white hover:bg-primary-blue/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-            Become a Member
-          </Link>
-        </div>
-      </section>
+      {/* CTA BANNER — only for non-authenticated visitors */}
+      {!isLoggedIn && (
+        <section className="py-16 bg-primary-saffron">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-text-dark font-poppins">
+              New to Canada? Looking for your Ambedkarite Buddhist community? You&apos;ve found us.
+            </h2>
+            <Link href="/auth/login" className="inline-block px-10 py-4 rounded-full font-bold text-lg bg-primary-blue text-white hover:bg-primary-blue/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+              Become a Member
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
