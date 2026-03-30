@@ -45,6 +45,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id: eventId } = await params;
   const body = (await request.json()) as {
     volunteering?: boolean;
+    volunteeringCultural?: boolean;
+    photoConsent?: boolean;
+    needsRide?: boolean;
+    ridePickupAddress?: string;
+    donationAmount?: number;
+    notes?: string;
     includeFamily?: boolean;
     selectedFamilyMemberIds?: string[];
     nonMemberGuests?: Array<{ name?: string; age?: number }>;
@@ -167,6 +173,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     ? nonMemberGuests.filter((guest) => guest.age < 18).length
     : 0;
 
+  const volunteeringCultural = Boolean(body.volunteeringCultural);
+  const photoConsent = body.photoConsent !== false;
+  const needsRide = Boolean(body.needsRide);
+  const ridePickupAddress = needsRide ? String(body.ridePickupAddress ?? '').trim() || null : null;
+  const donationAmount = Math.max(0, Number(body.donationAmount ?? 0)) || 0;
+  const notes = String(body.notes ?? '').trim() || null;
+
   const effectiveAdults = 1 + (includeFamily ? familyAdults + nonMemberAdultGuests : 0);
   const effectiveChildren = includeFamily ? familyChildren + nonMemberChildGuests : 0;
   const totalAmount = event.isPaid
@@ -213,6 +226,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .update(eventRegistrations)
       .set({
         volunteering: Boolean(body.volunteering),
+        volunteeringCultural,
+        photoConsent,
+        needsRide,
+        ridePickupAddress,
+        donationAmount,
+        notes,
         includeFamily,
         selectedFamilyMemberIds: JSON.stringify(includeFamily ? effectiveFamilyIds : []),
         nonMemberGuestDetails: JSON.stringify(includeFamily ? nonMemberGuests : []),
@@ -239,6 +258,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       eventId,
       userId: user.id,
       volunteering: Boolean(body.volunteering),
+      volunteeringCultural,
+      photoConsent,
+      needsRide,
+      ridePickupAddress,
+      donationAmount,
+      notes,
       includeFamily,
       selectedFamilyMemberIds: JSON.stringify(includeFamily ? effectiveFamilyIds : []),
       nonMemberGuestDetails: JSON.stringify(includeFamily ? nonMemberGuests : []),

@@ -47,6 +47,12 @@ type InfoData = {
 
 type FullRegistration = {
   volunteering: boolean
+  volunteeringCultural: boolean
+  photoConsent: boolean
+  needsRide: boolean
+  ridePickupAddress: string | null
+  donationAmount: number
+  notes: string | null
   includeFamily: boolean
   selectedFamilyMemberIds: string
   nonMemberGuestDetails: string
@@ -87,6 +93,12 @@ export default function EventsPage() {
   const [message, setMessage] = useState('')
   // Existing payment info when editing a confirmed registration
   const [existingPaidAmount, setExistingPaidAmount] = useState(0)
+  const [volunteeringCultural, setVolunteeringCultural] = useState(false)
+  const [photoConsent, setPhotoConsent] = useState(true)
+  const [needsRide, setNeedsRide] = useState(false)
+  const [ridePickupAddress, setRidePickupAddress] = useState('')
+  const [donationAmount, setDonationAmount] = useState('')
+  const [notes, setNotes] = useState('')
 
   // Info modal state
   const [infoEventId, setInfoEventId] = useState<string | null>(null)
@@ -166,6 +178,12 @@ export default function EventsPage() {
     setNonMemberGuests([])
     setNewGuestName('')
     setNewGuestAge('')
+    setVolunteeringCultural(false)
+    setPhotoConsent(true)
+    setNeedsRide(false)
+    setRidePickupAddress('')
+    setDonationAmount('')
+    setNotes('')
   }
 
   const openEditModal = async (event: EventItem) => {
@@ -195,6 +213,12 @@ export default function EventsPage() {
           if (data.registration.paymentStatus === 'Paid') {
             setExistingPaidAmount(Number(data.registration.totalAmount) + Number(data.registration.refundDue ?? 0))
           }
+          setVolunteeringCultural(Boolean(data.registration.volunteeringCultural))
+          setPhotoConsent(data.registration.photoConsent !== false)
+          setNeedsRide(Boolean(data.registration.needsRide))
+          setRidePickupAddress(data.registration.ridePickupAddress ?? '')
+          setDonationAmount(data.registration.donationAmount ? String(data.registration.donationAmount) : '')
+          setNotes(data.registration.notes ?? '')
         }
       }
     } catch { /* keep defaults */ }
@@ -210,7 +234,18 @@ export default function EventsPage() {
       const res = await fetch(`/api/events/${selectedEvent.id}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ volunteering, includeFamily, selectedFamilyMemberIds, nonMemberGuests }),
+        body: JSON.stringify({
+          volunteering,
+          volunteeringCultural,
+          photoConsent,
+          needsRide,
+          ridePickupAddress: needsRide ? ridePickupAddress : '',
+          donationAmount: donationAmount ? Number(donationAmount) : 0,
+          notes,
+          includeFamily,
+          selectedFamilyMemberIds,
+          nonMemberGuests,
+        }),
       })
       const data = (await res.json()) as { error?: string; message?: string }
       if (!res.ok) { setMessage(data.error ?? 'Unable to register'); return }
@@ -525,141 +560,242 @@ export default function EventsPage() {
 
       {/* Registration / Edit Modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-8 py-5 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-center">
-              <h3 className="text-xl font-bold text-white">{isEditMode ? 'Edit Registration: ' : 'Register: '}{selectedEvent.title}</h3>
-              <button onClick={closeModal} className="text-white/90 hover:text-white text-2xl font-semibold leading-none">×</button>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+            {/* Header */}
+            <div className="px-5 sm:px-8 py-4 sm:py-5 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-start gap-3 flex-shrink-0">
+              <div>
+                <p className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-0.5">{isEditMode ? 'Edit Registration' : 'Register'}</p>
+                <h3 className="text-base sm:text-xl font-bold text-white leading-snug line-clamp-2">{selectedEvent.title}</h3>
+              </div>
+              <button onClick={closeModal} className="text-white/80 hover:text-white text-2xl font-semibold leading-none flex-shrink-0 mt-0.5">×</button>
             </div>
 
-            <div className="p-8 space-y-5 overflow-y-auto flex-1">
-              {isEditMode && existingPaidAmount > 0 ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 space-y-1">
-                  <p className="text-sm text-amber-800 font-medium">You have a confirmed registration</p>
-                  <p className="text-xs text-amber-700">
-                    Amount paid: <strong>${existingPaidAmount}</strong>.
-                    {totalAmount < existingPaidAmount && ` Reducing attendees will generate a refund of $${existingPaidAmount - totalAmount} — your registration stays confirmed.`}
-                    {totalAmount > existingPaidAmount && ` Increasing attendees requires an additional $${totalAmount - existingPaidAmount} payment — status will reset to Pending.`}
-                  </p>
-                </div>
-              ) : isEditMode ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-sm text-amber-800 font-medium">Editing your registration</p>
-                  <p className="text-xs text-amber-700 mt-1">If your total changes, payment status will reset to Unpaid and require re-confirmation by an admin.</p>
-                </div>
-              ) : null}
+            <div className="overflow-y-auto flex-1 px-5 sm:px-8 py-5 sm:py-6 space-y-6">
 
-              <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-                <p className="text-sm text-blue-800 font-medium">You are already counted as 1 adult attendee.</p>
-                <p className="text-xs text-blue-700 mt-1">Add additional family members or guests below.</p>
-              </div>
+              {/* Edit mode notices */}
+              {isEditMode && (
+                <div className={`rounded-xl border px-4 py-3 ${existingPaidAmount > 0 ? 'border-amber-200 bg-amber-50' : 'border-blue-100 bg-blue-50'}`}>
+                  {existingPaidAmount > 0 ? (
+                    <>
+                      <p className="text-sm font-semibold text-amber-800">Confirmed registration — amount paid: ${existingPaidAmount}</p>
+                      {totalAmount < existingPaidAmount && <p className="text-xs text-amber-700 mt-1">Reducing attendees will generate a refund of ${existingPaidAmount - totalAmount}.</p>}
+                      {totalAmount > existingPaidAmount && <p className="text-xs text-amber-700 mt-1">Increasing attendees requires an additional ${totalAmount - existingPaidAmount} payment — status will reset to Pending.</p>}
+                    </>
+                  ) : (
+                    <p className="text-sm text-blue-800">You are editing your registration. If the total changes, payment status resets to Unpaid.</p>
+                  )}
+                </div>
+              )}
 
+              {/* Payment instructions */}
               {selectedEvent.isPaid && selectedEvent.paymentInstructions && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-sm text-amber-800 font-semibold mb-1">💳 Payment Instructions</p>
-                  <p className="text-sm text-amber-900 whitespace-pre-line">{selectedEvent.paymentInstructions}</p>
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-sm font-semibold text-amber-800 mb-1">Payment Instructions</p>
+                  <p className="text-sm text-amber-900 whitespace-pre-line leading-relaxed">{selectedEvent.paymentInstructions}</p>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="flex items-center gap-2 text-sm rounded-md border border-slate-200 px-3 py-2">
-                  <input type="checkbox" checked={volunteering} onChange={(e) => setVolunteering(e.target.checked)} />Volunteering
+              {/* Section: Attendees */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-5 rounded-full bg-primary-blue flex-shrink-0" />
+                  <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Attendees</h4>
+                </div>
+                <p className="text-sm text-gray-500 mb-3">You are counted as 1 adult. Add family members or guests below.</p>
+
+                <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={includeFamily} onChange={(e) => setIncludeFamily(e.target.checked)} />
+                  <span className="font-medium text-gray-800">Add family members or guests</span>
                 </label>
-                <label className="flex items-center gap-2 text-sm rounded-md border border-slate-200 px-3 py-2">
-                  <input type="checkbox" checked={includeFamily} onChange={(e) => setIncludeFamily(e.target.checked)} />Add Family Members
-                </label>
+
+                {includeFamily && (
+                  <div className="mt-3 space-y-4">
+                    {/* Family members from profile */}
+                    <div className="rounded-xl border border-slate-200 p-4">
+                      <p className="text-sm font-semibold text-gray-800 mb-2">Family Members (from profile)</p>
+                      {familyMembers.length === 0 ? (
+                        <p className="text-xs text-slate-500">No family members saved. Add them in your Profile settings.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {familyMembers.map((member) => (
+                            <label key={member.id} className="flex items-center gap-2 text-sm rounded-lg border border-slate-200 px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 accent-primary-blue"
+                                checked={selectedFamilyMemberIds.includes(member.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) setSelectedFamilyMemberIds((prev) => [...prev, member.id])
+                                  else setSelectedFamilyMemberIds((prev) => prev.filter((id) => id !== member.id))
+                                }}
+                              />
+                              <span className="text-gray-800">{member.name} <span className="text-gray-500">({member.relationship}{member.age != null ? `, age ${member.age}` : ''})</span></span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Non-member guests */}
+                    <div className="rounded-xl border border-slate-200 p-4">
+                      <p className="text-sm font-semibold text-gray-800 mb-3">Non-member Guests</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <label className="block">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Guest Name</span>
+                          <input type="text" value={newGuestName} onChange={(e) => setNewGuestName(e.target.value)} placeholder="Full name" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition" />
+                        </label>
+                        <label className="block">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Guest Age</span>
+                          <input type="number" min={0} value={newGuestAge} onChange={(e) => setNewGuestAge(e.target.value)} placeholder="Age" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition" />
+                        </label>
+                      </div>
+                      <button type="button" onClick={() => {
+                        const name = newGuestName.trim()
+                        const age = Number(newGuestAge)
+                        if (!name || !Number.isFinite(age) || age < 0) return
+                        setNonMemberGuests((prev) => [...prev, { name, age }])
+                        setNewGuestName('')
+                        setNewGuestAge('')
+                      }} className="w-full sm:w-auto px-4 py-2 text-sm rounded-xl bg-primary-blue text-white font-semibold hover:bg-primary-blue/90 transition-colors">
+                        + Add Guest
+                      </button>
+                      {nonMemberGuests.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {nonMemberGuests.map((guest, idx) => (
+                            <div key={`${guest.name}-${idx}`} className="flex items-center justify-between text-sm border border-slate-200 rounded-xl px-3 py-2 bg-slate-50">
+                              <span className="text-gray-800">{guest.name} <span className="text-gray-500">(age {guest.age})</span></span>
+                              <button type="button" onClick={() => setNonMemberGuests((prev) => prev.filter((_, i) => i !== idx))} className="text-xs px-2.5 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 font-medium transition-colors">Remove</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {includeFamily && (
-                <div className="space-y-4">
-                  <div className="rounded-md border border-slate-200 p-3">
-                    <p className="text-sm font-medium text-slate-800 mb-2">Select Family Members</p>
-                    {familyMembers.length === 0 ? (
-                      <p className="text-xs text-slate-500">No family members in profile. Add them from Profile settings.</p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {familyMembers.map((member) => (
-                          <label key={member.id} className="flex items-center gap-2 text-sm rounded border border-slate-200 px-2 py-1.5">
-                            <input
-                              type="checkbox"
-                              checked={selectedFamilyMemberIds.includes(member.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) setSelectedFamilyMemberIds((prev) => [...prev, member.id])
-                                else setSelectedFamilyMemberIds((prev) => prev.filter((id) => id !== member.id))
-                              }}
-                            />
-                            <span>{member.name} ({member.relationship}{member.age != null ? `, ${member.age}` : ''})</span>
-                          </label>
-                        ))}
+              {/* Section: Volunteering */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-5 rounded-full bg-primary-saffron flex-shrink-0" />
+                  <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Volunteering</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                    <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={volunteering} onChange={(e) => setVolunteering(e.target.checked)} />
+                    <span className="font-medium text-gray-800">Volunteer for event setup</span>
+                  </label>
+                  <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                    <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={volunteeringCultural} onChange={(e) => setVolunteeringCultural(e.target.checked)} />
+                    <span className="font-medium text-gray-800">Volunteer for cultural activities</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Section: Additional */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-5 rounded-full bg-purple-400 flex-shrink-0" />
+                  <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Additional Info</h4>
+                </div>
+                <div className="space-y-3">
+                  {/* Photo consent */}
+                  <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                    <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={photoConsent} onChange={(e) => setPhotoConsent(e.target.checked)} />
+                    <div>
+                      <p className="font-medium text-gray-800">Photo & video consent</p>
+                      <p className="text-xs text-gray-500 mt-0.5">I consent to being photographed/filmed at this event for community use</p>
+                    </div>
+                  </label>
+
+                  {/* Ride pickup */}
+                  <div>
+                    <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                      <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={needsRide} onChange={(e) => setNeedsRide(e.target.checked)} />
+                      <span className="font-medium text-gray-800">I need a ride pickup</span>
+                    </label>
+                    {needsRide && (
+                      <div className="mt-2 pl-1">
+                        <label className="block">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Pickup Address</span>
+                          <input type="text" value={ridePickupAddress} onChange={(e) => setRidePickupAddress(e.target.value)} placeholder="Enter your full pickup address" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition" />
+                        </label>
                       </div>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-sm text-slate-700">
-                      <span className="mb-1 block font-medium">Guest Name</span>
-                      <input type="text" value={newGuestName} onChange={(e) => setNewGuestName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
-                    </label>
-                    <label className="text-sm text-slate-700">
-                      <span className="mb-1 block font-medium">Guest Age</span>
-                      <input type="number" min={0} value={newGuestAge} onChange={(e) => setNewGuestAge(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
-                    </label>
-                    <button type="button" onClick={() => {
-                      const name = newGuestName.trim()
-                      const age = Number(newGuestAge)
-                      if (!name || !Number.isFinite(age) || age < 0) return
-                      setNonMemberGuests((prev) => [...prev, { name, age }])
-                      setNewGuestName('')
-                      setNewGuestAge('')
-                    }} className="col-span-2 px-3 py-2 text-sm rounded-xl bg-primary-blue text-white font-semibold hover:bg-primary-blue/90 transition-colors">
-                      Add Non-member Guest
-                    </button>
-                    {nonMemberGuests.length > 0 && (
-                      <div className="col-span-2 space-y-2">
-                        {nonMemberGuests.map((guest, idx) => (
-                          <div key={`${guest.name}-${idx}`} className="flex items-center justify-between text-sm border border-slate-200 rounded-md px-3 py-2">
-                            <span>{guest.name} ({guest.age})</span>
-                            <button type="button" onClick={() => setNonMemberGuests((prev) => prev.filter((_, i) => i !== idx))} className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">Remove</button>
-                          </div>
-                        ))}
+                  {/* Donation */}
+                  <div>
+                    <label className="block">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Donation Amount (optional)</span>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">$</span>
+                        <input type="number" min={0} value={donationAmount} onChange={(e) => setDonationAmount(e.target.value)} placeholder="0" className="w-full pl-7 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition" />
                       </div>
-                    )}
+                    </label>
                   </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Feedback / Notes (optional)</span>
+                      <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any questions, dietary needs, or other notes..." className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition resize-none" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary */}
+              {selectedEvent.isPaid && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 space-y-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-1 h-5 rounded-full bg-green-400 flex-shrink-0" />
+                    <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Summary</h4>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Registration total</span>
+                    <span className="font-bold text-gray-900 text-base">${totalAmount}</span>
+                  </div>
+                  {isEditMode && existingPaidAmount > 0 && totalAmount !== existingPaidAmount && (
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200">
+                      <span className="text-gray-500">Previously paid</span>
+                      <span className="text-gray-500">${existingPaidAmount}</span>
+                    </div>
+                  )}
+                  {isEditMode && existingPaidAmount > 0 && totalAmount < existingPaidAmount && (
+                    <div className="flex items-center justify-between text-xs font-semibold text-green-700">
+                      <span>Refund due</span>
+                      <span>${existingPaidAmount - totalAmount}</span>
+                    </div>
+                  )}
+                  {isEditMode && existingPaidAmount > 0 && totalAmount > existingPaidAmount && (
+                    <div className="flex items-center justify-between text-xs font-semibold text-red-600">
+                      <span>Additional payment required</span>
+                      <span>${totalAmount - existingPaidAmount}</span>
+                    </div>
+                  )}
+                  {donationAmount && Number(donationAmount) > 0 && (
+                    <div className="flex items-center justify-between text-xs text-gray-500 border-t border-slate-200 pt-1">
+                      <span>Donation (separate)</span>
+                      <span>${donationAmount}</span>
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">New total</span>
-                  <span className="font-semibold text-slate-900">${totalAmount}</span>
-                </div>
-                {isEditMode && existingPaidAmount > 0 && totalAmount !== existingPaidAmount && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Amount paid</span>
-                    <span className="text-slate-500">${existingPaidAmount}</span>
-                  </div>
-                )}
-                {isEditMode && existingPaidAmount > 0 && totalAmount < existingPaidAmount && (
-                  <div className="flex items-center justify-between text-xs font-medium text-amber-700">
-                    <span>↩ Refund</span>
-                    <span>${existingPaidAmount - totalAmount}</span>
-                  </div>
-                )}
-                {isEditMode && existingPaidAmount > 0 && totalAmount > existingPaidAmount && (
-                  <div className="flex items-center justify-between text-xs font-medium text-red-700">
-                    <span>⚠ Additional payment required</span>
-                    <span>${totalAmount - existingPaidAmount}</span>
-                  </div>
-                )}
-              </div>
-              {message && <p className="text-sm text-blue-700">{message}</p>}
             </div>
 
-            <div className="p-6 border-t flex justify-end gap-3">
-              <button onClick={closeModal} className="px-4 py-2 text-sm border border-slate-200 rounded-xl text-text-medium hover:bg-slate-50 transition-colors">Close</button>
-              <button onClick={registerForEvent} disabled={registering} className="px-5 py-2 text-sm text-white bg-primary-blue rounded-xl font-bold hover:bg-primary-blue/90 disabled:opacity-50 transition-colors">
-                {registering ? 'Submitting...' : isEditMode ? 'Save Changes' : 'Submit Registration'}
-              </button>
+            {/* Footer */}
+            <div className="px-5 sm:px-8 py-4 border-t bg-gray-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-shrink-0">
+              {message ? (
+                <p className="text-sm font-medium text-blue-700">{message}</p>
+              ) : <div />}
+              <div className="flex gap-3 justify-end">
+                <button onClick={closeModal} className="px-4 py-2 text-sm border border-slate-200 rounded-xl text-gray-600 bg-white hover:bg-slate-50 transition-colors font-medium">Cancel</button>
+                <button onClick={registerForEvent} disabled={registering} className="px-5 py-2 text-sm text-white rounded-xl font-bold disabled:opacity-50 transition-colors" style={{ background: 'linear-gradient(135deg, #2D4D9B, #7F56D9)' }}>
+                  {registering ? 'Submitting…' : isEditMode ? 'Save Changes' : 'Submit Registration'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

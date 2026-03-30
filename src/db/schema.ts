@@ -127,6 +127,12 @@ export const eventRegistrations = sqliteTable('EventRegistration', {
   paymentHistory:  text('paymentHistory').notNull().default('[]'),
   paymentStatus:   text('paymentStatus').notNull().default('Unpaid'), // Unpaid | Paid
   registrationStatus: text('registrationStatus').notNull().default('Pending Registration'), // Pending Registration | Confirmed | Rejected
+  volunteeringCultural: integer('volunteeringCultural', { mode: 'boolean' }).notNull().default(false),
+  photoConsent:        integer('photoConsent', { mode: 'boolean' }).notNull().default(true),
+  needsRide:           integer('needsRide', { mode: 'boolean' }).notNull().default(false),
+  ridePickupAddress:   text('ridePickupAddress'),
+  donationAmount:      integer('donationAmount').notNull().default(0),
+  notes:               text('notes'),
   createdAt:       text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt:       text('updatedAt').notNull().default(sql`(datetime('now'))`),
 }, (t) => ({
