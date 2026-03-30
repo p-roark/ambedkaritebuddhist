@@ -54,10 +54,15 @@ export function Footer() {
             <div className="flex items-center gap-2">
               <img src="/images/logo.png" alt="ABCC logo" className="w-10 h-10 rounded-none object-contain flex-shrink-0" />
               <h3 className="font-poppins font-bold text-primary-saffron leading-tight">
-                <span className="block text-base">{org.orgName.split('(')[0].trim()}</span>
-                {org.orgName.includes('(') && (
-                  <span className="block text-sm font-semibold text-primary-saffron/80">({org.orgName.split('(')[1]}</span>
-                )}
+                {(() => {
+                  const words = org.orgName.replace(/\(.*\)/, '').trim().split(' ')
+                  return (
+                    <>
+                      <span className="block text-base">{words.slice(0, 2).join(' ')}</span>
+                      <span className="block text-sm font-semibold text-primary-saffron/80">{words.slice(2).join(' ')}</span>
+                    </>
+                  )
+                })()}
               </h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed font-noto-sans">

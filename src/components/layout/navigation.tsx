@@ -19,11 +19,10 @@ export function Navigation() {
       .then((data) => {
         const name = data.settings?.orgName ?? ''
         if (!name) return
-        // Split at the midpoint on a word boundary for a balanced two-line display
+        // Always split after the first 2 words: "Ambedkarite Buddhist" / "Community of Canada"
         const words = name.split(' ')
-        const mid = Math.ceil(words.length / 2)
-        setOrgLine1(words.slice(0, mid).join(' '))
-        setOrgLine2(words.slice(mid).join(' '))
+        setOrgLine1(words.slice(0, 2).join(' '))
+        setOrgLine2(words.slice(2).join(' '))
       })
       .catch(() => {})
   }, [])
