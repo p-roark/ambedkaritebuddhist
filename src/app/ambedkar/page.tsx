@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 const TIMELINE = [
@@ -25,6 +26,18 @@ export default function AmbedkarPage() {
         <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-white/5" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <p className="text-sm font-bold text-primary-saffron uppercase tracking-widest mb-4">Bodhisattva of Modern India</p>
+          <div className="flex justify-center mb-8">
+            <div className="w-44 h-56 md:w-52 md:h-64 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20">
+              <Image
+                src="/images/ambedkar-portrait.jpg"
+                alt="Dr. B.R. Ambedkar"
+                width={208}
+                height={256}
+                className="object-cover w-full h-full"
+                priority
+              />
+            </div>
+          </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 font-poppins">Dr. Babasaheb Ambedkar</h1>
           <p className="text-lg md:text-xl text-white/80 mb-2">(1891 – 1956)</p>
           <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
