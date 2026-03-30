@@ -19,7 +19,7 @@ export default function LoginPage() {
           {/* Brand header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <img src="/images/logo.jpg" alt="ABCC logo" className="w-16 h-16 rounded-full object-cover shadow-md" />
+              <img src="/images/logo.png" alt="ABCC logo" className="w-16 h-16 rounded-none object-contain shadow-md" />
             </div>
             <h1 className="text-3xl font-bold text-text-dark font-poppins mb-2">Welcome Back</h1>
             <p className="text-text-medium text-base">Sign in to access your community account</p>

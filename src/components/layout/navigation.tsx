@@ -66,7 +66,7 @@ export function Navigation() {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center gap-2 font-poppins font-bold text-primary-blue">
-            <img src="/images/logo.jpg" alt="ABCC logo" className="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+            <img src="/images/logo.png" alt="ABCC logo" className="w-11 h-11 rounded-none object-contain flex-shrink-0" />
             <span className="flex flex-col leading-tight">
               <span className="text-base md:text-lg font-bold">{orgLine1}</span>
               <span className="text-xs md:text-sm font-semibold text-primary-blue/80">{orgLine2}</span>
