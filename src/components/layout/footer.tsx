@@ -52,7 +52,7 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/icon.svg" alt="" aria-hidden="true" className="w-8 h-8 rounded-full flex-shrink-0" />
+              <img src="/images/logo.jpg" alt="ABCC logo" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               <h3 className="font-poppins font-bold text-primary-saffron leading-tight">
                 <span className="block text-base">{org.orgName.split('(')[0].trim()}</span>
                 {org.orgName.includes('(') && (
