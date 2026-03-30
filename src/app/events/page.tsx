@@ -718,7 +718,7 @@ export default function EventsPage() {
                       <div className="mt-2 pl-1">
                         <label className="block">
                           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Pickup Address</span>
-                          <input type="text" value={ridePickupAddress} onChange={(e) => setRidePickupAddress(e.target.value)} placeholder="Enter your full pickup address" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition" />
+                          <input type="text" value={ridePickupAddress} onChange={(e) => setRidePickupAddress(e.target.value)} placeholder="Enter your full pickup address" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition" />
                         </label>
                       </div>
                     )}
@@ -739,7 +739,7 @@ export default function EventsPage() {
                   <div>
                     <label className="block">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Feedback / Notes (optional)</span>
-                      <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any questions, dietary needs, or other notes..." className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition resize-none" />
+                      <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any questions, dietary needs, or other notes..." className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition resize-none" />
                     </label>
                   </div>
                 </div>
