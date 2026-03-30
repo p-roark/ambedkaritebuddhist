@@ -1451,105 +1451,129 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="max-w-2xl space-y-6">
+          <div className="space-y-6">
             <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
               {/* Card header */}
-              <div className="px-6 py-5 bg-gradient-to-r from-primary-blue to-[#7F56D9] flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="px-8 py-6 bg-gradient-to-r from-primary-blue to-[#7F56D9] flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-white font-semibold text-base leading-tight">Organization Details</h2>
-                  <p className="text-white/70 text-xs mt-0.5">Displayed across the site and in emails</p>
+                  <h2 className="text-white font-bold text-xl leading-tight">Organization Details</h2>
+                  <p className="text-white/70 text-sm mt-0.5">Displayed across the site and in member emails</p>
                 </div>
               </div>
 
-              <div className="bg-white px-6 py-6 space-y-5">
-                {/* Identity fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {([
-                    { key: 'orgName', label: 'Organization Name', colSpan: true },
-                    { key: 'shortName', label: 'Short Name / Display Name' },
-                    { key: 'website', label: 'Website URL' },
-                  ] as Array<{ key: keyof OrgSettings; label: string; colSpan?: boolean }>).map(({ key, label, colSpan }) => (
-                    <label key={key} className={`block ${colSpan ? 'sm:col-span-2' : ''}`}>
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
-                      <input
-                        type="text"
-                        value={orgSettingsForm[key]}
-                        onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                        className="mt-1.5 w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition"
-                      />
-                    </label>
-                  ))}
-                </div>
-
-                {/* Contact fields */}
+              <div className="bg-white px-8 py-8 space-y-8">
+                {/* Identity */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Contact</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {([
-                      { key: 'email', label: 'Email', type: 'email' },
-                      { key: 'phone', label: 'Phone' },
-                      { key: 'altPhone', label: 'Alt. Phone' },
-                    ] as Array<{ key: keyof OrgSettings; label: string; type?: string }>).map(({ key, label, type }) => (
-                      <label key={key} className="block">
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
-                        <input
-                          type={type ?? 'text'}
-                          value={orgSettingsForm[key]}
-                          onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="mt-1.5 w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition"
-                        />
-                      </label>
-                    ))}
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-5 rounded-full bg-primary-blue" />
+                    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Identity</h3>
                   </div>
-                </div>
-
-                {/* Address fields */}
-                <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Address</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                     {([
-                      { key: 'addressLine1', label: 'Address Line 1', colSpan: true },
-                      { key: 'addressLine2', label: 'Address Line 2', colSpan: true },
-                      { key: 'city', label: 'City' },
-                      { key: 'province', label: 'Province' },
-                      { key: 'postalCode', label: 'Postal Code' },
-                      { key: 'country', label: 'Country' },
-                    ] as Array<{ key: keyof OrgSettings; label: string; colSpan?: boolean }>).map(({ key, label, colSpan }) => (
-                      <label key={key} className={`block ${colSpan ? 'sm:col-span-2' : ''}`}>
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+                      { key: 'orgName', label: 'Organization Name', span: 'lg:col-span-2' },
+                      { key: 'shortName', label: 'Short Name' },
+                      { key: 'website', label: 'Website URL' },
+                    ] as Array<{ key: keyof OrgSettings; label: string; span?: string }>).map(({ key, label, span }) => (
+                      <label key={key} className={`block ${span ?? ''}`}>
+                        <span className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</span>
                         <input
                           type="text"
                           value={orgSettingsForm[key]}
                           onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="mt-1.5 w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition"
                         />
                       </label>
                     ))}
                   </div>
                 </div>
 
+                <div className="border-t border-gray-100" />
+
+                {/* Contact */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-5 rounded-full bg-primary-saffron" />
+                    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Contact</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {([
+                      { key: 'email', label: 'Email Address', type: 'email' },
+                      { key: 'phone', label: 'Phone Number' },
+                      { key: 'altPhone', label: 'Alternative Phone' },
+                    ] as Array<{ key: keyof OrgSettings; label: string; type?: string }>).map(({ key, label, type }) => (
+                      <label key={key} className="block">
+                        <span className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</span>
+                        <input
+                          type={type ?? 'text'}
+                          value={orgSettingsForm[key]}
+                          onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-100" />
+
+                {/* Address */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-5 rounded-full bg-purple-400" />
+                    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Address</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    {([
+                      { key: 'addressLine1', label: 'Address Line 1', span: 'md:col-span-2 lg:col-span-2' },
+                      { key: 'addressLine2', label: 'Address Line 2', span: 'md:col-span-2 lg:col-span-2' },
+                      { key: 'city', label: 'City' },
+                      { key: 'province', label: 'Province' },
+                      { key: 'postalCode', label: 'Postal Code' },
+                      { key: 'country', label: 'Country' },
+                    ] as Array<{ key: keyof OrgSettings; label: string; span?: string }>).map(({ key, label, span }) => (
+                      <label key={key} className={`block ${span ?? ''}`}>
+                        <span className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</span>
+                        <input
+                          type="text"
+                          value={orgSettingsForm[key]}
+                          onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-100" />
+
                 {/* Description */}
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Organization Description</span>
-                  <textarea
-                    rows={3}
-                    value={orgSettingsForm.description}
-                    onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, description: e.target.value }))}
-                    className="mt-1.5 w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition resize-none"
-                  />
-                </label>
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-5 rounded-full bg-green-400" />
+                    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest">About</h3>
+                  </div>
+                  <label className="block">
+                    <span className="block text-sm font-semibold text-gray-700 mb-1.5">Organization Description</span>
+                    <textarea
+                      rows={4}
+                      value={orgSettingsForm.description}
+                      onChange={(e) => setOrgSettingsForm((prev) => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition resize-none"
+                    />
+                  </label>
+                </div>
               </div>
 
               {/* Card footer */}
-              <div className="bg-gray-50 border-t border-gray-100 px-6 py-4 flex items-center justify-between">
+              <div className="bg-gray-50 border-t border-gray-100 px-8 py-5 flex items-center justify-between">
                 <div>
                   {orgSettingsMessage && (
-                    <p className={`text-sm font-medium ${orgSettingsMessage.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>
+                    <p className={`text-sm font-semibold ${orgSettingsMessage.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>
                       {orgSettingsMessage.includes('Failed') ? '✗ ' : '✓ '}{orgSettingsMessage}
                     </p>
                   )}
@@ -1557,7 +1581,7 @@ export default function DashboardPage() {
                 <button
                   onClick={handleSaveOrgSettings}
                   disabled={orgSettingsSaving}
-                  className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 transition"
+                  className="px-7 py-2.5 text-sm font-bold text-white rounded-xl disabled:opacity-50 transition shadow-sm hover:shadow-md"
                   style={{ background: 'linear-gradient(135deg, #2D4D9B, #7F56D9)' }}
                 >
                   {orgSettingsSaving ? 'Saving…' : 'Save Settings'}
