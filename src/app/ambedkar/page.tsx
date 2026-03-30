@@ -1,5 +1,7 @@
+'use client'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 const TIMELINE = [
   { year: '1891', event: 'Born in Mhow, Madhya Pradesh, into a family from the Mahar caste — classified as "untouchable" by the caste system.' },
@@ -15,6 +17,9 @@ const TIMELINE = [
 ]
 
 export default function AmbedkarPage() {
+  const { status } = useSession()
+  const isLoggedIn = status === 'authenticated'
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
@@ -200,23 +205,25 @@ export default function AmbedkarPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 bg-primary-saffron">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-text-dark font-poppins">
-            Join ABCC — Continue His Legacy
-          </h2>
-          <p className="text-text-dark/80 text-lg max-w-xl mx-auto">
-            Be part of a community that honours Dr. Ambedkar not just in words, but in how we live, learn, and serve.
-          </p>
-          <Link
-            href="/membership"
-            className="inline-block px-10 py-4 rounded-full font-bold text-lg bg-primary-blue text-white hover:bg-primary-blue/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-          >
-            Become a Member
-          </Link>
-        </div>
-      </section>
+      {/* CTA — only for non-authenticated visitors */}
+      {!isLoggedIn && (
+        <section className="py-16 bg-primary-saffron">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-text-dark font-poppins">
+              Join ABCC — Continue His Legacy
+            </h2>
+            <p className="text-text-dark/80 text-lg max-w-xl mx-auto">
+              Be part of a community that honours Dr. Ambedkar not just in words, but in how we live, learn, and serve.
+            </p>
+            <Link
+              href="/auth/login"
+              className="inline-block px-10 py-4 rounded-full font-bold text-lg bg-primary-blue text-white hover:bg-primary-blue/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            >
+              Become a Member
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
