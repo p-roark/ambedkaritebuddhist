@@ -3,7 +3,6 @@ import { requireAdminOrCoordinator } from '@/lib/admin-auth';
 import { getEventImagesBucket, parseEventImageKeys } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 const MAX_IMAGES_PER_EVENT = 25;
 

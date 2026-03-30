@@ -4,7 +4,6 @@ import { getEventImagesBucket } from '@/lib/r2';
 import type { CoverImage } from '../route';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 function toCoverImageUrl(key: string): string {
   return `/api/events/image?key=${encodeURIComponent(key)}`;

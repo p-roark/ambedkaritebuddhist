@@ -3,7 +3,6 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { getEventImagesBucket } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 export type CoverImage = {
   key: string;

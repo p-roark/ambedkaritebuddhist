@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminOrCoordinator } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

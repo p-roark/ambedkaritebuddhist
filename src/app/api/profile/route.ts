@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 async function getOrCreateUserId() {
   const { auth } = await import('@/lib/auth');

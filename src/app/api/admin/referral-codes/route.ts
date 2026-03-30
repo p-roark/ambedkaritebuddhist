@@ -3,7 +3,6 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { nameFromEmail } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 async function ensureOwnerId(email: string) {
   const [{ eq }, { getDb }, { users }] = await Promise.all([

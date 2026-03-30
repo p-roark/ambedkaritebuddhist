@@ -3,7 +3,6 @@ import { getAuthenticatedUserId, requireAdmin } from '@/lib/admin-auth';
 import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   const isAdmin = await requireAdmin(request);

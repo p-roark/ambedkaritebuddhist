@@ -3,7 +3,6 @@ import { isValidReferralCodeFormat } from '@/lib/referral';
 import { pickDisplayName } from '@/lib/user-name';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {

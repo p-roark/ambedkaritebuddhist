@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { getEventImagesBucket } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 function inferImageContentType(key: string) {
   const lower = key.toLowerCase();
