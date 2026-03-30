@@ -191,7 +191,7 @@ export async function PATCH(request: NextRequest) {
     await db
       .update(organizationSettings)
       .set({
-        orgName: String(body.orgName ?? '').trim() || 'Ambedkarite Buddhist Organization Canada',
+        orgName: String(body.orgName ?? '').trim() || 'Ambedkarite Buddhist Community of Canada',
         shortName: String(body.shortName ?? '').trim() || 'ABC Canada',
         email: String(body.email ?? '').trim() || 'info@ambedkaritebuddhist.ca',
         phone: String(body.phone ?? '').trim() || null,

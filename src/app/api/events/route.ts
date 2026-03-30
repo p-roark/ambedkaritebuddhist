@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       settings: row ?? {
         id: 'main',
-        orgName: 'Ambedkarite Buddhist Organization Canada',
+        orgName: 'Ambedkarite Buddhist Community of Canada',
         shortName: 'ABC Canada',
         email: 'info@ambedkaritebuddhist.ca',
         phone: null,

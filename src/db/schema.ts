@@ -205,7 +205,7 @@ export const leadershipRoles = sqliteTable('LeadershipRole', {
 
 export const organizationSettings = sqliteTable('OrganizationSettings', {
   id:           text('id').primaryKey(),
-  orgName:      text('orgName').notNull().default('Ambedkarite Buddhist Organization Canada'),
+  orgName:      text('orgName').notNull().default('Ambedkarite Buddhist Community of Canada'),
   shortName:    text('shortName').notNull().default('ABC Canada'),
   email:        text('email').notNull().default('info@ambedkaritebuddhist.ca'),
   phone:        text('phone'),
