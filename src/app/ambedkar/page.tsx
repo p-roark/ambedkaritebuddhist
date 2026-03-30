@@ -119,7 +119,7 @@ export default function AmbedkarPage() {
       {/* The Great Conversion */}
       <section
         className="py-20 md:py-28 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #2D4D9B 0%, #7F56D9 55%, #FF6B35 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #1a2f6e 0%, #4a1f7a 55%, #7a2010 100%)' }}
       >
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5" />
         <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-white/5" />
