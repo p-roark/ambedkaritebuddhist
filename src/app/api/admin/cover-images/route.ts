@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
   if (!adminCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const bucket = getEventImagesBucket();
-  const listed = await bucket.list({ prefix: 'covers/' });
+  // include customMetadata is valid at runtime but missing from the TS type definition
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const listed = await bucket.list({ prefix: 'covers/', include: ['customMetadata'] } as any);
 
   const images: CoverImage[] = listed.objects.map((obj) => ({
     key: obj.key,

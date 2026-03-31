@@ -8,6 +8,10 @@ export function normalizeImagePath(src: string | null | undefined, fallback = DE
   }
   if (value.startsWith('/')) return value;
   if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  // R2 key (e.g. covers/uuid.jpg) — serve via image proxy
+  if (value.startsWith('covers/') || value.startsWith('events/')) {
+    return `/api/events/image?key=${encodeURIComponent(value)}`;
+  }
   if (!/\.(jpg|jpeg|png|webp|gif|avif|svg)$/i.test(value)) return fallback;
   return `/images/events/covers/${value}`;
 }
