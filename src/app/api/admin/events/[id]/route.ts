@@ -56,6 +56,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       paymentHistory: eventRegistrations.paymentHistory,
       paymentStatus: eventRegistrations.paymentStatus,
       registrationStatus: eventRegistrations.registrationStatus,
+      volunteeringCultural: eventRegistrations.volunteeringCultural,
+      photoConsent: eventRegistrations.photoConsent,
+      needsRide: eventRegistrations.needsRide,
+      ridePickupAddress: eventRegistrations.ridePickupAddress,
+      donationAmount: eventRegistrations.donationAmount,
+      notes: eventRegistrations.notes,
       createdAt: eventRegistrations.createdAt,
     })
     .from(eventRegistrations)
@@ -137,10 +143,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     registrationStatus?: 'Pending Registration' | 'Confirmed' | 'Rejected';
     // editRegistration fields
     volunteering?: boolean;
+    volunteeringCultural?: boolean;
     selectedFamilyMemberIds?: string[];
     nonMemberAdultGuests?: number;
     nonMemberChildGuests?: number;
     nonMemberGuestDetails?: string;
+    needsRide?: boolean;
+    ridePickupAddress?: string | null;
+    donationAmount?: number;
+    notes?: string | null;
     // addPayment / addRefund fields
     amount?: number;
     referenceNumber?: string;
@@ -295,10 +306,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       // runningRefund === 0 → stays Paid, refundDue stays 0
     }
 
+    const newNeedsRide = Boolean(body.needsRide ?? reg.needsRide);
     await db
       .update(eventRegistrations)
       .set({
         volunteering: Boolean(body.volunteering ?? reg.volunteering),
+        volunteeringCultural: Boolean(body.volunteeringCultural ?? reg.volunteeringCultural),
+        needsRide: newNeedsRide,
+        ridePickupAddress: newNeedsRide ? (body.ridePickupAddress ?? reg.ridePickupAddress ?? null) : null,
+        donationAmount: Number(body.donationAmount ?? reg.donationAmount ?? 0),
+        notes: body.notes !== undefined ? (body.notes ?? null) : (reg.notes ?? null),
         includeFamily,
         selectedFamilyMemberIds: JSON.stringify(familyRows.map((f) => f.id)),
         nonMemberGuestDetails: body.nonMemberGuestDetails ?? '[]',

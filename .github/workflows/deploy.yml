@@ -31,6 +31,14 @@ jobs:
       - name: Build for Cloudflare Workers
         run: pnpm workers:build
 
+      - name: Apply DB migrations (preview)
+        if: github.ref != 'refs/heads/release'
+        run: pnpm dlx wrangler d1 migrations apply DB --remote
+
+      - name: Apply DB migrations (production)
+        if: github.ref == 'refs/heads/release'
+        run: pnpm dlx wrangler d1 migrations apply DB-PROD --remote
+
       - name: Deploy (production — www.ambedkaritebuddhist.org)
         if: github.ref == 'refs/heads/release'
         run: pnpm dlx wrangler deploy
