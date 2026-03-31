@@ -241,10 +241,10 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-xl">
+            <div className="relative h-[220px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-xl">
               <div className="absolute inset-0 bg-gradient-to-br from-primary-blue to-accent-purple flex items-center justify-center">
                 <div className="text-center text-white p-8">
-                  <div className="text-8xl mb-4">☸</div>
+                  <div className="text-5xl sm:text-7xl md:text-8xl mb-4">☸</div>
                   <p className="text-xl font-bold">Ambedkarite Buddhist Community of Canada</p>
                   <p className="text-white/80 mt-2">Ontario, Canada</p>
                 </div>

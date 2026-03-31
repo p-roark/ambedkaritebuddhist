@@ -42,7 +42,7 @@ function UnderConstruction() {
     <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
       <body className="min-h-screen bg-gradient-to-br from-primary-blue via-accent-purple to-accent-orange flex items-center justify-center p-6 font-noto-sans">
         <div className="text-center max-w-lg">
-          <div className="text-7xl mb-6">☸️</div>
+          <div className="text-5xl sm:text-7xl mb-6">☸️</div>
           <h1 className="text-4xl md:text-5xl font-bold text-white font-poppins mb-4">
             Coming Soon
           </h1>

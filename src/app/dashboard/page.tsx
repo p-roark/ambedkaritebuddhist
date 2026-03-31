@@ -649,7 +649,7 @@ export default function DashboardPage() {
             {/* Active Members */}
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Members ({activeMembers.length})</h2>
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -712,7 +712,7 @@ export default function DashboardPage() {
             {/* Inactive Members */}
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Inactive Members ({inactiveMembers.length})</h2>
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -934,7 +934,7 @@ export default function DashboardPage() {
             {isAdmin ? (
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">All Events</h2>
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1012,7 +1012,7 @@ export default function DashboardPage() {
             /* Coordinator view — simplified events list */
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">My Events</h2>
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1060,7 +1060,7 @@ export default function DashboardPage() {
                 + Generate Referral Code
               </button>
             </div>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="bg-white shadow rounded-lg overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>{['Code', 'Uses', 'Created', 'Status', 'Actions'].map(h => (
@@ -1289,7 +1289,7 @@ export default function DashboardPage() {
             {activationRequests.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Activation Requests ({activationRequests.length})</h2>
-                <div className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="bg-white shadow rounded-lg overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-amber-50">
                       <tr>
@@ -1342,7 +1342,7 @@ export default function DashboardPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Messages</h2>
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1396,7 +1396,7 @@ export default function DashboardPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Resolved Messages</h2>
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
