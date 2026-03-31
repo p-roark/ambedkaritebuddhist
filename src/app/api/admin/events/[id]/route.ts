@@ -137,6 +137,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     paymentInstructions?: string | null;
     status?: EventStatus;
     eventImages?: string[];
+    showVolunteering?: boolean;
+    showCulturalVolunteering?: boolean;
+    showNeedsRide?: boolean;
+    showPhotoConsent?: boolean;
+    showDonation?: boolean;
+    showNotes?: boolean;
     userId?: string;
     registrationId?: string;
     paymentStatus?: 'Paid' | 'Unpaid';
@@ -364,6 +370,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         maxAttendees: body.maxAttendees != null ? Number(body.maxAttendees) : null,
         externalLink: body.externalLink?.trim() || null,
         paymentInstructions: body.paymentInstructions?.trim() || null,
+        showVolunteering: body.showVolunteering !== false,
+        showCulturalVolunteering: Boolean(body.showCulturalVolunteering),
+        showNeedsRide: Boolean(body.showNeedsRide),
+        showPhotoConsent: body.showPhotoConsent !== false,
+        showDonation: Boolean(body.showDonation),
+        showNotes: Boolean(body.showNotes),
         status: body.status,
         eventImages: JSON.stringify(imageKeys),
         updatedAt: new Date().toISOString(),

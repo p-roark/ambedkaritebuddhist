@@ -32,6 +32,12 @@ type EventDetail = {
   paymentInstructions: string | null;
   eventImages: string;
   status: EventStatus;
+  showVolunteering: boolean;
+  showCulturalVolunteering: boolean;
+  showNeedsRide: boolean;
+  showPhotoConsent: boolean;
+  showDonation: boolean;
+  showNotes: boolean;
 };
 
 type FamilyMemberRow = { id: string; userId: string; name: string; age: number | null };
@@ -132,6 +138,12 @@ export default function AdminEventPage() {
     paymentInstructions: '',
     status: 'Upcoming' as EventStatus,
     eventImages: [] as string[],
+    showVolunteering: true,
+    showCulturalVolunteering: false,
+    showNeedsRide: false,
+    showPhotoConsent: true,
+    showDonation: false,
+    showNotes: false,
   });
 
   const getGuestDetails = (raw: string) => {
@@ -189,6 +201,12 @@ export default function AdminEventPage() {
       paymentInstructions: data.event.paymentInstructions ?? '',
       status: data.event.status,
       eventImages: parsedImages,
+      showVolunteering: data.event.showVolunteering !== false,
+      showCulturalVolunteering: Boolean(data.event.showCulturalVolunteering),
+      showNeedsRide: Boolean(data.event.showNeedsRide),
+      showPhotoConsent: data.event.showPhotoConsent !== false,
+      showDonation: Boolean(data.event.showDonation),
+      showNotes: Boolean(data.event.showNotes),
     });
 
     setRegistrations(data.registrations);
@@ -393,6 +411,12 @@ export default function AdminEventPage() {
           maxAttendees: eventForm.maxAttendees !== '' ? Number(eventForm.maxAttendees) : null,
           externalLink: eventForm.externalLink.trim() || null,
           paymentInstructions: eventForm.isPaid ? eventForm.paymentInstructions.trim() || null : null,
+          showVolunteering: eventForm.showVolunteering,
+          showCulturalVolunteering: eventForm.showCulturalVolunteering,
+          showNeedsRide: eventForm.showNeedsRide,
+          showPhotoConsent: eventForm.showPhotoConsent,
+          showDonation: eventForm.showDonation,
+          showNotes: eventForm.showNotes,
         }),
       });
       const data = (await res.json()) as { error?: string };
@@ -624,6 +648,29 @@ export default function AdminEventPage() {
                 <option value="Event Ended">Event Ended</option>
               </select>
             </label>
+            <div className="col-span-full">
+              <p className="mb-2 text-sm font-medium text-slate-700">Registration form fields</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {([
+                  ['showVolunteering', 'Volunteering'],
+                  ['showCulturalVolunteering', 'Cultural Volunteering'],
+                  ['showNeedsRide', 'Needs Ride Pickup'],
+                  ['showPhotoConsent', 'Photo Consent'],
+                  ['showDonation', 'Donation'],
+                  ['showNotes', 'Notes'],
+                ] as [keyof typeof eventForm, string][]).map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(eventForm[key])}
+                      onChange={(e) => setEventForm((prev) => ({ ...prev, [key]: e.target.checked }))}
+                      className="w-4 h-4 rounded border-slate-300 text-blue-600"
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="mt-5 flex items-center justify-between">

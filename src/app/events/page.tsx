@@ -26,6 +26,12 @@ type EventItem = {
   paymentInstructions: string | null
   eventImages: string
   status: EventStatus
+  showVolunteering: boolean
+  showCulturalVolunteering: boolean
+  showNeedsRide: boolean
+  showPhotoConsent: boolean
+  showDonation: boolean
+  showNotes: boolean
 }
 
 type FamilyMember = {
@@ -675,24 +681,31 @@ export default function EventsPage() {
               </div>
 
               {/* Section: Volunteering */}
+              {(selectedEvent.showVolunteering || selectedEvent.showCulturalVolunteering) && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1 h-5 rounded-full bg-primary-saffron flex-shrink-0" />
                   <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Volunteering</h4>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {selectedEvent.showVolunteering && (
                   <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
                     <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={volunteering} onChange={(e) => setVolunteering(e.target.checked)} />
                     <span className="font-medium text-gray-800">Volunteer for event setup</span>
                   </label>
+                  )}
+                  {selectedEvent.showCulturalVolunteering && (
                   <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
                     <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={volunteeringCultural} onChange={(e) => setVolunteeringCultural(e.target.checked)} />
                     <span className="font-medium text-gray-800">Volunteer for cultural activities</span>
                   </label>
+                  )}
                 </div>
               </div>
+              )}
 
               {/* Section: Additional */}
+              {(selectedEvent.showPhotoConsent || selectedEvent.showNeedsRide || selectedEvent.showDonation || selectedEvent.showNotes) && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1 h-5 rounded-full bg-purple-400 flex-shrink-0" />
@@ -700,6 +713,7 @@ export default function EventsPage() {
                 </div>
                 <div className="space-y-3">
                   {/* Photo consent */}
+                  {selectedEvent.showPhotoConsent && (
                   <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
                     <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={photoConsent} onChange={(e) => setPhotoConsent(e.target.checked)} />
                     <div>
@@ -707,8 +721,10 @@ export default function EventsPage() {
                       <p className="text-xs text-gray-500 mt-0.5">I consent to being photographed/filmed at this event for community use</p>
                     </div>
                   </label>
+                  )}
 
                   {/* Ride pickup */}
+                  {selectedEvent.showNeedsRide && (
                   <div>
                     <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
                       <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={needsRide} onChange={(e) => setNeedsRide(e.target.checked)} />
@@ -723,8 +739,10 @@ export default function EventsPage() {
                       </div>
                     )}
                   </div>
+                  )}
 
                   {/* Donation */}
+                  {selectedEvent.showDonation && (
                   <div>
                     <label className="block">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Donation Amount (optional)</span>
@@ -734,16 +752,20 @@ export default function EventsPage() {
                       </div>
                     </label>
                   </div>
+                  )}
 
                   {/* Notes */}
+                  {selectedEvent.showNotes && (
                   <div>
                     <label className="block">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Feedback / Notes (optional)</span>
                       <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any questions, dietary needs, or other notes..." className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition resize-none" />
                     </label>
                   </div>
+                  )}
                 </div>
               </div>
+              )}
 
               {/* Summary */}
               {selectedEvent.isPaid && (

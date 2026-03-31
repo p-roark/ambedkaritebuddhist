@@ -100,6 +100,12 @@ export async function POST(request: NextRequest) {
     paymentInstructions?: string | null;
     status?: EventStatus;
     coordinatorIds?: string[];
+    showVolunteering?: boolean;
+    showCulturalVolunteering?: boolean;
+    showNeedsRide?: boolean;
+    showPhotoConsent?: boolean;
+    showDonation?: boolean;
+    showNotes?: boolean;
   };
 
   if (!body.title || !body.date || !body.location || !body.status) {
@@ -134,6 +140,12 @@ export async function POST(request: NextRequest) {
     maxAttendees: body.maxAttendees != null ? Number(body.maxAttendees) : null,
     externalLink: body.externalLink?.trim() || null,
     paymentInstructions: body.paymentInstructions?.trim() || null,
+    showVolunteering: body.showVolunteering !== false,
+    showCulturalVolunteering: Boolean(body.showCulturalVolunteering),
+    showNeedsRide: Boolean(body.showNeedsRide),
+    showPhotoConsent: body.showPhotoConsent !== false,
+    showDonation: Boolean(body.showDonation),
+    showNotes: Boolean(body.showNotes),
     status: body.status,
     createdAt: now,
     updatedAt: now,

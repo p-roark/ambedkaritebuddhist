@@ -146,6 +146,12 @@ export default function DashboardPage() {
   const [newEventExternalLink, setNewEventExternalLink] = useState('');
   const [newEventPaymentInstructions, setNewEventPaymentInstructions] = useState('');
   const [newEventStatus, setNewEventStatus] = useState<EventStatus>('Upcoming');
+  const [newEventShowVolunteering, setNewEventShowVolunteering] = useState(true);
+  const [newEventShowCulturalVolunteering, setNewEventShowCulturalVolunteering] = useState(false);
+  const [newEventShowNeedsRide, setNewEventShowNeedsRide] = useState(false);
+  const [newEventShowPhotoConsent, setNewEventShowPhotoConsent] = useState(true);
+  const [newEventShowDonation, setNewEventShowDonation] = useState(false);
+  const [newEventShowNotes, setNewEventShowNotes] = useState(false);
   const [newEventMessage, setNewEventMessage] = useState('');
 
   const [confirmDeactivateMemberId, setConfirmDeactivateMemberId] = useState<string | null>(null);
@@ -396,6 +402,12 @@ export default function DashboardPage() {
         externalLink: newEventExternalLink.trim() || null,
         paymentInstructions: newEventIsPaid ? newEventPaymentInstructions.trim() || null : null,
         status: newEventStatus,
+        showVolunteering: newEventShowVolunteering,
+        showCulturalVolunteering: newEventShowCulturalVolunteering,
+        showNeedsRide: newEventShowNeedsRide,
+        showPhotoConsent: newEventShowPhotoConsent,
+        showDonation: newEventShowDonation,
+        showNotes: newEventShowNotes,
       }),
     });
     const data = (await res.json()) as { error?: string };
@@ -907,6 +919,24 @@ export default function DashboardPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                   />
                 </label>
+                <div className="md:col-span-3">
+                  <p className="mb-2 text-sm font-medium text-gray-700">Registration form fields</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { label: 'Volunteering', value: newEventShowVolunteering, set: setNewEventShowVolunteering },
+                      { label: 'Cultural Volunteering', value: newEventShowCulturalVolunteering, set: setNewEventShowCulturalVolunteering },
+                      { label: 'Needs Ride Pickup', value: newEventShowNeedsRide, set: setNewEventShowNeedsRide },
+                      { label: 'Photo Consent', value: newEventShowPhotoConsent, set: setNewEventShowPhotoConsent },
+                      { label: 'Donation', value: newEventShowDonation, set: setNewEventShowDonation },
+                      { label: 'Notes', value: newEventShowNotes, set: setNewEventShowNotes },
+                    ].map(({ label, value, set }) => (
+                      <label key={label} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                        <input type="checkbox" checked={value} onChange={(e) => set(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+                        <span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <label className="flex-1 text-sm text-gray-700">
                     <span className="mb-1 block font-medium">Event status</span>

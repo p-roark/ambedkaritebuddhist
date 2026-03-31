@@ -100,6 +100,13 @@ export const events = sqliteTable('Event', {
   externalLink: text('externalLink'), // optional link to outside org event
   paymentInstructions: text('paymentInstructions'), // shown in registration modal for paid events
   archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+  // Registration form field visibility flags
+  showVolunteering:         integer('showVolunteering', { mode: 'boolean' }).notNull().default(true),
+  showCulturalVolunteering: integer('showCulturalVolunteering', { mode: 'boolean' }).notNull().default(false),
+  showNeedsRide:            integer('showNeedsRide', { mode: 'boolean' }).notNull().default(false),
+  showPhotoConsent:         integer('showPhotoConsent', { mode: 'boolean' }).notNull().default(true),
+  showDonation:             integer('showDonation', { mode: 'boolean' }).notNull().default(false),
+  showNotes:                integer('showNotes', { mode: 'boolean' }).notNull().default(false),
   status:    text('status').notNull().default('Upcoming'), // Upcoming | Registration Started | Event Ended
   createdAt: text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updatedAt').notNull().default(sql`(datetime('now'))`),
