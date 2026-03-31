@@ -5,20 +5,7 @@ const nextConfig = {
     optimizePackageImports: ['drizzle-orm'],
   },
   images: {
-    localPatterns: [
-      {
-        pathname: '/api/events/image',
-      },
-      {
-        pathname: '/images/**',
-      },
-    ],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.com',
-      },
-    ],
+    unoptimized: true, // Cloudflare Workers has no /_next/image backend
   },
 };
 
