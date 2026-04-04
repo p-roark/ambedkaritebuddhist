@@ -11,8 +11,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Decode JWT from cookie — no DB hit, no auth() wrapper issues
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  // Decode JWT — NextAuth v5 uses authjs.session-token (with __Secure- prefix on HTTPS)
+  const isSecure = req.nextUrl.protocol === 'https:';
+  const cookieName = isSecure ? '__Secure-authjs.session-token' : 'authjs.session-token';
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET, cookieName });
   const role = (token?.role as string | undefined) ?? null;
   if (role === 'ADMIN') return NextResponse.next();
 
