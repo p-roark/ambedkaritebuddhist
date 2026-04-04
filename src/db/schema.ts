@@ -223,9 +223,11 @@ export const organizationSettings = sqliteTable('OrganizationSettings', {
   province:     text('province'),
   postalCode:   text('postalCode'),
   country:      text('country').notNull().default('Canada'),
-  website:      text('website'),
-  description:  text('description'),
-  updatedAt:    text('updatedAt').notNull().default(sql`(datetime('now'))`),
+  website:         text('website'),
+  description:     text('description'),
+  maintenanceMode: integer('maintenanceMode').notNull().default(0),
+  maintenanceMessage: text('maintenanceMessage'),
+  updatedAt:       text('updatedAt').notNull().default(sql`(datetime('now'))`),
 });
 
 // ─── Inferred types ───────────────────────────────────────────────────────────
