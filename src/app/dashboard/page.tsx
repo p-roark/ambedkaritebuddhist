@@ -25,6 +25,11 @@ type OrgSettings = {
   description: string;
 };
 
+type MaintenanceSettings = {
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+};
+
 type LeadershipRole = {
   id: string;
   roleName: string;
@@ -164,6 +169,9 @@ export default function DashboardPage() {
   const [orgSettingsForm, setOrgSettingsForm] = useState<OrgSettings>(emptyOrgSettings);
   const [orgSettingsSaving, setOrgSettingsSaving] = useState(false);
   const [orgSettingsMessage, setOrgSettingsMessage] = useState('');
+  const [maintenanceForm, setMaintenanceForm] = useState<MaintenanceSettings>({ maintenanceMode: false, maintenanceMessage: '' });
+  const [maintenanceSaving, setMaintenanceSaving] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -188,6 +196,10 @@ export default function DashboardPage() {
       country: s.country ?? 'Canada',
       website: s.website ?? '',
       description: s.description ?? '',
+    });
+    setMaintenanceForm({
+      maintenanceMode: Number(s.maintenanceMode) === 1,
+      maintenanceMessage: s.maintenanceMessage ?? '',
     });
   };
 
@@ -504,6 +516,23 @@ export default function DashboardPage() {
     });
     setOrgSettingsSaving(false);
     setOrgSettingsMessage(res.ok ? 'Settings saved.' : 'Failed to save settings.');
+    if (res.ok) await loadOrgSettings();
+  };
+
+  const handleSaveMaintenanceSettings = async () => {
+    setMaintenanceSaving(true);
+    setMaintenanceMessage('');
+    const res = await fetch('/api/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateMaintenanceMode',
+        maintenanceMode: maintenanceForm.maintenanceMode,
+        maintenanceMessage: maintenanceForm.maintenanceMessage,
+      }),
+    });
+    setMaintenanceSaving(false);
+    setMaintenanceMessage(res.ok ? 'Maintenance settings saved.' : 'Failed to save maintenance settings.');
     if (res.ok) await loadOrgSettings();
   };
 
@@ -1615,6 +1644,89 @@ export default function DashboardPage() {
                   style={{ background: 'linear-gradient(135deg, #2D4D9B, #7F56D9)' }}
                 >
                   {orgSettingsSaving ? 'Saving…' : 'Save Settings'}
+                </button>
+              </div>
+            </div>
+
+            {/* Maintenance Mode Card */}
+            <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+              {/* Card header */}
+              <div className="px-8 py-6 bg-gradient-to-r from-orange-500 to-red-500 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-xl leading-tight">Maintenance Mode</h2>
+                  <p className="text-white/70 text-sm mt-0.5">Control site access during maintenance windows</p>
+                </div>
+              </div>
+
+              <div className="bg-white px-8 py-8 space-y-6">
+                {/* Toggle */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-gray-800">Enable Maintenance Mode</p>
+                    <p className="text-xs text-gray-500 mt-0.5">When enabled, only admins can access the site</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={maintenanceForm.maintenanceMode}
+                    onClick={() => setMaintenanceForm((prev) => ({ ...prev, maintenanceMode: !prev.maintenanceMode }))}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 ${maintenanceForm.maintenanceMode ? 'bg-orange-500' : 'bg-gray-200'}`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${maintenanceForm.maintenanceMode ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+
+                {/* Warning */}
+                {maintenanceForm.maintenanceMode && (
+                  <div className="flex items-start gap-3 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
+                    <svg className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p className="text-xs font-semibold text-orange-700">Site will be inaccessible to all non-admin users. Admins can still log in via /auth/login.</p>
+                  </div>
+                )}
+
+                {/* Custom message */}
+                {maintenanceForm.maintenanceMode && (
+                  <div>
+                    <div className="border-t border-gray-100 mb-6" />
+                    <label className="block">
+                      <span className="block text-sm font-semibold text-gray-700 mb-1.5">Custom Message <span className="font-normal text-gray-400">(optional)</span></span>
+                      <textarea
+                        rows={3}
+                        placeholder="We're currently performing scheduled maintenance. We'll be back shortly — thank you for your patience."
+                        value={maintenanceForm.maintenanceMessage}
+                        onChange={(e) => setMaintenanceForm((prev) => ({ ...prev, maintenanceMessage: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400 transition resize-none"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Card footer */}
+              <div className="bg-gray-50 border-t border-gray-100 px-8 py-5 flex items-center justify-between">
+                <div>
+                  {maintenanceMessage && (
+                    <p className={`text-sm font-semibold ${maintenanceMessage.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>
+                      {maintenanceMessage.includes('Failed') ? '✗ ' : '✓ '}{maintenanceMessage}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={handleSaveMaintenanceSettings}
+                  disabled={maintenanceSaving}
+                  className="px-7 py-2.5 text-sm font-bold text-white rounded-xl disabled:opacity-50 transition shadow-sm hover:shadow-md"
+                  style={{ background: 'linear-gradient(135deg, #f97316, #ef4444)' }}
+                >
+                  {maintenanceSaving ? 'Saving…' : 'Save Settings'}
                 </button>
               </div>
             </div>
