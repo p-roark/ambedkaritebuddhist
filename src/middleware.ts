@@ -1,9 +1,9 @@
-import { auth } from '@/lib/auth';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 const ALWAYS_ALLOW = ['/auth/login', '/api/auth', '/maintenance', '/_next', '/favicon'];
 
-export default auth(async (req) => {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Always allow auth, maintenance, and Next.js internals
@@ -11,8 +11,9 @@ export default auth(async (req) => {
     return NextResponse.next();
   }
 
-  // Admins pass through — role is in the JWT, no DB hit
-  const role = (req.auth as { user?: { role?: string } } | null)?.user?.role;
+  // Decode JWT from cookie — no DB hit, no auth() wrapper issues
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const role = (token?.role as string | undefined) ?? null;
   if (role === 'ADMIN') return NextResponse.next();
 
   // Check maintenance mode from D1 for all other users
@@ -38,7 +39,7 @@ export default auth(async (req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|.*\\.png$|.*\\.svg$|.*\\.jpg$|.*\\.ico$).*)'],
