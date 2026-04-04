@@ -26,13 +26,20 @@ export async function middleware(req: NextRequest) {
 
     const db = getDb();
     const rows = await db
-      .select({ maintenanceMode: organizationSettings.maintenanceMode })
+      .select({
+        maintenanceMode: organizationSettings.maintenanceMode,
+        maintenanceMessage: organizationSettings.maintenanceMessage,
+        orgName: organizationSettings.orgName,
+      })
       .from(organizationSettings)
       .where(eq(organizationSettings.id, 'main'))
       .limit(1);
 
     if (rows[0]?.maintenanceMode === 1) {
-      return NextResponse.redirect(new URL('/maintenance', req.url));
+      const dest = new URL('/maintenance', req.url);
+      if (rows[0].orgName) dest.searchParams.set('org', rows[0].orgName);
+      if (rows[0].maintenanceMessage) dest.searchParams.set('msg', rows[0].maintenanceMessage);
+      return NextResponse.redirect(dest);
     }
   } catch {
     // D1 unavailable — fail open (don't block the site)
