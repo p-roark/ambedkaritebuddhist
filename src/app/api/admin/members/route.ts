@@ -120,7 +120,7 @@ export async function PATCH(request: NextRequest) {
   if (!token) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = (await request.json()) as {
-    action?: 'setRole' | 'deactivateMember' | 'activateMember' | 'leadershipCreate' | 'leadershipUpdate' | 'leadershipDelete' | 'updateOrgSettings';
+    action?: 'setRole' | 'deactivateMember' | 'activateMember' | 'leadershipCreate' | 'leadershipUpdate' | 'leadershipDelete' | 'updateOrgSettings' | 'updateMaintenanceMode';
     userId?: string;
     role?: 'ADMIN' | 'MEMBER';
     // leadership fields
@@ -141,6 +141,9 @@ export async function PATCH(request: NextRequest) {
     country?: string;
     website?: string;
     description?: string;
+    // maintenance mode fields
+    maintenanceMode?: boolean;
+    maintenanceMessage?: string | null;
   };
 
   const { action } = body;
@@ -204,6 +207,18 @@ export async function PATCH(request: NextRequest) {
         country: String(body.country ?? '').trim() || 'Canada',
         website: String(body.website ?? '').trim() || null,
         description: String(body.description ?? '').trim() || null,
+        updatedAt: now,
+      })
+      .where(eq(organizationSettings.id, 'main'));
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  if (action === 'updateMaintenanceMode') {
+    await db
+      .update(organizationSettings)
+      .set({
+        maintenanceMode: body.maintenanceMode ? 1 : 0,
+        maintenanceMessage: String(body.maintenanceMessage ?? '').trim() || null,
         updatedAt: now,
       })
       .where(eq(organizationSettings.id, 'main'));
