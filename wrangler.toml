@@ -5,13 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 UNDER_CONSTRUCTION = "false"
-DEPLOYMENT = "dev"
-
-[env.production]
-name = "ambedkaritebuddhist"
-[env.production.vars]
-UNDER_CONSTRUCTION = "false"
-DEPLOYMENT = "prod"
 
 [assets]
 directory = ".open-next/assets"

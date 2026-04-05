@@ -41,7 +41,7 @@ jobs:
 
       - name: Deploy (production — www.ambedkaritebuddhist.org)
         if: github.ref == 'refs/heads/release'
-        run: pnpm dlx wrangler deploy --env production
+        run: pnpm dlx wrangler deploy
 
       - name: Deploy (preview — ambedkaritebuddhist-preview.workers.dev)
         if: github.ref != 'refs/heads/release'
