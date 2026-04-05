@@ -1,6 +1,5 @@
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import AuthSessionProvider from '@/components/providers/session-provider'
 import { MembershipGate } from '@/components/auth/membership-gate'
 import { AccountInactiveModal } from '@/components/auth/account-inactive-modal'
 
@@ -36,12 +35,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <AuthSessionProvider>
+    <>
       <Header />
       <MembershipGate />
       <AccountInactiveModal />
       <main className="flex-grow min-h-screen bg-white text-text-dark pt-20">{children}</main>
       <Footer />
-    </AuthSessionProvider>
+    </>
   )
 }

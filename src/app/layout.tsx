@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Poppins, Noto_Sans } from 'next/font/google'
+import AuthSessionProvider from '@/components/providers/session-provider'
 import '@/styles/variables.css'
 import '@/styles/globals.css'
 
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
       <body className="font-noto-sans antialiased">
-        {children}
+        <AuthSessionProvider>
+          {children}
+        </AuthSessionProvider>
       </body>
     </html>
   )
