@@ -1,0 +1,1 @@
+ALTER TABLE "Event" ADD COLUMN "eventImages" TEXT NOT NULL DEFAULT '[]';

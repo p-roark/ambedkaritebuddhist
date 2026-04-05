@@ -63,9 +63,7 @@ const colors = {
 ```
 ambedkaritebuddhist/
 ├── docs/                    # Documentation
-│   ├── requirements.md      # Project requirements
-│   └── api/                 # API documentation
-├── mockups/                 # Design files (Penpot exports)
+│   └── architecture.md      # Tech stack & architecture reference
 ├── src/
 │   ├── app/                 # Next.js app directory
 │   │   ├── (public)/        # Public routes
@@ -287,7 +285,7 @@ EMAIL_FROM=
 
 ## Documentation Standards
 
-- Keep the [requirements.md](docs/requirements.md) updated as features evolve
+- Keep [docs/architecture.md](docs/architecture.md) updated as the tech stack evolves
 - Document all API endpoints
 - Add JSDoc comments to complex functions
 - Maintain a CHANGELOG.md for version tracking
@@ -297,7 +295,7 @@ EMAIL_FROM=
 
 ## When Working on This Project
 
-1. **Always reference** [docs/requirements.md](docs/requirements.md) for feature specifications
+1. **Always reference** [docs/architecture.md](docs/architecture.md) for tech stack and architecture details
 2. **Prioritize accessibility** - it's not optional
 3. **Mobile-first approach** - design and test on mobile first
 4. **Ask for clarification** if cultural or community-specific aspects are unclear
@@ -337,7 +335,7 @@ pnpm test:coverage      # Generate coverage report
 
 ## Resources
 
-- **Requirements:** [docs/requirements.md](docs/requirements.md)
+- **Architecture:** [docs/architecture.md](docs/architecture.md)
 - **Next.js Docs:** https://nextjs.org/docs
 - **Tailwind CSS:** https://tailwindcss.com/docs
 - **shadcn/ui:** https://ui.shadcn.com

@@ -1,0 +1,6 @@
+ALTER TABLE EventRegistration ADD COLUMN volunteeringCultural INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE EventRegistration ADD COLUMN photoConsent INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE EventRegistration ADD COLUMN needsRide INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE EventRegistration ADD COLUMN ridePickupAddress TEXT;
+ALTER TABLE EventRegistration ADD COLUMN donationAmount INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE EventRegistration ADD COLUMN notes TEXT;
