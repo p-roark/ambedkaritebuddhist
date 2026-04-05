@@ -67,9 +67,9 @@ export function MissionPreview({
                 </p>
                 <Link
                   href={card.link}
-                  className="inline-block px-6 py-2 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
+                  className="inline-block px-6 py-2.5 bg-primary-blue text-white font-bold rounded-xl hover:bg-primary-blue/90 transition-all duration-200 text-sm"
                 >
-                  {card.linkText}
+                  {card.linkText} →
                 </Link>
               </div>
             </div>

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 interface EventCard {
   id: string
@@ -13,9 +15,14 @@ interface EventCard {
   category: string
   description: string
   image: string
+  imageKeys?: string[]
   status?: 'past' | 'upcoming'
   registrationFormUrl?: string
   registrationStatus?: 'open' | 'closed' | 'not-started'
+  userRegistrationStatus?: string
+  userPaymentStatus?: string
+  isCoordinator?: boolean
+  externalLink?: string | null
 }
 
 interface EventsPreviewProps {
@@ -25,17 +32,60 @@ interface EventsPreviewProps {
   events: EventCard[]
 }
 
-export function EventsPreview({
-  subtitle,
-  title,
-  description,
-  events,
-}: EventsPreviewProps) {
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
-  const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null
+type InfoData = {
+  event: {
+    title: string
+    description: string
+    date: string
+    time: string
+    location: string
+    eventType: string
+    status: string
+    isPaid: boolean
+    adultPrice: number
+    childPrice: number
+    externalLink: string | null
+  }
+  coordinators: Array<{ userId: string; userName: string; userEmail: string | null; userPhone: string | null }>
+}
+
+function InfoIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  )
+}
+
+export function EventsPreview({ subtitle, title, description, events }: EventsPreviewProps) {
+  const { status } = useSession()
+  const router = useRouter()
+
+  const [infoEventId, setInfoEventId] = useState<string | null>(null)
+  const [infoData, setInfoData] = useState<InfoData | null>(null)
+  const [loadingInfo, setLoadingInfo] = useState(false)
+
+  const openInfoModal = async (eventId: string) => {
+    setInfoEventId(eventId)
+    setInfoData(null)
+    setLoadingInfo(true)
+    try {
+      const res = await fetch(`/api/events?id=${eventId}`)
+      if (res.ok) setInfoData((await res.json()) as InfoData)
+    } catch { /* keep null */ }
+    setLoadingInfo(false)
+  }
+
+  const handleRegisterClick = () => {
+    if (status !== 'authenticated') {
+      router.push('/auth/login?callbackUrl=/events')
+      return
+    }
+    router.push('/events')
+  }
 
   return (
-    <section className="py-20 md:py-28 bg-white">
+    <section className="py-20 md:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -51,91 +101,130 @@ export function EventsPreview({
         </div>
 
         {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {events.map((event) => (
             <div
               key={event.id}
-              className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-background-light"
+              className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-background-light flex flex-col"
             >
-              {/* Image with Badge */}
-              <div className="relative h-64 overflow-hidden">
+              {/* Image */}
+              <div className="relative h-48 overflow-hidden flex-shrink-0">
                 <Image
                   src={event.image}
                   alt={event.title}
                   fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
-                <div className="absolute top-4 right-4">
-                  <span className="inline-block px-4 py-2 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold text-sm rounded-full">
+                <div className="absolute top-3 right-3">
+                  <span className="px-2.5 py-1 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold text-xs rounded-full shadow-sm">
                     {event.category}
                   </span>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="p-6 md:p-8">
-                <h3 className="text-xl md:text-2xl font-bold text-text-dark mb-4">
+              <div className="p-5 flex flex-col flex-1">
+                <h3 className="text-base font-bold text-text-dark mb-2.5 line-clamp-2 leading-snug">
                   {event.title}
                 </h3>
 
-                {/* Metadata */}
-                <div className="space-y-2 mb-4 text-text-medium text-sm md:text-base">
-                  <div className="flex items-center gap-2">
-                    <span>📅</span>
-                    <span>{event.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>📍</span>
-                    <span>{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>👥</span>
-                    <span>{event.attendees}</span>
-                  </div>
+                <div className="space-y-1 text-xs text-text-medium mb-3">
+                  <p className="flex items-center gap-1.5"><span>📅</span><span>{event.date}</span></p>
+                  <p className="flex items-center gap-1.5 line-clamp-1"><span>📍</span><span>{event.location}</span></p>
                 </div>
 
-                <p className="text-text-medium mb-6 leading-relaxed">
-                  {event.description}
-                </p>
+                {/* Event status chip */}
+                <div className="mb-4">
+                  {event.externalLink ? (
+                    <span className="text-xs px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-medium">External Event</span>
+                  ) : event.status === 'past' ? (
+                    <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full font-medium">Event Ended</span>
+                  ) : (
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                      event.registrationStatus === 'open'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {event.registrationStatus === 'open' ? 'Registration Open' :
+                       event.registrationStatus === 'not-started' ? 'Registration Coming Soon' :
+                       'Registration Closed'}
+                    </span>
+                  )}
+                </div>
 
-                {event.status === 'past' ? (
-                  <Link
-                    href={`/gallery?event=${event.id}`}
-                    className="inline-block px-6 py-3 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200"
-                  >
-                    View Photos
-                  </Link>
-                ) : event.registrationStatus === 'not-started' ? (
+                {/* Footer: Info + Action */}
+                <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
                   <button
-                    disabled
-                    className="inline-block px-6 py-3 bg-gray-300 text-gray-600 font-bold rounded-full cursor-not-allowed opacity-60"
+                    onClick={() => openInfoModal(event.id)}
+                    className="flex items-center gap-1 text-xs font-medium text-text-medium hover:text-primary-blue transition-colors flex-shrink-0"
                   >
-                    Coming Soon
+                    <InfoIcon />Info
                   </button>
-                ) : event.registrationStatus === 'closed' ? (
-                  <button
-                    disabled
-                    className="inline-block px-6 py-3 bg-gray-300 text-gray-600 font-bold rounded-full cursor-not-allowed opacity-60"
-                  >
-                    Registration Closed
-                  </button>
-                ) : (
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setSelectedEventId(event.id)}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-saffron to-accent-orange text-text-dark font-bold rounded-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 text-center cursor-pointer"
-                    >
-                      Register Now
-                    </button>
-                    <Link
-                      href="/contact?type=volunteer"
-                      className="flex-1 inline-block px-6 py-3 border-2 border-primary-blue text-primary-blue font-bold rounded-full hover:bg-primary-blue hover:text-white transition-all duration-200 text-center"
-                    >
-                      Volunteer
-                    </Link>
+
+                  <div className="flex items-center gap-2">
+                    {event.externalLink ? (
+                      <a
+                        href={event.externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
+                      >
+                        View Event →
+                      </a>
+                    ) : event.status === 'past' ? (
+                      <Link
+                        href={`/gallery?event=${event.id}`}
+                        className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
+                      >
+                        View Photos
+                      </Link>
+                    ) : (
+                      <>
+                        {event.isCoordinator && (
+                          <Link
+                            href={`/dashboard/events/${event.id}`}
+                            className="text-xs px-3 py-2 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors"
+                          >
+                            Manage
+                          </Link>
+                        )}
+                        {event.userRegistrationStatus ? (
+                          <>
+                            <span className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
+                              event.userRegistrationStatus === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                              event.userRegistrationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-amber-100 text-amber-700'
+                            }`}>
+                              {event.userRegistrationStatus === 'Confirmed' ? '✓ Confirmed' :
+                               event.userRegistrationStatus === 'Pending Registration' ? 'Pending' :
+                               event.userRegistrationStatus}
+                            </span>
+                            {event.registrationStatus === 'open' && (
+                              <Link
+                                href="/events"
+                                className="text-xs px-3 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
+                              >
+                                Edit
+                              </Link>
+                            )}
+                          </>
+                        ) : event.registrationStatus === 'open' ? (
+                          <button
+                            onClick={handleRegisterClick}
+                            className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
+                          >
+                            Register
+                          </button>
+                        ) : event.registrationStatus === 'not-started' ? (
+                          <span className="text-xs text-text-light font-medium">Coming Soon</span>
+                        ) : (
+                          <span className="text-xs text-text-light font-medium">Closed</span>
+                        )}
+                      </>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           ))}
@@ -152,54 +241,66 @@ export function EventsPreview({
         </div>
       </div>
 
-      {/* Registration Modal */}
-      {selectedEvent && selectedEventId && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-2xl w-full my-8 shadow-xl">
-            {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-primary-blue via-accent-purple to-accent-orange p-6 rounded-t-2xl flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">
-                Register for {selectedEvent.title}
-              </h2>
-              <button
-                onClick={() => setSelectedEventId(null)}
-                className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+      {/* Info Modal */}
+      {infoEventId && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-8 py-5 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white">Event Details</h3>
+              <button onClick={() => { setInfoEventId(null); setInfoData(null) }} className="text-white/80 hover:text-white text-2xl font-semibold leading-none">×</button>
             </div>
-
-            {/* Modal Content */}
-            <div className="p-6 max-h-[80vh] overflow-y-auto">
-              {selectedEvent.registrationFormUrl ? (
-                <iframe
-                  src={selectedEvent.registrationFormUrl + (selectedEvent.registrationFormUrl.includes('?') ? '&embedded=true' : '?embedded=true')}
-                  width="100%"
-                  height="700"
-                  frameBorder="0"
-                  marginHeight={0}
-                  marginWidth={0}
-                  className="w-full"
-                >
-                  Loading…
-                </iframe>
+            <div className="p-8 overflow-y-auto flex-1">
+              {loadingInfo ? (
+                <div className="text-center py-8 text-text-medium text-sm">Loading...</div>
+              ) : infoData ? (
+                <div className="space-y-5">
+                  <div>
+                    <h2 className="text-2xl font-bold text-text-dark mb-3">{infoData.event.title}</h2>
+                    <div className="flex gap-2 flex-wrap">
+                      <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">{infoData.event.eventType}</span>
+                      <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full">{infoData.event.status}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-text-medium">
+                    <p>📅 {infoData.event.date} · ⏰ {infoData.event.time}</p>
+                    <p>📍 {infoData.event.location}</p>
+                    {!infoData.event.externalLink && (
+                      <p>💰 {infoData.event.isPaid
+                        ? `$${infoData.event.adultPrice}/adult · $${infoData.event.childPrice}/child`
+                        : 'Free event'}
+                      </p>
+                    )}
+                  </div>
+                  {infoData.event.description && (
+                    <div className="border-t pt-5">
+                      <p className="text-sm text-text-dark leading-relaxed whitespace-pre-line">{infoData.event.description}</p>
+                    </div>
+                  )}
+                  {infoData.coordinators.length > 0 && (
+                    <div className="border-t pt-5">
+                      <p className="text-sm font-semibold text-text-dark mb-3">Event Coordinators</p>
+                      <ul className="space-y-2">
+                        {infoData.coordinators.map((c) => (
+                          <li key={c.userId} className="text-sm text-text-medium space-y-0.5">
+                            <p className="font-medium text-text-dark flex items-center gap-1.5"><span>👤</span>{c.userName}</p>
+                            {c.userEmail && (
+                              <p className="pl-6"><a href={`mailto:${c.userEmail}`} className="hover:underline text-primary-blue">{c.userEmail}</a></p>
+                            )}
+                            {c.userPhone && (
+                              <p className="pl-6"><a href={`tel:${c.userPhone}`} className="hover:underline">{c.userPhone}</a></p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <p className="text-text-medium text-center py-12">
-                  Registration form not available
-                </p>
+                <div className="text-center py-8 text-red-500 text-sm">Unable to load event details.</div>
               )}
+            </div>
+            <div className="p-6 border-t flex justify-end">
+              <button onClick={() => { setInfoEventId(null); setInfoData(null) }} className="px-4 py-2 text-sm border rounded-md hover:bg-gray-50">Close</button>
             </div>
           </div>
         </div>

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Poppins, Noto_Sans } from 'next/font/google'
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
+import AuthSessionProvider from '@/components/providers/session-provider'
 import '@/styles/variables.css'
 import '@/styles/globals.css'
 
@@ -20,36 +19,27 @@ const notoSans = Noto_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Ambedkarite Buddhist Community - Canada',
-  description: 'Welcome to the Ambedkarite Buddhist Community in Canada. Fostering unity, education, and social welfare based on the teachings of Dr. B.R. Ambedkar.',
-  keywords: ['Ambedkar', 'Buddhism', 'Community', 'Canada', 'Social Welfare', 'Education'],
-  authors: [{ name: 'ABC Canada' }],
+  icons: { icon: '/icon.svg', shortcut: '/icon.svg' },
+  title: 'Ambedkarite Buddhist Community Of Canada (ABCC) | Ontario',
+  description: 'ABCC is a registered non-profit in Ontario for Ambedkarite Buddhist families. Practising the Dhamma, celebrating Dr. Ambedkar\'s legacy, and building community in Canada.',
+  keywords: ['Ambedkarite Buddhist Canada', 'Ambedkarite Buddhist community Ontario', 'Navayana Buddhist Canada', 'Dr Ambedkar Canada', 'Buddhist community Toronto', 'Vesak celebration Canada'],
+  authors: [{ name: 'ABCC' }],
   openGraph: {
     type: 'website',
     url: 'https://ambedkaritebuddhist.ca',
-    title: 'Ambedkarite Buddhist Community - Canada',
-    description: 'Fostering unity, education, and social welfare',
-    images: [
-      {
-        url: 'https://via.placeholder.com/1200x630',
-        width: 1200,
-        height: 630,
-      },
-    ],
+    title: 'Ambedkarite Buddhist Community Of Canada (ABCC) | Ontario',
+    description: 'ABCC is a registered non-profit in Ontario for Ambedkarite Buddhist families. Practising the Dhamma, celebrating Dr. Ambedkar\'s legacy, and building community in Canada.',
+    images: [{ url: 'https://via.placeholder.com/1200x630', width: 1200, height: 630 }],
   },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
-      <body className="flex flex-col min-h-screen bg-white text-text-dark font-noto-sans antialiased pt-20">
-        <Header />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+      <body className="font-noto-sans antialiased">
+        <AuthSessionProvider>
+          {children}
+        </AuthSessionProvider>
       </body>
     </html>
   )

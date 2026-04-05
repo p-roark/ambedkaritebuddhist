@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { getRandomBackground, AVAILABLE_BACKGROUNDS } from '@/lib/backgrounds'
+import { AVAILABLE_BACKGROUNDS } from '@/lib/backgrounds'
+import { normalizeImagePath } from '@/lib/image-path'
 
 interface HeroProps {
   title: string
@@ -23,27 +24,63 @@ export function Hero({
   title,
   description,
   image,
-  overlayImage,
+  overlayImage: _overlayImage,
   buttons,
   layout = 'single',
   fullHeight = true,
 }: HeroProps) {
   const heightClass = fullHeight ? 'min-h-[70vh]' : 'min-h-[75vh]'
 
-  // Use state to handle random selection on client-side only
-  const [selectedOverlayImage, setSelectedOverlayImage] = useState<string>('')
+  // Use state for background image and event selection
+  const [backgroundImage, setBackgroundImage] = useState<string>('')
+  const [randomEventImage, setRandomEventImage] = useState<string>('')
+  const [randomEventName, setRandomEventName] = useState<string>('')
+  const [randomEventDate, setRandomEventDate] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!overlayImage) {
-      const randomImage = getRandomBackground()
-      setSelectedOverlayImage(randomImage)
-    } else {
-      setSelectedOverlayImage(overlayImage)
+    const loadData = async () => {
+      try {
+        // Pick a random background image
+        const randomBgIndex = Math.floor(Math.random() * AVAILABLE_BACKGROUNDS.length)
+        setBackgroundImage(AVAILABLE_BACKGROUNDS[randomBgIndex])
+
+        // Load DB-backed events and pick one for the hero side image.
+        const eventsRes = await fetch('/api/events', { cache: 'no-store' })
+        const eventsData = await eventsRes.json() as {
+          events?: Array<{ title?: string; date?: string; coverImage?: string; status?: string }>
+        }
+        const allEvents = eventsData.events || []
+        const activeEvents = allEvents.filter((e) => e.status !== 'Event Ended' && e.coverImage)
+        if (activeEvents.length > 0) {
+          const randomEventIndex = Math.floor(Math.random() * activeEvents.length)
+          const selectedEvent = activeEvents[randomEventIndex]
+          setRandomEventImage(normalizeImagePath(selectedEvent.coverImage, ''))
+          setRandomEventName(selectedEvent.title ?? '')
+          setRandomEventDate(selectedEvent.date ?? '')
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [overlayImage])
+
+    loadData()
+  }, [])
 
   // Use a default image during SSR
-  const displayImage = selectedOverlayImage || AVAILABLE_BACKGROUNDS[0]
+  const displayOverlayImage = backgroundImage
+  const displayRightImage = normalizeImagePath(randomEventImage || image || displayOverlayImage, '/images/backgrounds/ambedkar-1.jpg')
+
+  if (isLoading || !backgroundImage) {
+    return (
+      <div
+        className={`${heightClass} animate-pulse`}
+        style={{ background: 'linear-gradient(135deg, #2D4D9B 0%, #7F56D9 55%, #FF6B35 100%)' }}
+      />
+    )
+  }
 
   if (layout === 'two-column' && image) {
     return (
@@ -55,17 +92,17 @@ export function Hero({
       >
         {/* Overlay image on background */}
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-40"
           style={{
-            backgroundImage: `url(${displayImage})`,
+            backgroundImage: `url(${displayOverlayImage})`,
             backgroundSize: 'cover',
-            backgroundPosition: 'left center',
+            backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
           }}
         />
 
         {/* Fade overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-black/40" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center relative z-10">
@@ -102,16 +139,30 @@ export function Hero({
 
             {/* Image */}
             <div className="relative h-[400px] md:h-[500px]">
-              <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+              <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl">
                 <Image
-                  src={image}
-                  alt={title}
+                  src={displayRightImage}
+                  alt={randomEventName}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   priority
                 />
               </div>
+              
+              {/* Event name overlay */}
+              {randomEventName && (
+                <div className="absolute bottom-6 left-6 right-6 z-20">
+                  <p className="text-white text-sm md:text-base font-semibold text-center drop-shadow-lg">
+                    {randomEventName}
+                  </p>
+                  {randomEventDate && (
+                    <p className="text-white text-xs md:text-sm text-center drop-shadow-lg mt-1">
+                      {randomEventDate}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
