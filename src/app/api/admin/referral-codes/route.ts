@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
   const code = (body.code?.trim().toUpperCase() || generateCode());
-  if (!/^BHIM-[A-Z]{3}-[A-Z0-9]{4}$/.test(code)) {
+  if (!/^BHIM-[A-Z0-9]{3}-[A-Z0-9]{4}$/.test(code)) {
     return NextResponse.json({ error: 'Invalid referral code format' }, { status: 400 });
   }
 
