@@ -1701,7 +1701,7 @@ export default function DashboardPage() {
                       <span className="block text-sm font-semibold text-gray-700 mb-1.5">Custom Message <span className="font-normal text-gray-400">(optional)</span></span>
                       <textarea
                         rows={3}
-                        placeholder="We're currently performing scheduled maintenance. We'll be back shortly — thank you for your patience."
+                        placeholder="www.ambedkaritebuddhist.org is the official web presence for the Ambedkarite Buddhist Community of Canada."
                         value={maintenanceForm.maintenanceMessage}
                         onChange={(e) => setMaintenanceForm((prev) => ({ ...prev, maintenanceMessage: e.target.value }))}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400/25 focus:border-orange-400 transition resize-none"
