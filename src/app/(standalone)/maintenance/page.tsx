@@ -1,5 +1,5 @@
 const DEFAULT_MESSAGE =
-  "We're currently performing scheduled maintenance. We'll be back shortly — thank you for your patience.";
+  'www.ambedkaritebuddhist.org is the official web presence for the Ambedkarite Buddhist Community of Canada.';
 
 export default function MaintenancePage({
   searchParams,
