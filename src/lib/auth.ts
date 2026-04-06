@@ -39,10 +39,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!token.role) token.role = 'MEMBER';
       if (typeof token.isMember !== 'boolean') token.isMember = false;
 
-      // Admin override via env var
+      // Admin override via env var — ensure a user row exists in DB for member list visibility
       if (isAdminEmail) {
         token.role = 'ADMIN';
         token.isMember = true;
+        try {
+          const [{ eq }, { getDb }, { users }] = await Promise.all([
+            import('drizzle-orm'),
+            import('@/db'),
+            import('@/db/schema'),
+          ]);
+          const db = getDb();
+          const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, tokenEmail)).limit(1).then((r) => r[0]);
+          if (existing) {
+            token.sub = existing.id;
+          } else {
+            const now = new Date().toISOString();
+            const id = crypto.randomUUID();
+            await db.insert(users).values({ id, name: tokenEmail.split('@')[0], email: tokenEmail, passwordHash: '', role: 'ADMIN', emailVerified: now, createdAt: now, updatedAt: now });
+            token.sub = id;
+          }
+        } catch {
+          // D1 unavailable — continue without DB row
+        }
         return token;
       }
 
