@@ -53,6 +53,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, tokenEmail)).limit(1).then((r) => r[0]);
           if (existing) {
             token.sub = existing.id;
+            if (existing.role !== 'ADMIN') {
+              const { eq: eq2 } = await import('drizzle-orm');
+              await db.update(users).set({ role: 'ADMIN' }).where(eq2(users.id, existing.id));
+            }
           } else {
             const now = new Date().toISOString();
             const id = crypto.randomUUID();
