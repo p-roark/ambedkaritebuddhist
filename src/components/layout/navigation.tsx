@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { DonateModal } from './donate-modal'
 
 export function Navigation() {
   const { data: session, status } = useSession()
@@ -12,6 +13,7 @@ export function Navigation() {
   const [orgLine1, setOrgLine1] = useState('Ambedkarite Buddhist')
   const [orgLine2, setOrgLine2] = useState('Community Of Canada (ABCC)')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [donateOpen, setDonateOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/events?resource=org-settings')
@@ -91,6 +93,12 @@ export function Navigation() {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center space-x-2">
+            <button
+              onClick={() => setDonateOpen(true)}
+              className="px-4 py-2 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
+            >
+              🪷 Donate
+            </button>
             {!sessionState ? (
               <Link
                 href="/auth/login"
@@ -152,6 +160,12 @@ export function Navigation() {
             </>
           )}
           <div className="pt-2 border-t border-gray-100 mt-2">
+            <button
+              onClick={() => { setMobileOpen(false); setDonateOpen(true) }}
+              className="block w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors mb-2"
+            >
+              🪷 Donate
+            </button>
             {!sessionState ? (
               <Link
                 href="/auth/login"
@@ -170,6 +184,7 @@ export function Navigation() {
           </div>
         </div>
       )}
+      <DonateModal open={donateOpen} onClose={() => setDonateOpen(false)} />
     </nav>
   )
 }
