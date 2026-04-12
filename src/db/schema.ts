@@ -230,6 +230,41 @@ export const organizationSettings = sqliteTable('OrganizationSettings', {
   updatedAt:       text('updatedAt').notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Donation objectives ──────────────────────────────────────────────────────
+
+export const donationObjectives = sqliteTable('DonationObjective', {
+  id:            text('id').primaryKey(),
+  title:         text('title').notNull(),
+  description:   text('description').notNull().default(''),
+  targetAmount:  integer('targetAmount').notNull().default(0),   // in cents
+  currentAmount: integer('currentAmount').notNull().default(0),  // in cents
+  active:        integer('active', { mode: 'boolean' }).notNull().default(true),
+  displayOrder:  integer('displayOrder').notNull().default(0),
+  createdAt:     text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt:     text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  activeIdx: index('DonationObjective_active_idx').on(t.active),
+}));
+
+// ─── Donations ────────────────────────────────────────────────────────────────
+
+export const donations = sqliteTable('Donation', {
+  id:              text('id').primaryKey(),
+  objectiveId:     text('objectiveId').references(() => donationObjectives.id, { onDelete: 'set null' }),
+  donorName:       text('donorName').notNull(),
+  donorEmail:      text('donorEmail').notNull(),
+  donorPhone:      text('donorPhone'),
+  amount:          integer('amount').notNull(),                    // in cents
+  message:         text('message'),
+  status:          text('status').notNull().default('pending'),    // pending | confirmed
+  adminNote:       text('adminNote'),
+  createdAt:       text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt:       text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  objectiveIdx: index('Donation_objective_idx').on(t.objectiveId),
+  createdIdx:   index('Donation_createdAt_idx').on(t.createdAt),
+}));
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;
@@ -245,3 +280,7 @@ export type NewFamilyMember = typeof familyMembers.$inferInsert;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type NewContactMessage = typeof contactMessages.$inferInsert;
 export type OrganizationSettings = typeof organizationSettings.$inferSelect;
+export type DonationObjective = typeof donationObjectives.$inferSelect;
+export type NewDonationObjective = typeof donationObjectives.$inferInsert;
+export type Donation = typeof donations.$inferSelect;
+export type NewDonation = typeof donations.$inferInsert;
