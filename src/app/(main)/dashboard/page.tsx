@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings';
+type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings' | 'donations';
 
 type OrgSettings = {
   orgName: string;
@@ -96,6 +96,31 @@ type CoverImage = {
   url: string;
 };
 
+type DonationObjective = {
+  id: string;
+  title: string;
+  description: string;
+  targetAmount: number;
+  currentAmount: number;
+  active: boolean;
+  displayOrder: number;
+  createdAt: string;
+};
+
+type DonationRecord = {
+  id: string;
+  objectiveId: string | null;
+  objectiveTitle: string | null;
+  donorName: string;
+  donorEmail: string;
+  donorPhone: string | null;
+  amount: number;
+  message: string | null;
+  status: string;
+  adminNote: string | null;
+  createdAt: string;
+};
+
 const ROLE_COLORS: Record<Role, string> = {
   ADMIN: 'bg-red-100 text-red-800',
   MEMBER: 'bg-green-100 text-green-800',
@@ -173,6 +198,23 @@ export default function DashboardPage() {
   const [maintenanceSaving, setMaintenanceSaving] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
 
+  // Donations state
+  const [donationObjectives, setDonationObjectives] = useState<DonationObjective[]>([]);
+  const [donationRecords, setDonationRecords] = useState<DonationRecord[]>([]);
+  const [donationSubTab, setDonationSubTab] = useState<'objectives' | 'records'>('objectives');
+  const [newObjTitle, setNewObjTitle] = useState('');
+  const [newObjDescription, setNewObjDescription] = useState('');
+  const [newObjTarget, setNewObjTarget] = useState('');
+  const [newObjOrder, setNewObjOrder] = useState('0');
+  const [newObjMessage, setNewObjMessage] = useState('');
+  const [editObjId, setEditObjId] = useState<string | null>(null);
+  const [editObjTitle, setEditObjTitle] = useState('');
+  const [editObjDescription, setEditObjDescription] = useState('');
+  const [editObjTarget, setEditObjTarget] = useState('');
+  const [editObjCurrent, setEditObjCurrent] = useState('');
+  const [editObjOrder, setEditObjOrder] = useState('0');
+  const [editObjActive, setEditObjActive] = useState(true);
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
   }, [status, router]);
@@ -248,6 +290,21 @@ export default function DashboardPage() {
     }
   };
 
+  const loadDonations = async () => {
+    const [objRes, recRes] = await Promise.all([
+      fetch('/api/admin/donations/objectives', { cache: 'no-store' }),
+      fetch('/api/admin/donations', { cache: 'no-store' }),
+    ]);
+    if (objRes.ok) {
+      const d = (await objRes.json()) as { objectives: DonationObjective[] };
+      setDonationObjectives(d.objectives);
+    }
+    if (recRes.ok) {
+      const d = (await recRes.json()) as { donations: DonationRecord[] };
+      setDonationRecords(d.donations);
+    }
+  };
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     const isAdmin = session?.user?.role === 'ADMIN';
@@ -255,7 +312,7 @@ export default function DashboardPage() {
     const loadAll = async () => {
       try {
         if (isAdmin) {
-          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadMessages()]);
+          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadMessages(), loadDonations()]);
         } else {
           // Non-admin: try loading events — API returns 403 if not a coordinator
           const res = await fetch('/api/admin/events', { cache: 'no-store' });
@@ -305,6 +362,7 @@ export default function DashboardPage() {
         { id: 'cover-images', label: `Cover Images (${coverImages.length})` },
         { id: 'referrals', label: 'Referral Codes' },
         { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
+        { id: 'donations', label: `Donations (${donationRecords.length})` },
         { id: 'settings', label: 'Settings' },
       ]
     : [{ id: 'events', label: `My Events (${events.length})` }];
@@ -1730,6 +1788,277 @@ export default function DashboardPage() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+        {activeTab === 'donations' && (
+          <div className="space-y-4">
+            {/* Sub-tabs */}
+            <div className="flex gap-2 border-b border-gray-200 pb-0">
+              {(['objectives', 'records'] as const).map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setDonationSubTab(sub)}
+                  className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors ${
+                    donationSubTab === sub
+                      ? 'bg-white border border-b-white border-gray-200 text-primary-blue -mb-px'
+                      : 'text-gray-500 hover:text-primary-blue'
+                  }`}
+                >
+                  {sub === 'objectives' ? `Objectives (${donationObjectives.length})` : `Donations (${donationRecords.length})`}
+                </button>
+              ))}
+            </div>
+
+            {donationSubTab === 'objectives' && (
+              <div className="space-y-4">
+                {/* Create new objective */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Create New Objective</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Title *</label>
+                      <input
+                        type="text"
+                        value={newObjTitle}
+                        onChange={(e) => setNewObjTitle(e.target.value)}
+                        placeholder="e.g. Community Centre Fund"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Target Amount (CAD $)</label>
+                      <input
+                        type="number"
+                        value={newObjTarget}
+                        onChange={(e) => setNewObjTarget(e.target.value)}
+                        placeholder="e.g. 5000"
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                      <textarea
+                        rows={2}
+                        value={newObjDescription}
+                        onChange={(e) => setNewObjDescription(e.target.value)}
+                        placeholder="What will this fund be used for?"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Display Order</label>
+                      <input
+                        type="number"
+                        value={newObjOrder}
+                        onChange={(e) => setNewObjOrder(e.target.value)}
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue"
+                      />
+                    </div>
+                  </div>
+                  {newObjMessage && <p className={`text-xs mb-2 ${newObjMessage.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>{newObjMessage}</p>}
+                  <button
+                    onClick={async () => {
+                      if (!newObjTitle.trim()) { setNewObjMessage('Title is required.'); return; }
+                      const res = await fetch('/api/admin/donations/objectives', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          title: newObjTitle.trim(),
+                          description: newObjDescription.trim(),
+                          targetAmount: newObjTarget ? parseFloat(newObjTarget) : 0,
+                          displayOrder: parseInt(newObjOrder) || 0,
+                          active: true,
+                        }),
+                      });
+                      if (res.ok) {
+                        setNewObjTitle(''); setNewObjDescription(''); setNewObjTarget(''); setNewObjOrder('0');
+                        setNewObjMessage('Objective created!');
+                        await loadDonations();
+                        setTimeout(() => setNewObjMessage(''), 3000);
+                      } else {
+                        setNewObjMessage('Error creating objective.');
+                      }
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-lg transition-colors"
+                  >
+                    + Create Objective
+                  </button>
+                </div>
+
+                {/* Objectives list */}
+                {donationObjectives.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-6">No donation objectives yet. Create one above.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {donationObjectives.map((obj) => (
+                      <div key={obj.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                        {editObjId === obj.id ? (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                                <input type="text" value={editObjTitle} onChange={(e) => setEditObjTitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Target ($)</label>
+                                <input type="number" value={editObjTarget} onChange={(e) => setEditObjTarget(e.target.value)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Current Amount ($)</label>
+                                <input type="number" value={editObjCurrent} onChange={(e) => setEditObjCurrent(e.target.value)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Display Order</label>
+                                <input type="number" value={editObjOrder} onChange={(e) => setEditObjOrder(e.target.value)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25" />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                                <textarea rows={2} value={editObjDescription} onChange={(e) => setEditObjDescription(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 resize-none" />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" id={`active-${obj.id}`} checked={editObjActive} onChange={(e) => setEditObjActive(e.target.checked)} className="rounded" />
+                                <label htmlFor={`active-${obj.id}`} className="text-sm text-gray-700">Active (visible to public)</label>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                              <button
+                                onClick={async () => {
+                                  await fetch(`/api/admin/donations/objectives/${obj.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      title: editObjTitle,
+                                      description: editObjDescription,
+                                      targetAmount: parseFloat(editObjTarget) || 0,
+                                      currentAmount: parseFloat(editObjCurrent) || 0,
+                                      active: editObjActive,
+                                      displayOrder: parseInt(editObjOrder) || 0,
+                                    }),
+                                  });
+                                  setEditObjId(null);
+                                  await loadDonations();
+                                }}
+                                className="px-3 py-1.5 text-xs font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-lg"
+                              >Save</button>
+                              <button onClick={() => setEditObjId(null)} className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <p className="font-semibold text-text-dark truncate">{obj.title}</p>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${obj.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                  {obj.active ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
+                              {obj.description && <p className="text-xs text-gray-500 mb-1 line-clamp-1">{obj.description}</p>}
+                              {obj.targetAmount > 0 && (
+                                <div className="mt-1">
+                                  <div className="flex justify-between text-xs text-gray-500 mb-0.5">
+                                    <span>${(obj.currentAmount / 100).toFixed(2)} raised</span>
+                                    <span>Goal: ${(obj.targetAmount / 100).toFixed(2)}</span>
+                                  </div>
+                                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-primary-saffron rounded-full"
+                                      style={{ width: `${Math.min(100, Math.round((obj.currentAmount / obj.targetAmount) * 100))}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-1.5 flex-shrink-0">
+                              <button
+                                onClick={() => {
+                                  setEditObjId(obj.id);
+                                  setEditObjTitle(obj.title);
+                                  setEditObjDescription(obj.description);
+                                  setEditObjTarget(String(obj.targetAmount / 100));
+                                  setEditObjCurrent(String(obj.currentAmount / 100));
+                                  setEditObjOrder(String(obj.displayOrder));
+                                  setEditObjActive(obj.active);
+                                }}
+                                className="px-2.5 py-1.5 text-xs text-primary-blue border border-primary-blue rounded-lg hover:bg-blue-50"
+                              >Edit</button>
+                              <button
+                                onClick={async () => {
+                                  if (!confirm(`Delete objective "${obj.title}"? This cannot be undone.`)) return;
+                                  await fetch(`/api/admin/donations/objectives/${obj.id}`, { method: 'DELETE' });
+                                  await loadDonations();
+                                }}
+                                className="px-2.5 py-1.5 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
+                              >Delete</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {donationSubTab === 'records' && (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                {donationRecords.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-8">No donation records yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Donor</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objective</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Amount</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Date</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {donationRecords.map((rec) => (
+                          <tr key={rec.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-text-dark">{rec.donorName}</p>
+                              <p className="text-xs text-gray-500">{rec.donorEmail}</p>
+                              {rec.donorPhone && <p className="text-xs text-gray-500">{rec.donorPhone}</p>}
+                            </td>
+                            <td className="px-4 py-3 text-gray-600 text-xs">{rec.objectiveTitle ?? <span className="italic text-gray-400">General</span>}</td>
+                            <td className="px-4 py-3 font-semibold text-text-dark">${(rec.amount / 100).toFixed(2)}</td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${rec.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                {rec.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-500">{new Date(rec.createdAt).toLocaleDateString('en-CA')}</td>
+                            <td className="px-4 py-3">
+                              {rec.status === 'pending' && (
+                                <button
+                                  onClick={async () => {
+                                    await fetch('/api/admin/donations', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ id: rec.id, status: 'confirmed', confirmedAmount: rec.amount }),
+                                    });
+                                    await loadDonations();
+                                  }}
+                                  className="px-2.5 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg"
+                                >
+                                  Confirm
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
