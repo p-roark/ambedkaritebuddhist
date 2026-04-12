@@ -1867,7 +1867,7 @@ export default function DashboardPage() {
                         body: JSON.stringify({
                           title: newObjTitle.trim(),
                           description: newObjDescription.trim(),
-                          targetAmount: newObjTarget ? parseFloat(newObjTarget) : 0,
+                          targetAmount: newObjTarget ? Math.round(parseFloat(newObjTarget)) : 0,
                           displayOrder: parseInt(newObjOrder) || 0,
                           active: true,
                         }),
@@ -1931,8 +1931,8 @@ export default function DashboardPage() {
                                     body: JSON.stringify({
                                       title: editObjTitle,
                                       description: editObjDescription,
-                                      targetAmount: parseFloat(editObjTarget) || 0,
-                                      currentAmount: parseFloat(editObjCurrent) || 0,
+                                      targetAmount: Math.round(parseFloat(editObjTarget) || 0),
+                                      currentAmount: Math.round(parseFloat(editObjCurrent) || 0),
                                       active: editObjActive,
                                       displayOrder: parseInt(editObjOrder) || 0,
                                     }),

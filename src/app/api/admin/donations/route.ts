@@ -62,23 +62,28 @@ export async function PATCH(request: NextRequest) {
   const db = getDb();
 
   const now = new Date().toISOString();
+
+  // If confirming a donation, fetch objective info before the update
+  let objectiveIdToUpdate: string | null = null;
+  if (status === 'confirmed' && typeof confirmedAmount === 'number') {
+    const [existing] = await db.select({ objectiveId: donations.objectiveId }).from(donations).where(eq(donations.id, id)).limit(1);
+    objectiveIdToUpdate = existing?.objectiveId ?? null;
+  }
+
   const updates: Record<string, unknown> = { updatedAt: now };
   if (typeof status === 'string') updates.status = status;
   if (typeof adminNote === 'string') updates.adminNote = adminNote;
 
   await db.update(donations).set(updates).where(eq(donations.id, id));
 
-  // If confirming a donation, increment the objective's currentAmount
-  if (status === 'confirmed' && typeof confirmedAmount === 'number') {
-    const [donation] = await db.select({ objectiveId: donations.objectiveId }).from(donations).where(eq(donations.id, id)).limit(1);
-    if (donation?.objectiveId) {
-      const [obj] = await db.select({ currentAmount: donationObjectives.currentAmount }).from(donationObjectives).where(eq(donationObjectives.id, donation.objectiveId)).limit(1);
-      if (obj) {
-        await db.update(donationObjectives).set({
-          currentAmount: obj.currentAmount + confirmedAmount,
-          updatedAt: now,
-        }).where(eq(donationObjectives.id, donation.objectiveId));
-      }
+  // Increment the objective's currentAmount after confirming
+  if (objectiveIdToUpdate && typeof confirmedAmount === 'number') {
+    const [obj] = await db.select({ currentAmount: donationObjectives.currentAmount }).from(donationObjectives).where(eq(donationObjectives.id, objectiveIdToUpdate)).limit(1);
+    if (obj) {
+      await db.update(donationObjectives).set({
+        currentAmount: obj.currentAmount + confirmedAmount,
+        updatedAt: now,
+      }).where(eq(donationObjectives.id, objectiveIdToUpdate));
     }
   }
 

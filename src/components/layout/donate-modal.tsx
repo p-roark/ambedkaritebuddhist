@@ -227,7 +227,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 <p className="mt-1 text-xs text-blue-700">Use your name as the message/note in the transfer.</p>
               </div>
 
-              <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
+              <form onSubmit={(e) => { handleSubmit(e).catch((err: unknown) => { console.error(err); setError('Unexpected error. Please try again.'); }) }} className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-text-dark mb-1" htmlFor="donor-name">
                     Full Name <span className="text-red-500">*</span>
@@ -281,7 +281,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                     type="number"
                     required
                     min="1"
-                    step="1"
+                    step="0.01"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-saffron focus:border-transparent"
