@@ -202,6 +202,10 @@ export default function DashboardPage() {
   const [donationObjectives, setDonationObjectives] = useState<DonationObjective[]>([]);
   const [donationRecords, setDonationRecords] = useState<DonationRecord[]>([]);
   const [donationSubTab, setDonationSubTab] = useState<'objectives' | 'records'>('objectives');
+  const [expandedObjId, setExpandedObjId] = useState<string | null>(null);
+  const [confirmingDonationId, setConfirmingDonationId] = useState<string | null>(null);
+  const [confirmRef, setConfirmRef] = useState('');
+  const [confirmAmount, setConfirmAmount] = useState('');
   const [newObjTitle, setNewObjTitle] = useState('');
   const [newObjDescription, setNewObjDescription] = useState('');
   const [newObjTarget, setNewObjTarget] = useState('');
@@ -1946,52 +1950,164 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <p className="font-semibold text-text-dark truncate">{obj.title}</p>
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${obj.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                                  {obj.active ? 'Active' : 'Inactive'}
-                                </span>
-                              </div>
-                              {obj.description && <p className="text-xs text-gray-500 mb-1 line-clamp-1">{obj.description}</p>}
-                              {obj.targetAmount > 0 && (
-                                <div className="mt-1">
-                                  <div className="flex justify-between text-xs text-gray-500 mb-0.5">
-                                    <span>${(obj.currentAmount / 100).toFixed(2)} raised</span>
-                                    <span>Goal: ${(obj.targetAmount / 100).toFixed(2)}</span>
-                                  </div>
-                                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-primary-saffron rounded-full"
-                                      style={{ width: `${Math.min(100, Math.round((obj.currentAmount / obj.targetAmount) * 100))}%` }}
-                                    />
-                                  </div>
+                          <div>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <p className="font-semibold text-text-dark truncate">{obj.title}</p>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${obj.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                    {obj.active ? 'Active' : 'Inactive'}
+                                  </span>
                                 </div>
-                              )}
+                                {obj.description && <p className="text-xs text-gray-500 mb-1 line-clamp-1">{obj.description}</p>}
+                                {obj.targetAmount > 0 && (
+                                  <div className="mt-1">
+                                    <div className="flex justify-between text-xs text-gray-500 mb-0.5">
+                                      <span>${(obj.currentAmount / 100).toFixed(2)} raised</span>
+                                      <span>Goal: ${(obj.targetAmount / 100).toFixed(2)}</span>
+                                    </div>
+                                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-primary-saffron rounded-full"
+                                        style={{ width: `${Math.min(100, Math.round((obj.currentAmount / obj.targetAmount) * 100))}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                                <button
+                                  onClick={() => setExpandedObjId(expandedObjId === obj.id ? null : obj.id)}
+                                  className="px-2.5 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                                >
+                                  {expandedObjId === obj.id ? 'Hide Donors' : `Donors (${donationRecords.filter((r) => r.objectiveId === obj.id).length})`}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditObjId(obj.id);
+                                    setEditObjTitle(obj.title);
+                                    setEditObjDescription(obj.description);
+                                    setEditObjTarget(String(obj.targetAmount / 100));
+                                    setEditObjCurrent(String(obj.currentAmount / 100));
+                                    setEditObjOrder(String(obj.displayOrder));
+                                    setEditObjActive(obj.active);
+                                  }}
+                                  className="px-2.5 py-1.5 text-xs text-primary-blue border border-primary-blue rounded-lg hover:bg-blue-50"
+                                >Edit</button>
+                                <button
+                                  onClick={async () => {
+                                    if (!confirm(`Delete objective "${obj.title}"? This cannot be undone.`)) return;
+                                    await fetch(`/api/admin/donations/objectives/${obj.id}`, { method: 'DELETE' });
+                                    await loadDonations();
+                                  }}
+                                  className="px-2.5 py-1.5 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
+                                >Delete</button>
+                              </div>
                             </div>
-                            <div className="flex gap-1.5 flex-shrink-0">
-                              <button
-                                onClick={() => {
-                                  setEditObjId(obj.id);
-                                  setEditObjTitle(obj.title);
-                                  setEditObjDescription(obj.description);
-                                  setEditObjTarget(String(obj.targetAmount / 100));
-                                  setEditObjCurrent(String(obj.currentAmount / 100));
-                                  setEditObjOrder(String(obj.displayOrder));
-                                  setEditObjActive(obj.active);
-                                }}
-                                className="px-2.5 py-1.5 text-xs text-primary-blue border border-primary-blue rounded-lg hover:bg-blue-50"
-                              >Edit</button>
-                              <button
-                                onClick={async () => {
-                                  if (!confirm(`Delete objective "${obj.title}"? This cannot be undone.`)) return;
-                                  await fetch(`/api/admin/donations/objectives/${obj.id}`, { method: 'DELETE' });
-                                  await loadDonations();
-                                }}
-                                className="px-2.5 py-1.5 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
-                              >Delete</button>
-                            </div>
+
+                            {/* Expandable donor list */}
+                            {expandedObjId === obj.id && (
+                              <div className="mt-4 border-t border-gray-100 pt-4">
+                                {donationRecords.filter((r) => r.objectiveId === obj.id).length === 0 ? (
+                                  <p className="text-xs text-gray-400 text-center py-3">No donations for this objective yet.</p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {donationRecords.filter((r) => r.objectiveId === obj.id).map((rec) => (
+                                      <div key={rec.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                                          <div className="min-w-0">
+                                            <p className="text-sm font-medium text-text-dark">{rec.donorName}</p>
+                                            <p className="text-xs text-gray-500">{rec.donorEmail}{rec.donorPhone ? ` · ${rec.donorPhone}` : ''}</p>
+                                            {rec.message && <p className="text-xs text-gray-500 italic mt-0.5">&ldquo;{rec.message}&rdquo;</p>}
+                                          </div>
+                                          <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-semibold text-text-dark">${(rec.amount / 100).toFixed(2)}</p>
+                                            <p className="text-xs text-gray-400">{new Date(rec.createdAt).toLocaleDateString('en-CA')}</p>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 inline-block ${rec.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                              {rec.status}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        {rec.adminNote && (
+                                          <p className="text-xs text-gray-500 mt-1.5 border-t border-gray-200 pt-1.5">
+                                            <span className="font-medium">Interac Ref:</span> {rec.adminNote}
+                                          </p>
+                                        )}
+                                        {rec.status === 'pending' && confirmingDonationId !== rec.id && (
+                                          <button
+                                            onClick={() => {
+                                              setConfirmingDonationId(rec.id);
+                                              setConfirmRef('');
+                                              setConfirmAmount(String(rec.amount / 100));
+                                            }}
+                                            className="mt-2 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                                          >
+                                            Confirm Receipt
+                                          </button>
+                                        )}
+                                        {rec.status === 'pending' && confirmingDonationId === rec.id && (
+                                          <div className="mt-3 border-t border-gray-200 pt-3 space-y-2">
+                                            <div className="grid grid-cols-2 gap-2">
+                                              <div>
+                                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Interac Reference</label>
+                                                <input
+                                                  type="text"
+                                                  value={confirmRef}
+                                                  onChange={(e) => setConfirmRef(e.target.value)}
+                                                  placeholder="e.g. ABC123XYZ"
+                                                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition"
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Amount Received ($)</label>
+                                                <input
+                                                  type="number"
+                                                  min="0"
+                                                  step="0.01"
+                                                  value={confirmAmount}
+                                                  onChange={(e) => setConfirmAmount(e.target.value)}
+                                                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue transition"
+                                                />
+                                              </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                              <button
+                                                onClick={async () => {
+                                                  const amountCents = Math.round(parseFloat(confirmAmount) * 100);
+                                                  await fetch('/api/admin/donations', {
+                                                    method: 'PATCH',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                      id: rec.id,
+                                                      status: 'confirmed',
+                                                      confirmedAmount: amountCents,
+                                                      adminNote: confirmRef.trim() || null,
+                                                    }),
+                                                  });
+                                                  setConfirmingDonationId(null);
+                                                  setConfirmRef('');
+                                                  setConfirmAmount('');
+                                                  await loadDonations();
+                                                }}
+                                                className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                                              >
+                                                Confirm
+                                              </button>
+                                              <button
+                                                onClick={() => { setConfirmingDonationId(null); setConfirmRef(''); setConfirmAmount(''); }}
+                                                className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
