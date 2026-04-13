@@ -133,7 +133,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
       aria-modal="true"
       aria-label="Donate"
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-5 sm:px-8 py-4 sm:py-5 bg-gradient-to-r from-primary-blue to-accent-purple flex justify-between items-start gap-3 flex-shrink-0">
           <div>
