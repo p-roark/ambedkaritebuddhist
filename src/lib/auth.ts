@@ -50,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             import('@/db/schema'),
           ]);
           const db = getDb();
-          const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, tokenEmail)).limit(1).then((r) => r[0]);
+          const existing = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.email, tokenEmail)).limit(1).then((r) => r[0]);
           if (existing) {
             token.sub = existing.id;
             if (existing.role !== 'ADMIN') {
