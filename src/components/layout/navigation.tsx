@@ -99,14 +99,7 @@ export function Navigation() {
             >
               🪷 Donate
             </button>
-            {!sessionState ? (
-              <Link
-                href="/auth/login"
-                className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
-              >
-                Member Login
-              </Link>
-            ) : (
+            {sessionState && (
               <>
                 <span className="text-sm text-gray-700 max-w-[120px] truncate">
                   {sessionState?.user?.name || sessionState?.user?.email}
@@ -166,14 +159,7 @@ export function Navigation() {
             >
               🪷 Donate
             </button>
-            {!sessionState ? (
-              <Link
-                href="/auth/login"
-                className="block w-full text-center px-4 py-2.5 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
-              >
-                Member Login
-              </Link>
-            ) : (
+            {sessionState && (
               <button
                 onClick={() => void signOut({ callbackUrl: '/' })}
                 className="block w-full text-center px-4 py-2.5 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
