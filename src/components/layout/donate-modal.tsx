@@ -247,14 +247,6 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 </ol>
                 <p className="text-xs text-gray-600 pt-3 border-t border-blue-200">You'll receive a confirmation email from ABCC once your donation is received.</p>
               </div>
-
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-5">
-                <p className="text-sm font-semibold text-amber-800 mb-2">After Submitting</p>
-                <p className="text-sm text-amber-900 mb-2">Send your <strong>Interac e-Transfer</strong> to:</p>
-                <p className="font-bold text-amber-900 break-all">{INTERAC_EMAIL}</p>
-                <p className="text-xs text-amber-700 mt-1">Use your full name as the message/note in the transfer.</p>
-              </div>
-
               <form onSubmit={(e) => { handleSubmit(e).catch((err: unknown) => { console.error(err); setError('Unexpected error. Please try again.'); }) }} className="space-y-3">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-1 h-5 rounded-full bg-primary-blue flex-shrink-0" />
