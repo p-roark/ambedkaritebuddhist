@@ -102,6 +102,17 @@ export function Footer() {
                 {org.email}
               </a>
             </p>
+            <p className="text-gray-300 text-sm">
+              Instagram:{' '}
+              <a
+                href="https://www.instagram.com/ambedkarite_buddhists_ca"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary-saffron transition-colors"
+              >
+                @ambedkarite_buddhists_ca
+              </a>
+            </p>
           </div>
         </div>
 
