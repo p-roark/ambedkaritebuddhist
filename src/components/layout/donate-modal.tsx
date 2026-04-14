@@ -226,7 +226,6 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 </div>
               )}
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-5">
               <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 mb-5">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1 h-4 rounded-full bg-primary-blue flex-shrink-0" />
