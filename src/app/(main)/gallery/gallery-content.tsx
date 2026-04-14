@@ -63,14 +63,6 @@ function PauseIcon() {
   )
 }
 
-function GridIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-      <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 function ExpandIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
@@ -98,15 +90,6 @@ function StatusBadge({ status }: { status: EventWithImages['status'] }) {
     <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${classes}`}>
       {status}
     </span>
-  )
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-text-light">{label}</p>
-      <p className="mt-2 text-xl font-semibold text-text-dark">{value}</p>
-    </div>
   )
 }
 
@@ -484,35 +467,21 @@ export function GalleryContent() {
 
                 <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:p-8">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-blue">Gallery overview</p>
-                  <h2 className="mt-3 text-3xl font-bold text-text-dark">A more polished way to revisit the event</h2>
-                  <p className="mt-4 text-text-medium">
-                    Browse with the featured slideshow, jump through thumbnails, or open the immersive viewer for keyboard navigation.
-                  </p>
 
-                  <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                    <StatCard label="Photos" value={String(selectedEvent.imageKeys.length)} />
-                    <StatCard label="Current page" value={`${page + 1} / ${totalPages}`} />
-                  </div>
+                  {selectedEvent.description && (
+                    <p className="mt-4 text-text-medium">
+                      {selectedEvent.description}
+                    </p>
+                  )}
 
-                  <div className="mt-6 rounded-3xl bg-slate-50 p-5">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-text-dark">
-                      <GridIcon />
-                      Browsing tools
-                    </div>
-                    <div className="mt-4 space-y-3 text-sm text-text-medium">
-                      <p>Use the main slideshow for a guided view of the strongest images from the event.</p>
-                      <p>Open the fullscreen slideshow for large-format viewing, arrow-key navigation, and quick thumbnail jumps.</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
+                  <div className="mt-6 flex flex-col gap-3">
                     <button
                       type="button"
                       onClick={() => setLightboxIndex(activeImageIndex)}
                       className="inline-flex items-center gap-2 rounded-full bg-primary-blue px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-blue/90"
                     >
                       <ExpandIcon />
-                      Open slideshow
+                      Open Slideshow
                     </button>
                     {selectedEvent.imageKeys.length > 1 && (
                       <button
@@ -521,7 +490,7 @@ export function GalleryContent() {
                         className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-text-dark transition hover:border-primary-blue hover:text-primary-blue"
                       >
                         {isPlaying ? <PauseIcon /> : <PlayIcon />}
-                        {isPlaying ? 'Pause autoplay' : 'Resume autoplay'}
+                        {isPlaying ? 'Pause Autoplay' : 'Resume Autoplay'}
                       </button>
                     )}
                   </div>
