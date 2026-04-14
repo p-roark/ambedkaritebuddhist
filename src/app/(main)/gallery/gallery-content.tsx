@@ -363,12 +363,12 @@ export function GalleryContent() {
           </div>
         </section>
 
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
           {selectedEvent.imageKeys.length > 0 ? (
             <>
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.8fr)]">
-                <div className="overflow-hidden rounded-[32px] bg-slate-950 shadow-[0_30px_80px_rgba(15,23,42,0.22)]">
-                  <div className="relative h-[320px] sm:h-[420px] lg:h-[560px]">
+              <div className="grid gap-6 sm:gap-8 md:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.8fr)]">
+                <div className="md:col-span-3 lg:col-span-1 overflow-hidden rounded-[32px] bg-slate-950 shadow-[0_30px_80px_rgba(15,23,42,0.22)]">
+                  <div className="relative h-[280px] sm:h-[420px] lg:h-[560px]">
                     <img
                       src={getImageSrc(selectedEvent.imageKeys[activeImageIndex])}
                       alt={`${selectedEvent.title} - Featured photo ${activeImageIndex + 1}`}
@@ -406,7 +406,7 @@ export function GalleryContent() {
                         <button
                           type="button"
                           onClick={() => handleSelectImage(activeImageIndex - 1)}
-                          className="absolute left-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50 sm:left-6"
+                          className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50 sm:h-12 sm:w-12 sm:left-6"
                           aria-label="Previous featured photo"
                         >
                           <ChevronLeftIcon />
@@ -414,7 +414,7 @@ export function GalleryContent() {
                         <button
                           type="button"
                           onClick={() => handleSelectImage(activeImageIndex + 1)}
-                          className="absolute right-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50 sm:right-6"
+                          className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50 sm:h-12 sm:w-12 sm:right-6"
                           aria-label="Next featured photo"
                         >
                           <ChevronRightIcon />
