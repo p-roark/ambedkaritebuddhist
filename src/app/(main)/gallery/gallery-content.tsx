@@ -106,6 +106,9 @@ function GalleryLightbox({ event, currentIndex, onClose, onSelect }: LightboxPro
   useEffect(() => {
     if (!isOpen) return
 
+    // Only listen for arrow keys on desktop
+    if (window.innerWidth < 640) return
+
     const handleKeyDown = (eventKey: KeyboardEvent) => {
       if (eventKey.key === 'Escape') onClose()
       if (eventKey.key === 'ArrowLeft') onSelect((currentIndex ?? 0) - 1)
@@ -159,9 +162,6 @@ function GalleryLightbox({ event, currentIndex, onClose, onSelect }: LightboxPro
               <div>
                 <p className="text-sm text-white/70">{event.date} • {event.location}</p>
                 <p className="mt-1 text-lg font-medium">Photo {displayIndex + 1} of {event.imageKeys.length}</p>
-              </div>
-              <div className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium">
-                Use arrow keys to navigate
               </div>
             </div>
           </div>
