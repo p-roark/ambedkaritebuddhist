@@ -108,7 +108,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
               className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-background-light flex flex-col"
             >
               {/* Image */}
-              <div className="relative h-48 overflow-hidden flex-shrink-0">
+              <div className="relative h-56 overflow-hidden flex-shrink-0">
                 <Image
                   src={event.image}
                   alt={event.title}

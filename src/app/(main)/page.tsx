@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Hero } from '@/components/sections/hero'
 import { EventsPreview } from '@/components/sections/events-preview'
@@ -139,6 +140,10 @@ const CALENDAR_EVENTS = [
 ]
 
 export default function Home() {
+  const communityImageUrl = process.env.NEXT_PUBLIC_API_URL?.includes('preview')
+    ? 'https://preview.ambedkaritebuddhist.org/api/events/image?key=covers/3fd8590d-2227-40b4-a94c-81d85eaf44ed.jpg'
+    : 'https://www.ambedkaritebuddhist.org/api/events/image?key=covers/fdeef40c-87f5-44f6-ba3a-1aa5d1ffb218.jpg'
+
   const [heroImage, setHeroImage] = useState<string>('')
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [pastEvents, setPastEvents] = useState<Event[]>([])
@@ -250,13 +255,13 @@ export default function Home() {
               </div>
             </div>
             <div className="relative h-[220px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-blue to-accent-purple flex items-center justify-center">
-                <div className="text-center text-white p-8">
-                  <div className="text-5xl sm:text-7xl md:text-8xl mb-4">☸</div>
-                  <p className="text-xl font-bold">Ambedkarite Buddhist Community of Canada</p>
-                  <p className="text-white/80 mt-2">Ontario, Canada</p>
-                </div>
-              </div>
+              <Image
+                src={communityImageUrl}
+                alt="Ambedkarite Buddhist Community of Canada"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           </div>
         </div>
