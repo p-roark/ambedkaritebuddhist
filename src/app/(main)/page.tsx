@@ -204,7 +204,7 @@ export default function Home() {
       {/* Hero */}
       <Hero
         title="Walking the Path of Buddha. Continuing the Vision of Ambedkar."
-        description="A growing community of Ambedkarite Buddhist families in Canada — practising the Dhamma, celebrating our heritage, and building a future rooted in equality, education, and compassion."
+        description="A growing community of Ambedkarite Buddhist families in Canada — practising the teachings of Lord Buddha and advancing Dr. B.R. Ambedkar's ideals of equality, dignity, and social justice."
         image="/images/backgrounds/ambedkar-1.jpg"
         overlayImage={heroImage}
         layout="two-column"
