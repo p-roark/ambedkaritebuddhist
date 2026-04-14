@@ -360,6 +360,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
 
           {/* Step: Success */}
           {step === 'success' && (
+            <>
             <div className="py-4">
               <div className="text-center mb-5">
                 <div className="text-5xl mb-3">🙏</div>
@@ -384,6 +385,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 Done
               </button>
             </div>
+            </>
           )}
         </div>
       </div>
