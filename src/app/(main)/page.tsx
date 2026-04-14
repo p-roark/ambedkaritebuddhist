@@ -159,7 +159,13 @@ export default function Home() {
           regMap[r.eventId] = { registrationStatus: r.registrationStatus, paymentStatus: r.paymentStatus }
         }
         const coordinatedSet = new Set(data.coordinatedEventIds ?? [])
-        const allEvents: Event[] = data.events.filter((event) => event.status !== 'Event Ended').map((event) => ({
+        
+        // Separate upcoming and past events - limit past events to 4
+        const upcomingEventsList = data.events.filter((event) => event.status !== 'Event Ended')
+        const pastEventsList = data.events.filter((event) => event.status === 'Event Ended').slice(0, 4)
+        const eventsToDisplay = [...upcomingEventsList, ...pastEventsList]
+        
+        const allEvents: Event[] = eventsToDisplay.map((event) => ({
           id: event.id,
           title: event.title,
           date: formatEventDate(event.date),
