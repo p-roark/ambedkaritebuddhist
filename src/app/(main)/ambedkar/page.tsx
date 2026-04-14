@@ -57,7 +57,7 @@ export default function AmbedkarPage() {
               Bhimrao Ramji Ambedkar was born on April 14, 1891, in Mhow (now in Madhya Pradesh, India), into a family classified as &quot;untouchable&quot; — the lowest stratum of the Hindu caste hierarchy. From childhood, he faced dehumanising discrimination: he was made to sit apart from other students, denied water from common sources, and humiliated in ways that would have broken most spirits.
             </p>
             <p>
-              Yet he refused to accept these circumstances as his destiny. With extraordinary determination and the support of progressive patrons, he earned a scholarship to Columbia University in New York in 1913. Under the mentorship of the renowned economist John Dewey, he completed his M.A. and then his Ph.D. He went on to the London School of Economics, earning a D.Sc. in economics — one of the most rigorous academic distinctions of the era. He also qualified as a barrister from Gray&apos;s Inn, London.
+              Yet he refused to accept these circumstances as his destiny. With extraordinary determination and the support of progressive patrons, he earned a scholarship to Columbia University in New York in 1913. Under the mentorship of the renowned philosopher John Dewey, he completed his M.A. and then his Ph.D. He went on to the London School of Economics, earning a D.Sc. in economics — one of the most rigorous academic distinctions of the era. He also qualified as a barrister from Gray&apos;s Inn, London.
             </p>
             <p>
               He became one of the most educated men in all of India, and one of the most educated Dalit figures in history — a living repudiation of the lie that untouchables were intellectually inferior.
