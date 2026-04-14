@@ -155,9 +155,22 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 <div className="w-1 h-5 rounded-full bg-primary-blue flex-shrink-0" />
                 <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Select a Cause</h4>
               </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-4">
-                <p className="text-sm font-semibold text-amber-800 mb-1">💛 Donation Method: Interac e-Transfer</p>
-                <p className="text-sm text-amber-900">Send your transfer to <span className="font-bold">{INTERAC_EMAIL}</span> — instructions will follow after you submit.</p>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 mb-4 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">How to Donate</p>
+                  <p className="mt-1 text-sm text-amber-900">
+                    We accept donations via Interac e-Transfer — secure, instant, and direct.
+                  </p>
+                </div>
+                <p className="text-sm text-amber-900">
+                  Send your e-transfers to <span className="font-bold">{INTERAC_EMAIL}</span> - instructions will
+                  follow after you submit.
+                </p>
+                <p className="text-sm text-amber-900">
+                  ABCC is a registered non-profit in Ontario. A donation acknowledgment will be provided by email.
+                  Please note: as a non-profit corporation, ABCC is not currently a registered charity with CRA and
+                  cannot issue official tax receipts at this time. We are working toward registered charity status.
+                </p>
               </div>
 
               {objectives.length === 0 ? (
