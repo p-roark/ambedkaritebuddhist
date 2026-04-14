@@ -140,7 +140,8 @@ const CALENDAR_EVENTS = [
 
 export default function Home() {
   const [heroImage, setHeroImage] = useState<string>('')
-  const [events, setEvents] = useState<Event[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [pastEvents, setPastEvents] = useState<Event[]>([])
   const [_isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -159,7 +160,13 @@ export default function Home() {
           regMap[r.eventId] = { registrationStatus: r.registrationStatus, paymentStatus: r.paymentStatus }
         }
         const coordinatedSet = new Set(data.coordinatedEventIds ?? [])
-        const allEvents: Event[] = data.events.filter((event) => event.status !== 'Event Ended').map((event) => ({
+        
+        // Separate upcoming and past events - limit past events to 4
+        const upcomingEventsList = data.events.filter((event) => event.status !== 'Event Ended')
+        const pastEventsList = data.events.filter((event) => event.status === 'Event Ended').slice(0, 4)
+        const eventsToDisplay = [...upcomingEventsList, ...pastEventsList]
+        
+        const allEvents: Event[] = eventsToDisplay.map((event) => ({
           id: event.id,
           title: event.title,
           date: formatEventDate(event.date),
@@ -181,7 +188,12 @@ export default function Home() {
           isCoordinator: coordinatedSet.has(event.id),
           externalLink: event.externalLink,
         }))
-        setEvents(allEvents)
+        
+        // Separate events for display
+        const upcoming = allEvents.filter((e) => e.status === 'upcoming')
+        const past = allEvents.filter((e) => e.status === 'past')
+        setUpcomingEvents(upcoming)
+        setPastEvents(past)
 
         const upcomingEvent = data.events
           .filter((e) => e.status !== 'Event Ended')
@@ -309,13 +321,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* EVENTS PREVIEW (DB-backed) */}
+      {/* UPCOMING EVENTS */}
       <EventsPreview
         subtitle="Join Us"
         title="Upcoming Events"
         description="Stay connected with our community through cultural celebrations and meaningful gatherings."
-        events={events}
+        events={upcomingEvents}
       />
+
+      {/* PAST EVENTS */}
+      {pastEvents.length > 0 && (
+        <EventsPreview
+          subtitle="Community Archive"
+          title="Recent Events"
+          description="Celebrate the memorable moments from our past gatherings and community milestones."
+          events={pastEvents}
+        />
+      )}
 
       {/* INSPIRATIONAL QUOTE */}
       <section className="py-16 bg-gradient-to-r from-primary-blue to-accent-purple">
