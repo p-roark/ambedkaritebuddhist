@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: 'Learn about our mission, history, and community values',
     type: 'website',
     url: 'https://www.ambedkaritebuddhist.org/about',
-    images: [{ url: '/images/logo.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://www.ambedkaritebuddhist.org/images/logo.png', width: 1200, height: 630 }],
   },
   keywords: ['about ABCC', 'Ambedkarite Buddhist', 'Dr Ambedkar', 'community', 'Ontario', 'nonprofit'],
 }

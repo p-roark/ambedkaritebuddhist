@@ -114,7 +114,6 @@ export function generateOrganizationSchema(siteUrl: string): Organization {
       contactType: 'General',
     },
     sameAs: [
-      'https://www.facebook.com/ambedkaritebuddhist',
       'https://www.instagram.com/ambedkaritebuddhist',
     ],
   }

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: 'Register for ABCC events and community gatherings',
     type: 'website',
     url: 'https://www.ambedkaritebuddhist.org/events',
-    images: [{ url: '/images/logo.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://www.ambedkaritebuddhist.org/images/logo.png', width: 1200, height: 630 }],
   },
   keywords: ['events', 'register', 'ABCC', 'community', 'gatherings', 'Buddhist', 'Ontario'],
 }

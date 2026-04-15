@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: 'Support ABCC through secure Interac e-Transfer donations',
     type: 'website',
     url: 'https://www.ambedkaritebuddhist.org/donations',
-    images: [{ url: '/images/logo.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://www.ambedkaritebuddhist.org/images/logo.png', width: 1200, height: 630 }],
   },
   keywords: ['donate', 'fundraise', 'support', 'ABCC', 'nonprofit', 'charity'],
 }
