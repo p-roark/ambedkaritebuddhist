@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description: 'Browse photos from ABCC events and gatherings',
     type: 'website',
     url: 'https://www.ambedkaritebuddhist.org/gallery',
-    images: [{ url: 'https://via.placeholder.com/1200x630', width: 1200, height: 630 }],
+    images: [{ url: '/images/logo.png', width: 1200, height: 630 }],
   },
   keywords: ['gallery', 'photos', 'events', 'ABCC', 'community', 'memories'],
 }

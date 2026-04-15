@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     description: 'ABCC is a registered non-profit in Ontario for Ambedkarite Buddhist families. Practising the Dhamma, celebrating Dr. Ambedkar\'s legacy, and building community in Canada.',
     images: [
       {
-        url: '/images/og-image.png',
+        url: '/images/logo.png',
         width: 1200,
         height: 630,
         alt: 'Ambedkarite Buddhist Community of Canada',
