@@ -1,3 +1,18 @@
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Donate | ABCC',
+  description: 'Support the Ambedkarite Buddhist Community of Canada. Your donation helps us celebrate our heritage, build community, and advance Dr. Ambedkar\'s ideals.',
+  openGraph: {
+    title: 'Donate | ABCC',
+    description: 'Support ABCC through secure Interac e-Transfer donations',
+    type: 'website',
+    url: 'https://www.ambedkaritebuddhist.org/donations',
+    images: [{ url: 'https://via.placeholder.com/1200x630', width: 1200, height: 630 }],
+  },
+  keywords: ['donate', 'fundraise', 'support', 'ABCC', 'nonprofit', 'charity'],
+}
+
 export default function Page() {
   return (
     <div className="min-h-screen bg-white">
