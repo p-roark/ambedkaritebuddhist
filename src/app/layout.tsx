@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { Poppins, Noto_Sans } from 'next/font/google'
 import AuthSessionProvider from '@/components/providers/session-provider'
 import { generateOrganizationSchema, generateLocalBusinessSchema } from '@/lib/schema'
@@ -30,20 +31,39 @@ export const metadata: Metadata = {
     url: 'https://www.ambedkaritebuddhist.org',
     title: 'Ambedkarite Buddhist Community Of Canada (ABCC) | Ontario',
     description: 'ABCC is a registered non-profit in Ontario for Ambedkarite Buddhist families. Practising the Dhamma, celebrating Dr. Ambedkar\'s legacy, and building community in Canada.',
-    images: [{ url: 'https://via.placeholder.com/1200x630', width: 1200, height: 630 }],
+    images: [
+      {
+        url: '/images/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Ambedkarite Buddhist Community of Canada',
+      },
+    ],
   },
   other: {
     'application/ld+json': JSON.stringify(generateOrganizationSchema('https://www.ambedkaritebuddhist.org')),
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const organizationSchema = generateOrganizationSchema('https://www.ambedkaritebuddhist.org')
   const localBusinessSchema = generateLocalBusinessSchema('https://www.ambedkaritebuddhist.org')
+
+  // Get the request host to determine if this is production or preview
+  const headersList = await headers()
+  const host = headersList.get('host') || 'www.ambedkaritebuddhist.org'
+  const isProduction = host.includes('www.ambedkaritebuddhist.org')
+
+  // Canonical URL should always point to production for preview domain
+  const canonicalUrl = isProduction
+    ? undefined // Use default (current URL)
+    : 'https://www.ambedkaritebuddhist.org'
 
   return (
     <html lang="en" className={`${poppins.variable} ${notoSans.variable}`}>
       <head>
+        {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+        {!isProduction && <meta name="robots" content="noindex, nofollow" />}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
