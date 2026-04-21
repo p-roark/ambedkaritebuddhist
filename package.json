@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.18.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "drizzle-orm": "^0.38.3",
     "next": "^16.2.1",
     "next-auth": "5.0.0-beta.30",
