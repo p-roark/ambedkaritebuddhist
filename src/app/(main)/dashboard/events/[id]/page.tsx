@@ -31,6 +31,7 @@ type EventDetail = {
   externalLink: string | null;
   paymentInstructions: string | null;
   eventImages: string;
+  googleDriveFolderUrl: string | null;
   status: EventStatus;
   showVolunteering: boolean;
   showCulturalVolunteering: boolean;
@@ -138,6 +139,7 @@ export default function AdminEventPage() {
     paymentInstructions: '',
     status: 'Upcoming' as EventStatus,
     eventImages: [] as string[],
+    googleDriveFolderUrl: '',
     showVolunteering: true,
     showCulturalVolunteering: false,
     showNeedsRide: false,
@@ -201,6 +203,7 @@ export default function AdminEventPage() {
       paymentInstructions: data.event.paymentInstructions ?? '',
       status: data.event.status,
       eventImages: parsedImages,
+      googleDriveFolderUrl: data.event.googleDriveFolderUrl ?? '',
       showVolunteering: data.event.showVolunteering !== false,
       showCulturalVolunteering: Boolean(data.event.showCulturalVolunteering),
       showNeedsRide: Boolean(data.event.showNeedsRide),
@@ -624,6 +627,19 @@ export default function AdminEventPage() {
                 placeholder="https://... (optional)"
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </label>
+            <label className="text-sm text-slate-700">
+              <span className="mb-1 block font-medium">Google Drive Gallery URL</span>
+              <input
+                type="url"
+                value={eventForm.googleDriveFolderUrl}
+                onChange={(e) => setEventForm((prev) => ({ ...prev, googleDriveFolderUrl: e.target.value }))}
+                placeholder="https://drive.google.com/drive/folders/... (optional)"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="mt-1 block text-xs text-slate-500">
+                Paste a public Google Drive folder URL to use Drive images in the gallery. Drive images take precedence over uploaded images.
+              </span>
             </label>
             <label className="text-sm text-slate-700 col-span-full">
               <span className="mb-1 block font-medium">Payment Instructions</span>

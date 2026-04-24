@@ -17,6 +17,7 @@ type DbEvent = {
   description: string
   status: 'Upcoming' | 'Registration Started' | 'Event Ended'
   eventImages: string
+  googleDriveFolderUrl: string | null
 }
 
 type EventWithImages = {
@@ -27,6 +28,7 @@ type EventWithImages = {
   description: string
   status: DbEvent['status']
   imageKeys: string[]
+  googleDriveFolderUrl: string | null
 }
 
 const PAGE_SIZE = 12
@@ -234,16 +236,44 @@ export function GalleryContent() {
         if (!response.ok) throw new Error('Failed to load events')
 
         const data = (await response.json()) as { events: DbEvent[] }
-        const eventsWithImages: EventWithImages[] = data.events
-          .map((event) => ({
-            id: event.id,
-            title: event.title,
-            date: formatGalleryDate(event.date),
-            location: event.location,
-            description: event.description || '',
-            status: event.status,
-            imageKeys: parseImageKeys(event.eventImages),
-          }))
+        const eventsData = data.events
+
+        // Fetch Drive images for events that have a Google Drive folder URL
+        const driveImagesByEventId = new Map<string, string[]>()
+        const driveFetches = eventsData
+          .filter((e) => e.googleDriveFolderUrl)
+          .map(async (e) => {
+            const match = e.googleDriveFolderUrl?.match(/\/folders\/([a-zA-Z0-9_-]+)/)
+            const folderId = match?.[1]
+            if (!folderId) return
+            try {
+              const res = await fetch(`/api/events/drive-images?folderId=${encodeURIComponent(folderId)}`)
+              if (!res.ok) return
+              const driveData = (await res.json()) as { images: Array<{ id: string; name: string }> }
+              const keys = (driveData.images ?? []).map((img) => `gdrive:${img.id}`)
+              if (keys.length > 0) driveImagesByEventId.set(e.id, keys)
+            } catch {
+              // ignore individual Drive fetch failures
+            }
+          })
+        await Promise.all(driveFetches)
+
+        const eventsWithImages: EventWithImages[] = eventsData
+          .map((event) => {
+            // Drive folder takes precedence over R2 images when Drive images are available
+            const driveKeys = driveImagesByEventId.get(event.id)
+            const imageKeys = driveKeys ?? parseImageKeys(event.eventImages)
+            return {
+              id: event.id,
+              title: event.title,
+              date: formatGalleryDate(event.date),
+              location: event.location,
+              description: event.description || '',
+              status: event.status,
+              imageKeys,
+              googleDriveFolderUrl: event.googleDriveFolderUrl ?? null,
+            }
+          })
           .filter((event) => event.imageKeys.length > 0)
 
         setEvents(eventsWithImages)
@@ -493,6 +523,19 @@ export function GalleryContent() {
                         {isPlaying ? 'Pause Autoplay' : 'Resume Autoplay'}
                       </button>
                     )}
+                    {selectedEvent.googleDriveFolderUrl && (
+                      <a
+                        href={selectedEvent.googleDriveFolderUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-text-dark transition hover:border-primary-saffron hover:text-primary-saffron"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                          <path d="M6.28 3L2 10.5l4.28 7.5h11.44L22 10.5 17.72 3zm5.72 2.5L14.9 10H9.1zM4.4 10.5L7.6 5h1.8L6.2 10.5zm1.8 1H9.1l-3.2 5.5L4.4 12zm6.88 5.5H9.12L6 10.5h12zM16.4 10.5L13.6 5h1.8l3.2 5.5zm.6 1h1.8l-2.5 5.5h-1.5z" />
+                        </svg>
+                        View full album on Google Drive
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -626,6 +669,11 @@ export function GalleryContent() {
                   <div className="absolute right-5 top-5 rounded-full bg-primary-saffron px-3 py-1 text-sm font-bold text-text-dark">
                     {event.imageKeys.length} photos
                   </div>
+                  {event.googleDriveFolderUrl && (
+                    <div className="absolute right-5 bottom-5 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-primary-blue backdrop-blur-sm">
+                      Google Drive
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 sm:p-7">

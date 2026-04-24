@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
     showPhotoConsent?: boolean;
     showDonation?: boolean;
     showNotes?: boolean;
+    googleDriveFolderUrl?: string | null;
   };
 
   if (!body.title || !body.date || !body.location || !body.status) {
@@ -146,6 +147,7 @@ export async function POST(request: NextRequest) {
     showPhotoConsent: body.showPhotoConsent !== false,
     showDonation: Boolean(body.showDonation),
     showNotes: Boolean(body.showNotes),
+    googleDriveFolderUrl: body.googleDriveFolderUrl?.trim() || null,
     status: body.status,
     createdAt: now,
     updatedAt: now,
