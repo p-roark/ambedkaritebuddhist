@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import {
   formatGalleryDate,
   getImageSrc,
@@ -221,6 +222,7 @@ function GalleryLightbox({ event, currentIndex, onClose, onSelect }: LightboxPro
 export function GalleryContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
   const [events, setEvents] = useState<EventWithImages[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventWithImages | null>(null)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
@@ -523,7 +525,7 @@ export function GalleryContent() {
                         {isPlaying ? 'Pause Autoplay' : 'Resume Autoplay'}
                       </button>
                     )}
-                    {selectedEvent.googleDriveFolderUrl && (
+                    {selectedEvent.googleDriveFolderUrl && session && (
                       <a
                         href={selectedEvent.googleDriveFolderUrl}
                         target="_blank"
@@ -533,7 +535,7 @@ export function GalleryContent() {
                         <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
                           <path d="M6.28 3L2 10.5l4.28 7.5h11.44L22 10.5 17.72 3zm5.72 2.5L14.9 10H9.1zM4.4 10.5L7.6 5h1.8L6.2 10.5zm1.8 1H9.1l-3.2 5.5L4.4 12zm6.88 5.5H9.12L6 10.5h12zM16.4 10.5L13.6 5h1.8l3.2 5.5zm.6 1h1.8l-2.5 5.5h-1.5z" />
                         </svg>
-                        View full album on Google Drive
+                        Upload photos to Drive
                       </a>
                     )}
                   </div>
