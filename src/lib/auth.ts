@@ -99,6 +99,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .where(eq(eventCoordinators.userId, row.id))
             .limit(1);
           token.isCoordinator = coordRows.length > 0;
+
+          // Check for a pending family invite matching this email (Option 2: email-match)
+          const { familyMembers } = await import('@/db/schema');
+          const { and } = await import('drizzle-orm');
+          const pendingInvite = await db
+            .select({ inviteCode: familyMembers.inviteCode })
+            .from(familyMembers)
+            .where(and(
+              eq(familyMembers.email, tokenEmail),
+              eq(familyMembers.inviteStatus, 'pending'),
+            ))
+            .limit(1)
+            .then(r => r[0]);
+          token.pendingFamilyInvite = pendingInvite?.inviteCode ?? null;
         } else {
           // New Google user — not yet in DB, needs referral code
           token.isMember = false;
@@ -119,6 +133,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.status                 = (token.status as string) ?? 'active';
         session.user.activationRequestStatus = (token.activationRequestStatus as string) ?? 'none';
         session.user.isCoordinator          = Boolean(token.isCoordinator);
+        session.user.pendingFamilyInvite    = (token.pendingFamilyInvite as string | null | undefined) ?? null;
       }
       return session;
     },

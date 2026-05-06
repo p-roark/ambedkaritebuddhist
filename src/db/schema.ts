@@ -151,16 +151,24 @@ export const eventRegistrations = sqliteTable('EventRegistration', {
 // --- Family members ----------------------------------------------------------
 
 export const familyMembers = sqliteTable('FamilyMember', {
-  id:          text('id').primaryKey(),
-  userId:      text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  name:        text('name').notNull(),
+  id:           text('id').primaryKey(),
+  userId:       text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name:         text('name').notNull(),
   relationship: text('relationship').notNull(),
-  age:         integer('age'),
-  notes:       text('notes'),
+  age:          integer('age'),
+  notes:        text('notes'),
+  // Reconciliation fields
+  email:           text('email'),
+  inviteCode:      text('inviteCode'),
+  inviteStatus:    text('inviteStatus').notNull().default('none'), // none | pending | accepted | expired
+  inviteExpiresAt: text('inviteExpiresAt'),
+  linkedUserId:    text('linkedUserId').references(() => users.id, { onDelete: 'set null' }),
   createdAt:   text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt:   text('updatedAt').notNull().default(sql`(datetime('now'))`),
 }, (t) => ({
-  userIdx: index('FamilyMember_user_idx').on(t.userId),
+  userIdx:       index('FamilyMember_user_idx').on(t.userId),
+  inviteCodeIdx: uniqueIndex('FamilyMember_inviteCode_key').on(t.inviteCode),
+  emailIdx:      index('FamilyMember_email_idx').on(t.email),
 }));
 
 // --- Contact messages --------------------------------------------------------
@@ -275,7 +283,7 @@ export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
 export type EventRegistration = typeof eventRegistrations.$inferSelect;
 export type NewEventRegistration = typeof eventRegistrations.$inferInsert;
-export type FamilyMember = typeof familyMembers.$inferSelect;
+export type FamilyMember    = typeof familyMembers.$inferSelect;
 export type NewFamilyMember = typeof familyMembers.$inferInsert;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type NewContactMessage = typeof contactMessages.$inferInsert;
