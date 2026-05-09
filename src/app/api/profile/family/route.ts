@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
     relationship?: string;
     age?: number | null;
     notes?: string;
+    email?: string;
   };
 
   const name = String(body.name ?? '').trim();
@@ -79,12 +80,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Name and relationship are required' }, { status: 400 });
   }
 
-  const [{ getDb }, { familyMembers }] = await Promise.all([
+  const email = String(body.email ?? '').trim().toLowerCase() || null;
+
+  const [{ getDb }, { familyMembers, users }, { eq }] = await Promise.all([
     import('@/db'),
     import('@/db/schema'),
+    import('drizzle-orm'),
   ]);
   const db = getDb();
   const now = new Date().toISOString();
+
+  // Get the primary account holder's name for the invite email
+  const owner = await db.select({ name: users.name }).from(users).where(eq(users.id, userId)).limit(1).then(r => r[0]);
+
+  let inviteCode: string | null = null;
+  let inviteStatus = 'none';
+  let inviteExpiresAt: string | null = null;
+
+  if (email) {
+    inviteCode = crypto.randomUUID();
+    inviteStatus = 'pending';
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 30);
+    inviteExpiresAt = expiry.toISOString();
+  }
+
   await db.insert(familyMembers).values({
     id: crypto.randomUUID(),
     userId,
@@ -92,9 +112,23 @@ export async function POST(request: NextRequest) {
     relationship,
     age: body.age == null ? null : Number(body.age),
     notes: String(body.notes ?? '').trim() || null,
+    email,
+    inviteCode,
+    inviteStatus,
+    inviteExpiresAt,
     createdAt: now,
     updatedAt: now,
   });
+
+  if (email && inviteCode && owner) {
+    const { sendFamilyInviteEmail } = await import('@/lib/email');
+    await sendFamilyInviteEmail({
+      to: email,
+      inviterName: owner.name,
+      relationship,
+      inviteCode,
+    });
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

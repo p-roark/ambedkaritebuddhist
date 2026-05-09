@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type Profile = {
   id: string;
@@ -28,6 +29,9 @@ type FamilyMember = {
   relationship: string;
   age: number | null;
   notes: string | null;
+  email: string | null;
+  inviteStatus: string;
+  linkedUserId: string | null;
 };
 
 const RELATIONSHIP_OPTIONS = [
@@ -44,7 +48,7 @@ const RELATIONSHIP_OPTIONS = [
 ];
 
 export default function ProfilePage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -58,6 +62,7 @@ export default function ProfilePage() {
     relationship: '',
     age: '',
     notes: '',
+    email: '',
   });
 
   useEffect(() => {
@@ -129,6 +134,7 @@ export default function ProfilePage() {
         relationship: newMember.relationship.trim(),
         age: newMember.age ? Number(newMember.age) : null,
         notes: newMember.notes.trim(),
+        email: newMember.email.trim() || undefined,
       }),
     });
     const data = (await res.json()) as { error?: string };
@@ -137,7 +143,7 @@ export default function ProfilePage() {
       return;
     }
 
-    setNewMember({ name: '', relationship: '', age: '', notes: '' });
+    setNewMember({ name: '', relationship: '', age: '', notes: '', email: '' });
     await loadData();
     setMessage('Family member added.');
   };
@@ -205,6 +211,23 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {session?.user?.pendingFamilyInvite && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+          <div className="max-w-6xl mx-auto flex items-center gap-3 text-sm text-amber-800">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+            </svg>
+            <span>You've been added as a family member.</span>
+            <Link
+              href={`/family/accept-invite?code=${session.user.pendingFamilyInvite}`}
+              className="font-semibold underline hover:text-amber-900"
+            >
+              Click here to link your account
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="bg-white rounded-2xl border border-background-gray shadow-sm p-6">
@@ -337,7 +360,17 @@ export default function ProfilePage() {
                   Add Member
                 </button>
               </div>
-              <label className="text-sm md:col-span-4">
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Email (Optional — sends a link invite)</span>
+                <input
+                  type="email"
+                  value={newMember.email}
+                  onChange={(e) => setNewMember((prev) => ({ ...prev, email: e.target.value }))}
+                  placeholder="family.member@email.com"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
+                />
+              </label>
+              <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Notes (Optional)</span>
                 <input
                   value={newMember.notes}
@@ -351,6 +384,19 @@ export default function ProfilePage() {
           <div className="mt-5 space-y-3">
             {familyMembers.map((member, idx) => (
               <div key={member.id} className="border border-background-gray rounded-2xl p-4 bg-white">
+                <div className="flex items-center gap-2 mb-3">
+                  {member.linkedUserId && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      Linked
+                    </span>
+                  )}
+                  {!member.linkedUserId && member.inviteStatus === 'pending' && (
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                      Invite Sent
+                    </span>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <label className="text-sm">
                     <span className="mb-1 block font-medium text-slate-700">Full Name</span>

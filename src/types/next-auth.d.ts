@@ -9,6 +9,7 @@ declare module 'next-auth' {
       isCoordinator?: boolean;
       status?: string;
       activationRequestStatus?: string;
+      pendingFamilyInvite?: string | null;
     } & DefaultSession['user'];
   }
 
@@ -24,5 +25,6 @@ declare module 'next-auth/jwt' {
     isCoordinator?: boolean;
     status?: string;
     activationRequestStatus?: string;
+    pendingFamilyInvite?: string | null;
   }
 }
