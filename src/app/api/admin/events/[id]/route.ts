@@ -143,6 +143,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     showPhotoConsent?: boolean;
     showDonation?: boolean;
     showNotes?: boolean;
+    googleDriveFolderUrl?: string | null;
     userId?: string;
     registrationId?: string;
     paymentStatus?: 'Paid' | 'Unpaid';
@@ -377,6 +378,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         showDonation: Boolean(body.showDonation),
         showNotes: Boolean(body.showNotes),
         status: body.status,
+        googleDriveFolderUrl: body.googleDriveFolderUrl?.trim() || null,
         eventImages: JSON.stringify(imageKeys),
         updatedAt: new Date().toISOString(),
       })

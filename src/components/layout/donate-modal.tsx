@@ -155,9 +155,22 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 <div className="w-1 h-5 rounded-full bg-primary-blue flex-shrink-0" />
                 <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Select a Cause</h4>
               </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-4">
-                <p className="text-sm font-semibold text-amber-800 mb-1">💛 Donation Method: Interac e-Transfer</p>
-                <p className="text-sm text-amber-900">Send your transfer to <span className="font-bold">{INTERAC_EMAIL}</span> — instructions will follow after you submit.</p>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 mb-4 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">How to Donate</p>
+                  <p className="mt-1 text-sm text-amber-900">
+                    We accept donations via Interac e-Transfer — secure, instant, and direct.
+                  </p>
+                </div>
+                <p className="text-sm text-amber-900">
+                  Send your e-transfers to <span className="font-bold">{INTERAC_EMAIL}</span> - instructions will
+                  follow after you submit.
+                </p>
+                <p className="text-sm text-amber-900">
+                  ABCC is a registered non-profit in Ontario. A donation acknowledgment will be provided by email.
+                  Please note: as a non-profit corporation, ABCC is not currently a registered charity with CRA and
+                  cannot issue official tax receipts at this time. We are working toward registered charity status.
+                </p>
               </div>
 
               {objectives.length === 0 ? (
@@ -226,13 +239,27 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 </div>
               )}
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-5">
-                <p className="text-sm font-semibold text-amber-800 mb-1">Payment Instructions</p>
-                <p className="text-sm text-amber-900">After submitting, send your <strong>Interac e-Transfer</strong> to:</p>
-                <p className="font-bold text-amber-900 mt-1 break-all">{INTERAC_EMAIL}</p>
-                <p className="text-xs text-amber-700 mt-1">Use your full name as the message/note in the transfer.</p>
+              <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 mb-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-4 rounded-full bg-primary-blue flex-shrink-0" />
+                  <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Donation Instructions</h4>
+                </div>
+                <ol className="space-y-2 mb-3">
+                  <li className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-saffron text-white flex items-center justify-center text-xs font-bold">1</span>
+                    <span className="text-sm text-gray-700 pt-0.5">Fill out the donation form.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-saffron text-white flex items-center justify-center text-xs font-bold">2</span>
+                    <span className="text-sm text-gray-700 pt-0.5">Open your banking app and send an Interac e-Transfer to: <strong>{INTERAC_EMAIL}</strong></span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-saffron text-white flex items-center justify-center text-xs font-bold">3</span>
+                    <span className="text-sm text-gray-700 pt-0.5">In the message/note field, include your full name and <strong>"ABCC Donation."</strong></span>
+                  </li>
+                </ol>
+                <p className="text-xs text-gray-600 pt-3 border-t border-blue-200">You'll receive a confirmation email from ABCC once your donation is received.</p>
               </div>
-
               <form onSubmit={(e) => { handleSubmit(e).catch((err: unknown) => { console.error(err); setError('Unexpected error. Please try again.'); }) }} className="space-y-3">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-1 h-5 rounded-full bg-primary-blue flex-shrink-0" />
@@ -337,6 +364,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
 
           {/* Step: Success */}
           {step === 'success' && (
+            <>
             <div className="py-4">
               <div className="text-center mb-5">
                 <div className="text-5xl mb-3">🙏</div>
@@ -361,6 +389,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                 Done
               </button>
             </div>
+            </>
           )}
         </div>
       </div>

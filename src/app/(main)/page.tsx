@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Hero } from '@/components/sections/hero'
 import { EventsPreview } from '@/components/sections/events-preview'
@@ -139,8 +140,13 @@ const CALENDAR_EVENTS = [
 ]
 
 export default function Home() {
+  const communityImageUrl = process.env.NEXT_PUBLIC_API_URL?.includes('preview')
+    ? 'https://preview.ambedkaritebuddhist.org/api/events/image?key=covers/3fd8590d-2227-40b4-a94c-81d85eaf44ed.jpg'
+    : 'https://www.ambedkaritebuddhist.org/api/events/image?key=covers/fdeef40c-87f5-44f6-ba3a-1aa5d1ffb218.jpg'
+
   const [heroImage, setHeroImage] = useState<string>('')
-  const [events, setEvents] = useState<Event[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [pastEvents, setPastEvents] = useState<Event[]>([])
   const [_isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -159,7 +165,13 @@ export default function Home() {
           regMap[r.eventId] = { registrationStatus: r.registrationStatus, paymentStatus: r.paymentStatus }
         }
         const coordinatedSet = new Set(data.coordinatedEventIds ?? [])
-        const allEvents: Event[] = data.events.filter((event) => event.status !== 'Event Ended').map((event) => ({
+        
+        // Separate upcoming and past events - limit past events to 4
+        const upcomingEventsList = data.events.filter((event) => event.status !== 'Event Ended')
+        const pastEventsList = data.events.filter((event) => event.status === 'Event Ended').slice(0, 4)
+        const eventsToDisplay = [...upcomingEventsList, ...pastEventsList]
+        
+        const allEvents: Event[] = eventsToDisplay.map((event) => ({
           id: event.id,
           title: event.title,
           date: formatEventDate(event.date),
@@ -181,7 +193,12 @@ export default function Home() {
           isCoordinator: coordinatedSet.has(event.id),
           externalLink: event.externalLink,
         }))
-        setEvents(allEvents)
+        
+        // Separate events for display
+        const upcoming = allEvents.filter((e) => e.status === 'upcoming')
+        const past = allEvents.filter((e) => e.status === 'past')
+        setUpcomingEvents(upcoming)
+        setPastEvents(past)
 
         const upcomingEvent = data.events
           .filter((e) => e.status !== 'Event Ended')
@@ -238,13 +255,13 @@ export default function Home() {
               </div>
             </div>
             <div className="relative h-[220px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-blue to-accent-purple flex items-center justify-center">
-                <div className="text-center text-white p-8">
-                  <div className="text-5xl sm:text-7xl md:text-8xl mb-4">☸</div>
-                  <p className="text-xl font-bold">Ambedkarite Buddhist Community of Canada</p>
-                  <p className="text-white/80 mt-2">Ontario, Canada</p>
-                </div>
-              </div>
+              <Image
+                src={communityImageUrl}
+                alt="Ambedkarite Buddhist Community of Canada"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           </div>
         </div>
@@ -309,13 +326,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* EVENTS PREVIEW (DB-backed) */}
+      {/* UPCOMING EVENTS */}
       <EventsPreview
         subtitle="Join Us"
         title="Upcoming Events"
         description="Stay connected with our community through cultural celebrations and meaningful gatherings."
-        events={events}
+        events={upcomingEvents}
       />
+
+      {/* PAST EVENTS */}
+      {pastEvents.length > 0 && (
+        <EventsPreview
+          subtitle="Community Archive"
+          title="Recent Events"
+          description="Celebrate the memorable moments from our past gatherings and community milestones."
+          events={pastEvents}
+        />
+      )}
 
       {/* INSPIRATIONAL QUOTE */}
       <section className="py-16 bg-gradient-to-r from-primary-blue to-accent-purple">

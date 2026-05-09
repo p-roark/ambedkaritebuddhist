@@ -107,6 +107,7 @@ export const events = sqliteTable('Event', {
   showPhotoConsent:         integer('showPhotoConsent', { mode: 'boolean' }).notNull().default(true),
   showDonation:             integer('showDonation', { mode: 'boolean' }).notNull().default(false),
   showNotes:                integer('showNotes', { mode: 'boolean' }).notNull().default(false),
+  googleDriveFolderUrl: text('googleDriveFolderUrl'), // optional public Google Drive folder URL
   status:    text('status').notNull().default('Upcoming'), // Upcoming | Registration Started | Event Ended
   createdAt: text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updatedAt').notNull().default(sql`(datetime('now'))`),

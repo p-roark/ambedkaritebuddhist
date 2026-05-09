@@ -1,0 +1,14 @@
+# Robots.txt for Ambedkarite Buddhist Community Canada
+
+# Allow all crawlers on production domain
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+# Sitemap location (production)
+Sitemap: https://www.ambedkaritebuddhist.org/sitemap.xml
+
+# Specific rule for preview domain - disallow all to prevent indexing non-prod
+User-agent: *
+Disallow: /
