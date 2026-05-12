@@ -76,11 +76,12 @@ export async function POST(request: NextRequest) {
 
   const name = String(body.name ?? '').trim();
   const relationship = String(body.relationship ?? '').trim();
+  const age = body.age == null ? null : Number(body.age);
   if (!name || !relationship) {
     return NextResponse.json({ error: 'Name and relationship are required' }, { status: 400 });
   }
 
-  const email = String(body.email ?? '').trim().toLowerCase() || null;
+  const email = age && age >= 16 ? String(body.email ?? '').trim().toLowerCase() || null : null;
 
   const [{ getDb }, { familyMembers, users }, { eq }] = await Promise.all([
     import('@/db'),
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
     userId,
     name,
     relationship,
-    age: body.age == null ? null : Number(body.age),
+    age,
     notes: String(body.notes ?? '').trim() || null,
     email,
     inviteCode,
@@ -142,10 +143,14 @@ export async function PATCH(request: NextRequest) {
     name?: string;
     relationship?: string;
     age?: number | null;
+    email?: string | null;
     notes?: string;
   };
 
   if (!body.id) return NextResponse.json({ error: 'Member id is required' }, { status: 400 });
+
+  const age = body.age == null ? null : Number(body.age);
+  const email = age && age >= 16 ? String(body.email ?? '').trim() || null : null;
 
   const [{ and, eq }, { getDb }, { familyMembers }] = await Promise.all([
     import('drizzle-orm'),
@@ -158,7 +163,8 @@ export async function PATCH(request: NextRequest) {
     .set({
       name: String(body.name ?? '').trim(),
       relationship: String(body.relationship ?? '').trim(),
-      age: body.age == null ? null : Number(body.age),
+      age,
+      email,
       notes: String(body.notes ?? '').trim() || null,
       updatedAt: new Date().toISOString(),
     })
