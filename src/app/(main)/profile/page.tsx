@@ -342,36 +342,30 @@ export default function ProfilePage() {
                     <option key={option} value={option}>
                       {option}
                     </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Age</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={newMember.age}
-                  onChange={(e) => setNewMember((prev) => ({ ...prev, age: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
-                />
-              </label>
-              <div className="flex items-end">
-                <button onClick={addFamilyMember} className="w-full px-4 py-2 bg-primary-blue text-white text-sm font-bold rounded-xl hover:bg-primary-blue/90 transition-colors">
-                  Add Member
-                </button>
-              </div>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Email (Optional — sends a link invite)</span>
                 <input
                   type="email"
+                  disabled={newMember.age && Number(newMember.age) < 16}
                   value={newMember.email}
                   onChange={(e) => setNewMember((prev) => ({ ...prev, email: e.target.value }))}
                   placeholder="family.member@email.com"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
                 />
               </label>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Notes (Optional)</span>
+                <input
+                  value={newMember.notes}
+                  onChange={(e) => setNewMember((prev) => ({ ...prev, notes: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
+                />
+              </label>
+              <div className="md:col-span-4 flex justify-end">
+                <button onClick={addFamilyMember} className="px-6 py-2.5 bg-primary-blue text-white text-sm font-bold rounded-xl hover:bg-primary-blue/90 transition-colors">
+                  Add Member
+                </button>
+              </div>
                 <input
                   value={newMember.notes}
                   onChange={(e) => setNewMember((prev) => ({ ...prev, notes: e.target.value }))}
