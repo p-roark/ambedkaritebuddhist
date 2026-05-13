@@ -342,11 +342,24 @@ export default function ProfilePage() {
                     <option key={option} value={option}>
                       {option}
                     </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Age</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={newMember.age}
+                  onChange={(e) => setNewMember((prev) => ({ ...prev, age: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
+                />
+              </label>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Email (Optional — sends a link invite)</span>
                 <input
                   type="email"
-                  disabled={newMember.age && Number(newMember.age) < 16}
+                  disabled={Boolean(newMember.age && Number(newMember.age) < 16)}
                   value={newMember.email}
                   onChange={(e) => setNewMember((prev) => ({ ...prev, email: e.target.value }))}
                   placeholder="family.member@email.com"
@@ -366,12 +379,6 @@ export default function ProfilePage() {
                   Add Member
                 </button>
               </div>
-                <input
-                  value={newMember.notes}
-                  onChange={(e) => setNewMember((prev) => ({ ...prev, notes: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
-                />
-              </label>
             </div>
           </div>
 
@@ -437,15 +444,22 @@ export default function ProfilePage() {
                       className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
                     />
                   </label>
-                  <div className="flex gap-2">
-                    <button onClick={() => saveFamilyMember(member)} className="flex-1 px-3 py-2 text-xs bg-primary-blue text-white rounded-xl font-semibold hover:bg-primary-blue/90 transition-colors">
-                      Save
-                    </button>
-                    <button onClick={() => removeFamilyMember(member.id)} className="flex-1 px-3 py-2 text-xs bg-red-50 text-red-600 border border-red-100 rounded-xl font-semibold hover:bg-red-100 transition-colors">
-                      Remove
-                    </button>
-                  </div>
-                  <label className="text-sm md:col-span-4">
+                  <label className="text-sm md:col-span-2">
+                    <span className="mb-1 block font-medium text-slate-700">Email (Optional — sends a link invite)</span>
+                    <input
+                      type="email"
+                      disabled={Boolean(member.age && member.age < 16)}
+                      value={member.email ?? ''}
+                      onChange={(e) =>
+                        setFamilyMembers((prev) =>
+                          prev.map((m, i) => (i === idx ? { ...m, email: e.target.value || null } : m)),
+                        )
+                      }
+                      placeholder="family.member@email.com"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                    />
+                  </label>
+                  <label className="text-sm md:col-span-2">
                     <span className="mb-1 block font-medium text-slate-700">Notes (Optional)</span>
                     <input
                       value={member.notes ?? ''}
@@ -457,6 +471,14 @@ export default function ProfilePage() {
                       className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
                     />
                   </label>
+                  <div className="md:col-span-4 flex gap-2 justify-end">
+                    <button onClick={() => saveFamilyMember(member)} className="px-6 py-2.5 text-sm bg-primary-blue text-white rounded-xl font-bold hover:bg-primary-blue/90 transition-colors">
+                      Save
+                    </button>
+                    <button onClick={() => removeFamilyMember(member.id)} className="px-6 py-2.5 text-sm bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold hover:bg-red-100 transition-colors">
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
