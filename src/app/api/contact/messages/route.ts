@@ -45,6 +45,13 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     });
 
+    import('@/lib/email').then(({ sendContactAcknowledgmentEmail, sendContactAdminEmail }) => {
+      sendContactAcknowledgmentEmail({ to: email, name, subject })
+        .catch((err: unknown) => console.error('[email] contact acknowledgment email failed:', err));
+      sendContactAdminEmail({ name, email, phone: phone || null, subject, message })
+        .catch((err: unknown) => console.error('[email] contact admin email failed:', err));
+    }).catch((err: unknown) => console.error('[email] import failed:', err));
+
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

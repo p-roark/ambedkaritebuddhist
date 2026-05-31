@@ -194,10 +194,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const [reg] = await db
       .select({
+        userId: eventRegistrations.userId,
         paidAmount: eventRegistrations.paidAmount,
         totalAmount: eventRegistrations.totalAmount,
         refundDue: eventRegistrations.refundDue,
         paymentHistory: eventRegistrations.paymentHistory,
+        paymentStatus: eventRegistrations.paymentStatus,
       })
       .from(eventRegistrations)
       .where(and(eq(eventRegistrations.id, body.registrationId), eq(eventRegistrations.eventId, id)))
@@ -205,6 +207,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!reg) return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
 
     const isPayment = body.action === 'addPayment';
+    const wasAlreadyPaid = reg.paymentStatus === 'Paid';
     const newPaidAmount = isPayment
       ? Number(reg.paidAmount) + txAmount
       : Math.max(0, Number(reg.paidAmount) - txAmount);
@@ -238,6 +241,34 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         updatedAt: new Date().toISOString(),
       })
       .where(eq(eventRegistrations.id, body.registrationId));
+
+    // Send payment confirmation email when payment becomes fully paid for the first time
+    if (isPayment && !wasAlreadyPaid && newPaymentStatus === 'Paid') {
+      const [{ users }] = await Promise.all([import('@/db/schema')]);
+      const registrant = await db
+        .select({ name: users.name, email: users.email })
+        .from(users)
+        .where(eq(users.id, reg.userId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      const [eventRow] = await db
+        .select({ title: events.title, date: events.date, time: events.time, location: events.location })
+        .from(events)
+        .where(eq(events.id, id))
+        .limit(1);
+
+      if (registrant && eventRow) {
+        import('@/lib/email').then(({ sendEventPaymentConfirmedEmail }) => {
+          sendEventPaymentConfirmedEmail({
+            to: registrant.email,
+            userName: registrant.name,
+            event: eventRow,
+            paidAmount: newPaidAmount,
+          }).catch((err: unknown) => console.error('[email] payment confirmed email failed:', err));
+        }).catch((err: unknown) => console.error('[email] import failed:', err));
+      }
+    }
 
     return NextResponse.json({ ok: true, paidAmount: newPaidAmount, refundDue: newRefundDue, paymentStatus: newPaymentStatus }, { status: 200 });
   }

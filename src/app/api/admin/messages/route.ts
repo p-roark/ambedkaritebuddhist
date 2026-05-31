@@ -61,6 +61,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Not an activation request' }, { status: 400 });
     }
 
+    // Fetch user info for email before updating
+    const affectedUser = await db
+      .select({ name: users.name, email: users.email, activationRequestCount: users.activationRequestCount })
+      .from(users)
+      .where(eq(users.id, message.userId))
+      .limit(1)
+      .then((rows) => rows[0]);
+
     if (body.action === 'accept') {
       await db
         .update(users)
@@ -73,14 +81,7 @@ export async function PATCH(request: NextRequest) {
         .where(eq(users.id, message.userId));
     } else {
       // reject — check if this is the 3rd request
-      const user = await db
-        .select({ activationRequestCount: users.activationRequestCount })
-        .from(users)
-        .where(eq(users.id, message.userId))
-        .limit(1)
-        .then((rows) => rows[0]);
-
-      if (user && user.activationRequestCount >= 3) {
+      if (affectedUser && affectedUser.activationRequestCount >= 3) {
         await db
           .update(users)
           .set({ status: 'blocked', updatedAt: now })
@@ -98,6 +99,16 @@ export async function PATCH(request: NextRequest) {
       .update(contactMessages)
       .set({ status: 'RESOLVED', updatedAt: now })
       .where(eq(contactMessages.id, body.id));
+
+    if (affectedUser) {
+      import('@/lib/email').then(({ sendActivationDecisionEmail }) => {
+        sendActivationDecisionEmail({
+          to: affectedUser.email,
+          userName: affectedUser.name,
+          accepted: body.action === 'accept',
+        }).catch((err: unknown) => console.error('[email] activation decision email failed:', err));
+      }).catch((err: unknown) => console.error('[email] import failed:', err));
+    }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   }

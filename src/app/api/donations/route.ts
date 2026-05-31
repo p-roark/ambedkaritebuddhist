@@ -44,27 +44,59 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Amount must be at least $1' }, { status: 400 });
   }
 
-  const [{ getDb }, { donations }] = await Promise.all([
+  const [{ getDb }, { donations, donationObjectives }, { eq }] = await Promise.all([
     import('@/db'),
     import('@/db/schema'),
+    import('drizzle-orm'),
   ]);
   const db = getDb();
 
   const id = randomUUID();
   const now = new Date().toISOString();
+  const resolvedObjectiveId = typeof objectiveId === 'string' && objectiveId ? objectiveId : null;
+  const amountCents = Math.round(amountNum * 100);
 
   await db.insert(donations).values({
     id,
-    objectiveId: typeof objectiveId === 'string' && objectiveId ? objectiveId : null,
-    donorName: donorName.trim(),
-    donorEmail: donorEmail.trim().toLowerCase(),
+    objectiveId: resolvedObjectiveId,
+    donorName: (donorName as string).trim(),
+    donorEmail: (donorEmail as string).trim().toLowerCase(),
     donorPhone: typeof donorPhone === 'string' && donorPhone.trim() ? donorPhone.trim() : null,
-    amount: Math.round(amountNum * 100), // store in cents
+    amount: amountCents,
     message: typeof message === 'string' && message.trim() ? message.trim() : null,
     status: 'pending',
     createdAt: now,
     updatedAt: now,
   });
+
+  // Look up objective title for email
+  let objectiveTitle: string | null = null;
+  if (resolvedObjectiveId) {
+    const obj = await db
+      .select({ title: donationObjectives.title })
+      .from(donationObjectives)
+      .where(eq(donationObjectives.id, resolvedObjectiveId))
+      .limit(1)
+      .then((r) => r[0]);
+    objectiveTitle = obj?.title ?? null;
+  }
+
+  import('@/lib/email').then(({ sendDonationReceivedEmail, sendDonationAdminEmail }) => {
+    sendDonationReceivedEmail({
+      to: (donorEmail as string).trim().toLowerCase(),
+      donorName: (donorName as string).trim(),
+      amountCents,
+      objectiveTitle,
+    }).catch((err: unknown) => console.error('[email] donation received email failed:', err));
+
+    sendDonationAdminEmail({
+      donorName: (donorName as string).trim(),
+      donorEmail: (donorEmail as string).trim().toLowerCase(),
+      amountCents,
+      objectiveTitle,
+      message: typeof message === 'string' && message.trim() ? message.trim() : null,
+    }).catch((err: unknown) => console.error('[email] donation admin email failed:', err));
+  }).catch((err: unknown) => console.error('[email] import failed:', err));
 
   return NextResponse.json({ success: true, id }, { status: 201 });
 }
