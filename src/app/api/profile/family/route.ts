@@ -123,11 +123,13 @@ export async function POST(request: NextRequest) {
 
   if (email && inviteCode && owner) {
     const { sendFamilyInviteEmail } = await import('@/lib/email');
-    await sendFamilyInviteEmail({
+    sendFamilyInviteEmail({
       to: email,
       inviterName: owner.name,
       relationship,
       inviteCode,
+    }).catch((err: unknown) => {
+      console.error('[family] Failed to send invite email:', err);
     });
   }
 

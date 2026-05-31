@@ -7,7 +7,13 @@ const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/
 // Convert ArrayBuffer or Uint8Array to base64url string
 function toBase64Url(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  return btoa(String.fromCharCode(...bytes))
+  // Process in chunks to avoid "Maximum call stack size exceeded" on large buffers
+  const CHUNK = 8192;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
@@ -93,10 +99,11 @@ async function getAccessToken(
 // Build a raw RFC 2822 message and send it via the Gmail API
 async function sendViaGmail(
   accessToken: string,
+  senderEmail: string,
   { to, subject, html }: { to: string; subject: string; html: string },
 ): Promise<void> {
   const raw = [
-    `From: ${FROM_NAME} <${FROM_ADDRESS}>`,
+    `From: ${FROM_NAME} <${senderEmail}>`,
     `To: ${to}`,
     `Subject: ${subject}`,
     'MIME-Version: 1.0',
@@ -154,7 +161,7 @@ export async function sendFamilyInviteEmail({
 
   const accessToken = await getAccessToken(config.serviceAccountEmail, config.privateKey, config.senderEmail);
 
-  await sendViaGmail(accessToken, {
+  await sendViaGmail(accessToken, config.senderEmail, {
     to,
     subject: `${inviterName} has added you as a family member`,
     html: `
