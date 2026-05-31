@@ -274,6 +274,49 @@ export const donations = sqliteTable('Donation', {
   createdIdx:   index('Donation_createdAt_idx').on(t.createdAt),
 }));
 
+// ─── Marketplace items (admin-managed listings) ───────────────────────────────
+
+export const marketplaceItems = sqliteTable('MarketplaceItem', {
+  id:          text('id').primaryKey(),
+  title:       text('title').notNull(),
+  description: text('description').notNull().default(''),
+  category:    text('category').notNull().default('Other'), // Books | Idols | Clothing | Art | Educational | Other
+  price:       text('price'), // null = price on request, '0' = free, otherwise dollar amount as string
+  imageUrl:    text('imageUrl'),
+  contactInfo: text('contactInfo'), // admin contact details for interested buyers
+  status:      text('status').notNull().default('available'), // available | sold | removed
+  createdBy:   text('createdBy').references(() => users.id, { onDelete: 'set null' }),
+  createdAt:   text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt:   text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  statusIdx:   index('MarketplaceItem_status_idx').on(t.status),
+  categoryIdx: index('MarketplaceItem_category_idx').on(t.category),
+}));
+
+// ─── Marketplace listing requests (submitted by users) ────────────────────────
+
+export const marketplaceRequests = sqliteTable('MarketplaceRequest', {
+  id:              text('id').primaryKey(),
+  userId:          text('userId').references(() => users.id, { onDelete: 'set null' }),
+  submitterName:   text('submitterName').notNull(),
+  submitterEmail:  text('submitterEmail').notNull(),
+  submitterPhone:  text('submitterPhone'),
+  itemTitle:       text('itemTitle').notNull(),
+  itemDescription: text('itemDescription').notNull().default(''),
+  itemCategory:    text('itemCategory').notNull().default('Other'),
+  askingPrice:     text('askingPrice'), // optional, free-text
+  imageUrl:        text('imageUrl'),
+  message:         text('message'), // additional notes from requester
+  status:          text('status').notNull().default('pending'), // pending | approved | rejected | listed
+  adminNote:       text('adminNote'),
+  createdAt:       text('createdAt').notNull().default(sql`(datetime('now'))`),
+  updatedAt:       text('updatedAt').notNull().default(sql`(datetime('now'))`),
+}, (t) => ({
+  statusIdx:  index('MarketplaceRequest_status_idx').on(t.status),
+  userIdx:    index('MarketplaceRequest_user_idx').on(t.userId),
+  createdIdx: index('MarketplaceRequest_createdAt_idx').on(t.createdAt),
+}));
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;
@@ -293,3 +336,7 @@ export type DonationObjective = typeof donationObjectives.$inferSelect;
 export type NewDonationObjective = typeof donationObjectives.$inferInsert;
 export type Donation = typeof donations.$inferSelect;
 export type NewDonation = typeof donations.$inferInsert;
+export type MarketplaceItem = typeof marketplaceItems.$inferSelect;
+export type NewMarketplaceItem = typeof marketplaceItems.$inferInsert;
+export type MarketplaceRequest = typeof marketplaceRequests.$inferSelect;
+export type NewMarketplaceRequest = typeof marketplaceRequests.$inferInsert;

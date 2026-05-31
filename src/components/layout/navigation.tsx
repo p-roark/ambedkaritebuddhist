@@ -57,6 +57,7 @@ export function Navigation() {
     { href: '/about', label: 'About' },
     { href: '/ambedkar', label: 'Dr. Ambedkar' },
     { href: '/events', label: 'Events' },
+    { href: '/marketplace', label: 'Marketplace' },
     { href: '/gallery', label: 'Gallery' },
     { href: '/contact', label: 'Contact' },
   ]

@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings' | 'donations';
+type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings' | 'donations' | 'marketplace';
 
 type OrgSettings = {
   orgName: string;
@@ -121,6 +121,34 @@ type DonationRecord = {
   createdAt: string;
 };
 
+type MarketplaceItem = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: string | null;
+  imageUrl: string | null;
+  contactInfo: string | null;
+  status: string;
+  createdAt: string;
+};
+
+type MarketplaceRequest = {
+  id: string;
+  userId: string | null;
+  submitterName: string;
+  submitterEmail: string;
+  submitterPhone: string | null;
+  itemTitle: string;
+  itemDescription: string;
+  itemCategory: string;
+  askingPrice: string | null;
+  message: string | null;
+  status: string;
+  adminNote: string | null;
+  createdAt: string;
+};
+
 const ROLE_COLORS: Record<Role, string> = {
   ADMIN: 'bg-red-100 text-red-800',
   MEMBER: 'bg-green-100 text-green-800',
@@ -219,6 +247,20 @@ export default function DashboardPage() {
   const [editObjOrder, setEditObjOrder] = useState('0');
   const [editObjActive, setEditObjActive] = useState(true);
 
+  // Marketplace state
+  const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>([]);
+  const [marketplaceRequests, setMarketplaceRequests] = useState<MarketplaceRequest[]>([]);
+  const [marketplaceSubTab, setMarketplaceSubTab] = useState<'items' | 'requests'>('items');
+  const [newItemTitle, setNewItemTitle] = useState('');
+  const [newItemDescription, setNewItemDescription] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('Other');
+  const [newItemPrice, setNewItemPrice] = useState('');
+  const [newItemImageUrl, setNewItemImageUrl] = useState('');
+  const [newItemContactInfo, setNewItemContactInfo] = useState('');
+  const [newItemMessage, setNewItemMessage] = useState('');
+  const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [editItemStatus, setEditItemStatus] = useState('available');
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
   }, [status, router]);
@@ -309,6 +351,21 @@ export default function DashboardPage() {
     }
   };
 
+  const loadMarketplace = async () => {
+    const [itemsRes, reqsRes] = await Promise.all([
+      fetch('/api/admin/marketplace', { cache: 'no-store' }),
+      fetch('/api/admin/marketplace?resource=requests', { cache: 'no-store' }),
+    ]);
+    if (itemsRes.ok) {
+      const d = (await itemsRes.json()) as { items: MarketplaceItem[] };
+      setMarketplaceItems(d.items);
+    }
+    if (reqsRes.ok) {
+      const d = (await reqsRes.json()) as { requests: MarketplaceRequest[] };
+      setMarketplaceRequests(d.requests);
+    }
+  };
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     const isAdmin = session?.user?.role === 'ADMIN';
@@ -316,7 +373,7 @@ export default function DashboardPage() {
     const loadAll = async () => {
       try {
         if (isAdmin) {
-          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadMessages(), loadDonations()]);
+          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadMessages(), loadDonations(), loadMarketplace()]);
         } else {
           // Non-admin: try loading events — API returns 403 if not a coordinator
           const res = await fetch('/api/admin/events', { cache: 'no-store' });
@@ -367,6 +424,7 @@ export default function DashboardPage() {
         { id: 'referrals', label: 'Referral Codes' },
         { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
         { id: 'donations', label: `Donations (${donationRecords.length})` },
+        { id: 'marketplace', label: `Marketplace (${marketplaceItems.length} items, ${marketplaceRequests.filter((r) => r.status === 'pending').length} pending)` },
         { id: 'settings', label: 'Settings' },
       ]
     : [{ id: 'events', label: `My Events (${events.length})` }];
@@ -2164,6 +2222,332 @@ export default function DashboardPage() {
                                   className="px-2.5 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg"
                                 >
                                   Confirm
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'marketplace' && (
+          <div className="space-y-4">
+            {/* Sub-tabs */}
+            <div className="flex gap-2 border-b border-gray-200 pb-0">
+              {(['items', 'requests'] as const).map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setMarketplaceSubTab(sub)}
+                  className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors ${
+                    marketplaceSubTab === sub
+                      ? 'bg-white border border-b-white border-gray-200 text-primary-blue -mb-px'
+                      : 'text-gray-500 hover:text-primary-blue'
+                  }`}
+                >
+                  {sub === 'items' ? `Items (${marketplaceItems.length})` : `Requests (${marketplaceRequests.length})`}
+                </button>
+              ))}
+            </div>
+
+            {marketplaceSubTab === 'items' && (
+              <div className="space-y-4">
+                {/* Add new item form */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Add New Item</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <label className="block">
+                      <span className="block text-xs font-medium text-gray-600 mb-1">Title *</span>
+                      <input
+                        type="text"
+                        value={newItemTitle}
+                        onChange={(e) => setNewItemTitle(e.target.value)}
+                        placeholder="e.g. The Buddha and His Dhamma"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="block text-xs font-medium text-gray-600 mb-1">Category</span>
+                      <select
+                        value={newItemCategory}
+                        onChange={(e) => setNewItemCategory(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue"
+                      >
+                        {['Books', 'Idols', 'Clothing', 'Art', 'Educational', 'Other'].map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block md:col-span-2">
+                      <span className="block text-xs font-medium text-gray-600 mb-1">Description</span>
+                      <textarea
+                        rows={2}
+                        value={newItemDescription}
+                        onChange={(e) => setNewItemDescription(e.target.value)}
+                        placeholder="Brief description of the item"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue resize-none"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="block text-xs font-medium text-gray-600 mb-1">Price (leave empty = price on request, enter 0 = free)</span>
+                      <input
+                        type="text"
+                        value={newItemPrice}
+                        onChange={(e) => setNewItemPrice(e.target.value)}
+                        placeholder="e.g. 25 or 0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="block text-xs font-medium text-gray-600 mb-1">Image URL (optional)</span>
+                      <input
+                        type="url"
+                        value={newItemImageUrl}
+                        onChange={(e) => setNewItemImageUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue"
+                      />
+                    </label>
+                    <label className="block md:col-span-2">
+                      <span className="block text-xs font-medium text-gray-600 mb-1">Contact info for buyers</span>
+                      <textarea
+                        rows={2}
+                        value={newItemContactInfo}
+                        onChange={(e) => setNewItemContactInfo(e.target.value)}
+                        placeholder="e.g. Email admin@abccanada.org or call 416-xxx-xxxx"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/25 focus:border-primary-blue resize-none"
+                      />
+                    </label>
+                  </div>
+                  {newItemMessage && (
+                    <p className={`text-xs mb-2 ${newItemMessage.includes('added') ? 'text-green-600' : 'text-red-600'}`}>{newItemMessage}</p>
+                  )}
+                  <button
+                    onClick={async () => {
+                      if (!newItemTitle.trim()) { setNewItemMessage('Title is required.'); return; }
+                      const res = await fetch('/api/admin/marketplace', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          title: newItemTitle.trim(),
+                          description: newItemDescription.trim(),
+                          category: newItemCategory,
+                          price: newItemPrice.trim() || null,
+                          imageUrl: newItemImageUrl.trim() || null,
+                          contactInfo: newItemContactInfo.trim() || null,
+                        }),
+                      });
+                      if (res.ok) {
+                        setNewItemTitle('');
+                        setNewItemDescription('');
+                        setNewItemCategory('Other');
+                        setNewItemPrice('');
+                        setNewItemImageUrl('');
+                        setNewItemContactInfo('');
+                        setNewItemMessage('Item added successfully.');
+                        await loadMarketplace();
+                      } else {
+                        const d = (await res.json()) as { error?: string };
+                        setNewItemMessage(d.error ?? 'Failed to add item.');
+                      }
+                    }}
+                    className="px-4 py-2 bg-primary-blue text-white text-sm font-semibold rounded-lg hover:bg-primary-blue/90"
+                  >
+                    Add Item
+                  </button>
+                </div>
+
+                {/* Items list */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  {marketplaceItems.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-8">No marketplace items yet.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            {['Title', 'Category', 'Price', 'Status', 'Actions'].map((h) => (
+                              <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {marketplaceItems.map((item) => (
+                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-4 py-3">
+                                <p className="font-medium text-gray-900">{item.title}</p>
+                                {item.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{item.description}</p>}
+                              </td>
+                              <td className="px-4 py-3 text-gray-600 text-xs">{item.category}</td>
+                              <td className="px-4 py-3 text-xs">
+                                {item.price === null ? <span className="italic text-gray-400">On request</span>
+                                  : item.price === '0' ? <span className="text-green-700 font-semibold">Free</span>
+                                  : <span className="font-semibold text-primary-blue">${item.price}</span>}
+                              </td>
+                              <td className="px-4 py-3">
+                                {editItemId === item.id ? (
+                                  <select
+                                    value={editItemStatus}
+                                    onChange={(e) => setEditItemStatus(e.target.value)}
+                                    className="px-2 py-1 border border-gray-300 rounded text-xs"
+                                  >
+                                    <option value="available">Available</option>
+                                    <option value="sold">Sold</option>
+                                    <option value="removed">Removed</option>
+                                  </select>
+                                ) : (
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                    item.status === 'available' ? 'bg-green-100 text-green-700'
+                                    : item.status === 'sold' ? 'bg-gray-100 text-gray-600'
+                                    : 'bg-red-100 text-red-700'
+                                  }`}>
+                                    {item.status}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 space-x-2">
+                                {editItemId === item.id ? (
+                                  <>
+                                    <button
+                                      onClick={async () => {
+                                        await fetch('/api/admin/marketplace', {
+                                          method: 'PATCH',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ id: item.id, status: editItemStatus }),
+                                        });
+                                        setEditItemId(null);
+                                        await loadMarketplace();
+                                      }}
+                                      className="px-2.5 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => setEditItemId(null)}
+                                      className="px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => { setEditItemId(item.id); setEditItemStatus(item.status); }}
+                                      className="px-2.5 py-1 text-xs font-medium text-primary-blue bg-blue-50 hover:bg-blue-100 rounded"
+                                    >
+                                      Edit Status
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        if (!confirm(`Delete "${item.title}"?`)) return;
+                                        await fetch(`/api/admin/marketplace?id=${item.id}`, { method: 'DELETE' });
+                                        await loadMarketplace();
+                                      }}
+                                      className="px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded"
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {marketplaceSubTab === 'requests' && (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                {marketplaceRequests.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-8">No listing requests yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          {['Requester', 'Item', 'Category', 'Price', 'Status', 'Date', 'Actions'].map((h) => (
+                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {marketplaceRequests.map((req) => (
+                          <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-gray-900">{req.submitterName}</p>
+                              <p className="text-xs text-gray-500">{req.submitterEmail}</p>
+                              {req.submitterPhone && <p className="text-xs text-gray-500">{req.submitterPhone}</p>}
+                            </td>
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-gray-900">{req.itemTitle}</p>
+                              {req.itemDescription && <p className="text-xs text-gray-500 line-clamp-2">{req.itemDescription}</p>}
+                              {req.message && <p className="text-xs text-blue-600 mt-1 italic line-clamp-1">Note: {req.message}</p>}
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-600">{req.itemCategory}</td>
+                            <td className="px-4 py-3 text-xs text-gray-600">{req.askingPrice ?? <span className="italic text-gray-400">Not specified</span>}</td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                req.status === 'pending' ? 'bg-yellow-100 text-yellow-700'
+                                : req.status === 'approved' || req.status === 'listed' ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                              }`}>
+                                {req.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-500">{new Date(req.createdAt).toLocaleDateString('en-CA')}</td>
+                            <td className="px-4 py-3 space-x-1">
+                              {req.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={async () => {
+                                      await fetch('/api/admin/marketplace', {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ type: 'request', id: req.id, status: 'approved' }),
+                                      });
+                                      await loadMarketplace();
+                                    }}
+                                    className="px-2.5 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      await fetch('/api/admin/marketplace', {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ type: 'request', id: req.id, status: 'rejected' }),
+                                      });
+                                      await loadMarketplace();
+                                    }}
+                                    className="px-2.5 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {req.status !== 'pending' && (
+                                <button
+                                  onClick={async () => {
+                                    await fetch('/api/admin/marketplace', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ type: 'request', id: req.id, status: 'pending' }),
+                                    });
+                                    await loadMarketplace();
+                                  }}
+                                  className="px-2.5 py-1 text-xs font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 rounded"
+                                >
+                                  Reset to Pending
                                 </button>
                               )}
                             </td>
