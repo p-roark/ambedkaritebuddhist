@@ -277,6 +277,32 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       createdAt: now,
       updatedAt: now,
     });
+
+    // Send registration confirmation to user and notification to admins
+    const userName = session?.user?.name ?? email;
+    const eventInfo = { title: event.title, date: event.date, time: event.time, location: event.location };
+    import('@/lib/email').then(({ sendEventRegistrationEmail, sendEventRegistrationAdminEmail }) => {
+      sendEventRegistrationEmail({
+        to: email,
+        userName,
+        event: eventInfo,
+        adultsCount: effectiveAdults,
+        childrenCount: effectiveChildren,
+        totalAmount,
+        isPaid: event.isPaid,
+        paymentInstructions: event.paymentInstructions,
+      }).catch((err: unknown) => console.error('[email] event registration user email failed:', err));
+
+      sendEventRegistrationAdminEmail({
+        event: eventInfo,
+        registrantName: userName,
+        registrantEmail: email,
+        adultsCount: effectiveAdults,
+        childrenCount: effectiveChildren,
+        totalAmount,
+        isPaid: event.isPaid,
+      }).catch((err: unknown) => console.error('[email] event registration admin email failed:', err));
+    }).catch((err: unknown) => console.error('[email] import failed:', err));
   }
 
   return NextResponse.json({ message: 'Pending Registration', totalAmount }, { status: 200 });

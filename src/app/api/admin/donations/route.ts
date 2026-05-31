@@ -63,12 +63,23 @@ export async function PATCH(request: NextRequest) {
 
   const now = new Date().toISOString();
 
-  // If confirming a donation, fetch objective info before the update
-  let objectiveIdToUpdate: string | null = null;
-  if (status === 'confirmed' && typeof confirmedAmount === 'number') {
-    const [existing] = await db.select({ objectiveId: donations.objectiveId }).from(donations).where(eq(donations.id, id)).limit(1);
-    objectiveIdToUpdate = existing?.objectiveId ?? null;
-  }
+  // Fetch current donation before update (needed for email and objective increment)
+  const [existing] = await db
+    .select({
+      donorName: donations.donorName,
+      donorEmail: donations.donorEmail,
+      amount: donations.amount,
+      objectiveId: donations.objectiveId,
+      status: donations.status,
+    })
+    .from(donations)
+    .where(eq(donations.id, id))
+    .limit(1);
+
+  const objectiveIdToUpdate =
+    status === 'confirmed' && typeof confirmedAmount === 'number'
+      ? (existing?.objectiveId ?? null)
+      : null;
 
   const updates: Record<string, unknown> = { updatedAt: now };
   if (typeof status === 'string') updates.status = status;
@@ -85,6 +96,27 @@ export async function PATCH(request: NextRequest) {
         updatedAt: now,
       }).where(eq(donationObjectives.id, objectiveIdToUpdate));
     }
+  }
+
+  // Send confirmation email to donor when status transitions to confirmed
+  if (status === 'confirmed' && existing && existing.status !== 'confirmed') {
+    let objectiveTitle: string | null = null;
+    if (existing.objectiveId) {
+      const [obj] = await db
+        .select({ title: donationObjectives.title })
+        .from(donationObjectives)
+        .where(eq(donationObjectives.id, existing.objectiveId))
+        .limit(1);
+      objectiveTitle = obj?.title ?? null;
+    }
+    import('@/lib/email').then(({ sendDonationConfirmedEmail }) => {
+      sendDonationConfirmedEmail({
+        to: existing.donorEmail,
+        donorName: existing.donorName,
+        amountCents: existing.amount,
+        objectiveTitle,
+      }).catch((err: unknown) => console.error('[email] donation confirmed email failed:', err));
+    }).catch((err: unknown) => console.error('[email] import failed:', err));
   }
 
   return NextResponse.json({ success: true });

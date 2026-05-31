@@ -136,6 +136,14 @@ export async function POST() {
       })
       .where(eq(users.id, user.id));
 
+    import('@/lib/email').then(({ sendActivationRequestAdminEmail }) => {
+      sendActivationRequestAdminEmail({
+        userName: user.name,
+        userEmail: user.email,
+        requestNumber: user.activationRequestCount + 1,
+      }).catch((err: unknown) => console.error('[email] activation request admin email failed:', err));
+    }).catch((err: unknown) => console.error('[email] import failed:', err));
+
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
     console.error('Activation request error:', error);
