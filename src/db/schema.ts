@@ -245,6 +245,15 @@ export const organizationSettings = sqliteTable('OrganizationSettings', {
 
 // ─── Donation objectives ──────────────────────────────────────────────────────
 
+// --- Feature switches (see src/lib/feature-flags.ts) -------------------------
+
+export const featureFlags = sqliteTable('FeatureFlag', {
+  key:       text('key').primaryKey(),
+  enabled:   integer('enabled', { mode: 'boolean' }).notNull(),
+  updatedBy: text('updatedBy'), // admin email
+  updatedAt: text('updatedAt').notNull(),
+});
+
 export const donationObjectives = sqliteTable('DonationObjective', {
   id:            text('id').primaryKey(),
   title:         text('title').notNull(),

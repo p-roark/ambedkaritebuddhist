@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireFeature } from '@/lib/feature-flags-server';
 import { DISCLAIMER_VERSION } from '@/lib/registration-config';
 import { normalizeInviteCode, normalizePostalCode, normalizeProvince, validateRegistration } from '@/lib/registration';
 import { getCurrentUser } from '@/lib/registration-server';
@@ -94,6 +95,8 @@ export async function POST(request: NextRequest) {
     let referredBy = current.user?.referredBy ?? null;
 
     if (current.registrationStatus === 'invite_required') {
+      const disabled = await requireFeature('memberRegistration');
+      if (disabled) return disabled;
       const code = normalizeInviteCode(body.code);
       if (!code) {
         return NextResponse.json(

@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { buildInviteLink } from '@/lib/registration';
+import { FeatureSwitchesPanel } from '@/components/admin/feature-switches-panel';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings' | 'donations';
+type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings' | 'donations' | 'features';
 
 type OrgSettings = {
   orgName: string;
@@ -370,6 +371,7 @@ export default function DashboardPage() {
         { id: 'referrals', label: 'Referral Codes' },
         { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
         { id: 'donations', label: `Donations (${donationRecords.length})` },
+        { id: 'features', label: 'Features' },
         { id: 'settings', label: 'Settings' },
       ]
     : [{ id: 'events', label: `My Events (${events.length})` }];
@@ -1191,6 +1193,8 @@ export default function DashboardPage() {
             )}
           </div>
         )}
+
+        {activeTab === 'features' && <FeatureSwitchesPanel />}
 
         {activeTab === 'referrals' && (
           <div>

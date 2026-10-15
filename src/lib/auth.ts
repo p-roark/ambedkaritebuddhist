@@ -111,8 +111,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isCoordinator = coordRows.length > 0;
 
           // Check for a pending family invite matching this email (Option 2: email-match)
-          const { FAMILY_FEATURE_ENABLED } = await import('@/lib/features');
-          if (FAMILY_FEATURE_ENABLED) {
+          const { isFeatureEnabled } = await import('@/lib/feature-flags-server');
+          if (await isFeatureEnabled('family')) {
             const { familyMembers } = await import('@/db/schema');
             const { and } = await import('drizzle-orm');
             const pendingInvite = await db

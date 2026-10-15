@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireFeature } from '@/lib/feature-flags-server';
 import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const disabled = await requireFeature('donations');
+  if (disabled) return disabled;
+
   let body: unknown;
   try {
     body = await request.json();

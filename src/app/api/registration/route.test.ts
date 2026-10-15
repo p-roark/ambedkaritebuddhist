@@ -1,29 +1,12 @@
 // @vitest-environment node
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { readdirSync, readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import path from 'node:path';
-import { drizzle } from 'drizzle-orm/sqlite-proxy';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as schema from '@/db/schema';
+import { createTestDb, type TestSqlite } from '@/test/sqlite-db';
 
-// node:sqlite (Node 22+) is loaded at runtime: Vite can't bundle it and
-// @types/node 20 has no typings for it.
-type SqliteStatement = {
-  run: (...params: unknown[]) => unknown;
-  all: (...params: unknown[]) => unknown[];
-  get: (...params: unknown[]) => unknown;
-};
-type DatabaseSync = { exec: (sql: string) => void; prepare: (sql: string) => SqliteStatement };
-const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
-  DatabaseSync: new (location: string) => DatabaseSync;
-};
-
-// In-memory SQLite with every D1 migration applied, exposed through drizzle's
-// proxy driver so the route's real queries run against real SQL.
+// Real migrations on in-memory SQLite (see src/test/sqlite-db.ts)
 const state = vi.hoisted(() => ({
-  sqlite: null as unknown as DatabaseSync,
+  sqlite: null as unknown as TestSqlite,
   db: null as unknown,
   sessionEmail: null as string | null,
   sessionRole: 'MEMBER',
@@ -46,25 +29,7 @@ const { GET: getRegistration, POST: completeRegistration } = await import('./rou
 const { GET: validateCode } = await import('./validate/route');
 const { GET: getProfile } = await import('../profile/route');
 const { GET: getStatus } = await import('../me/status/route');
-
-function createDb() {
-  const sqlite = new DatabaseSync(':memory:');
-  const dir = path.resolve(__dirname, '../../../../migrations');
-  for (const file of readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()) {
-    sqlite.exec(readFileSync(path.join(dir, file), 'utf8'));
-  }
-  const db = drizzle(async (query, params, method) => {
-    const stmt = sqlite.prepare(query);
-    const args = params as unknown[];
-    if (method === 'run') {
-      stmt.run(...args);
-      return { rows: [] };
-    }
-    const rows = stmt.all(...args).map((row) => Object.values(row as Record<string, unknown>));
-    return { rows: method === 'get' ? rows[0] : rows };
-  }, { schema });
-  return { sqlite, db };
-}
+const { clearFeatureFlagsCache } = await import('@/lib/feature-flags-server');
 
 const validForm = {
   name: 'Savitri Phule',
@@ -104,7 +69,8 @@ function userRow(email: string) {
 }
 
 beforeEach(() => {
-  const { sqlite, db } = createDb();
+  const { sqlite, db } = createTestDb();
+  clearFeatureFlagsCache();
   state.sqlite = sqlite;
   state.db = db;
   state.sessionEmail = 'new.member@example.com';
@@ -242,5 +208,30 @@ describe('member-only routes', () => {
     seedUser('new.member@example.com', { referredBy: 'BHIM-OLD-0001', registrationCompletedAt: '2026-10-15T00:00:00Z' });
     const profile = await getProfile(new NextRequest('http://localhost/api/profile'));
     expect(profile.status).toBe(200);
+  });
+});
+
+describe('memberRegistration switch', () => {
+  function pauseRegistration() {
+    state.sqlite
+      .prepare('INSERT INTO "FeatureFlag" (key, enabled, updatedBy, updatedAt) VALUES (?, ?, ?, ?)')
+      .run('memberRegistration', 0, 'admin@example.com', '2026-10-15');
+    clearFeatureFlagsCache();
+  }
+
+  it('pauses new registrations without using the code', async () => {
+    seedCode('BHIM-ABC-1234');
+    pauseRegistration();
+
+    expect((await post({ ...validForm, code: 'BHIM-ABC-1234' })).status).toBe(403);
+    expect(codeUses('BHIM-ABC-1234')).toBe(0);
+    const validation = await validateCode(new NextRequest('http://localhost/api/registration/validate?code=BHIM-ABC-1234'));
+    expect(await validation.json()).toEqual({ valid: false, reason: 'paused' });
+  });
+
+  it('still lets existing members complete their details', async () => {
+    seedUser('new.member@example.com', { referredBy: 'BHIM-OLD-0001' });
+    pauseRegistration();
+    expect((await post(validForm)).status).toBe(200);
   });
 });

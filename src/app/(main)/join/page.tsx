@@ -18,6 +18,7 @@ type ViewState =
   | { kind: 'error' };
 
 const INVALID_INVITE_MESSAGES: Record<string, string> = {
+  paused: 'New member registration is paused at the moment. Please try your invite link again later, or contact us.',
   invalid: 'This invite link is not valid. Please check that you opened the full link you received.',
   inactive: 'This invite link has been disabled.',
   exhausted: 'This invite link has already been used the maximum number of times.',
@@ -77,7 +78,8 @@ function JoinFlow() {
       if (!code) return { kind: 'no-invite' };
       const invite = await checkInvite(code);
       if (!invite.valid) {
-        clearPendingInviteCode();
+        // Keep the code while registration is only paused, so the link still works later
+        if (invite.reason !== 'paused') clearPendingInviteCode();
         return { kind: 'invalid-invite', reason: invite.reason ?? 'invalid' };
       }
       if (status !== 'authenticated' || !prefill) return { kind: 'sign-in' };
@@ -171,7 +173,11 @@ function JoinFlow() {
           {(view.kind === 'no-invite' || view.kind === 'invalid-invite' || view.kind === 'error') && (
             <div className="space-y-4 py-2">
               <h2 className="text-xl font-bold text-text-dark">
-                {view.kind === 'error' ? 'Something went wrong' : 'An invite link is required'}
+                {view.kind === 'error'
+                  ? 'Something went wrong'
+                  : view.kind === 'invalid-invite' && view.reason === 'paused'
+                    ? 'Registration is paused'
+                    : 'An invite link is required'}
               </h2>
               <p className="text-base text-text-medium">
                 {view.kind === 'invalid-invite' && (INVALID_INVITE_MESSAGES[view.reason] ?? INVALID_INVITE_MESSAGES.invalid)}
