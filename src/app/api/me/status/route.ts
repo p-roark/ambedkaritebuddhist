@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
-import { pickDisplayName } from '@/lib/user-name';
+import { getCurrentUser } from '@/lib/registration-server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { auth } = await import('@/lib/auth');
-    const session = await auth();
-    const email = String(session?.user?.email ?? '').trim().toLowerCase();
-
-    if (!email) {
+    const current = await getCurrentUser();
+    if (!current) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!current.user) {
+      return NextResponse.json(
+        { id: null, role: 'MEMBER', isMember: current.isAdmin, registrationStatus: current.registrationStatus, status: 'active', activationRequestStatus: 'none' },
+        { status: 200 },
+      );
     }
 
     const [{ eq }, { getDb }, { users }] = await Promise.all([
@@ -19,40 +23,22 @@ export async function GET() {
       import('@/db/schema'),
     ]);
     const db = getDb();
-    const now = new Date().toISOString();
-
-    let user = await db
-      .select({ id: users.id, role: users.role, referredBy: users.referredBy, status: users.status, activationRequestStatus: users.activationRequestStatus })
+    const user = await db
+      .select({ status: users.status, activationRequestStatus: users.activationRequestStatus })
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.id, current.user.id))
       .limit(1)
       .then((rows) => rows[0]);
 
-    if (!user) {
-      const userId = crypto.randomUUID();
-      await db.insert(users).values({
-        id: userId,
-        name: pickDisplayName({
-          sessionName: session?.user?.name,
-          email,
-        }),
-        email,
-        passwordHash: '',
-        role: 'MEMBER',
-        image: String(session?.user?.image ?? '') || null,
-        emailVerified: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      user = { id: userId, role: 'MEMBER', referredBy: null, status: 'active', activationRequestStatus: 'none' };
-    }
-
-    const isMember =
-      Boolean(user.referredBy) || user.role === 'ADMIN' || user.role === 'LEADER';
-
     return NextResponse.json(
-      { id: user.id, role: user.role, isMember, status: user.status, activationRequestStatus: user.activationRequestStatus },
+      {
+        id: current.user.id,
+        role: current.user.role,
+        isMember: current.registrationStatus === 'complete',
+        registrationStatus: current.registrationStatus,
+        status: user?.status ?? 'active',
+        activationRequestStatus: user?.activationRequestStatus ?? 'none',
+      },
       { status: 200 },
     );
   } catch (error) {
