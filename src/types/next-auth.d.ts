@@ -26,5 +26,7 @@ declare module 'next-auth/jwt' {
     status?: string;
     activationRequestStatus?: string;
     pendingFamilyInvite?: string | null;
+    /** When role/membership were last read from D1 (ms since epoch) */
+    syncedAt?: number;
   }
 }

@@ -37,7 +37,12 @@ export async function GET(request: NextRequest) {
         website: null,
         description: null,
       },
-    }, { status: 200 });
+    }, {
+      status: 200,
+      // Public and rarely changed: let browsers reuse it across page views.
+      // The admin dashboard fetches with cache: 'no-store', so edits show there immediately.
+      headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' },
+    });
   }
 
   const eventId = searchParams.get('id');
