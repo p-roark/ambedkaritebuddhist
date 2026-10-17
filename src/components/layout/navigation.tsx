@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { DonateModal } from './donate-modal'
 import { fetchOrgSettings } from '@/lib/org-settings-client'
+import { useFeature } from '@/lib/use-feature'
 
 export function Navigation() {
   const { data: session, status } = useSession()
@@ -15,6 +16,7 @@ export function Navigation() {
   const [orgLine2, setOrgLine2] = useState('Community Of Canada (ABCC)')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [donateOpen, setDonateOpen] = useState(false)
+  const donationsEnabled = useFeature('donations') === true
 
   useEffect(() => {
     fetchOrgSettings<{ shortName?: string; orgName?: string }>()
@@ -96,12 +98,14 @@ export function Navigation() {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center space-x-2">
-            <button
-              onClick={() => setDonateOpen(true)}
-              className="px-4 py-2 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
-            >
-              🪷 Donate
-            </button>
+            {donationsEnabled && (
+              <button
+                onClick={() => setDonateOpen(true)}
+                className="px-4 py-2 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
+              >
+                🪷 Donate
+              </button>
+            )}
             {sessionState && (
               <>
                 <span className="text-sm text-gray-700 max-w-[120px] truncate">
@@ -164,12 +168,14 @@ export function Navigation() {
             </>
           )}
           <div className="pt-2 border-t border-gray-100 mt-2">
-            <button
-              onClick={() => { setMobileOpen(false); setDonateOpen(true) }}
-              className="block w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors mb-2"
-            >
-              🪷 Donate
-            </button>
+            {donationsEnabled && (
+              <button
+                onClick={() => { setMobileOpen(false); setDonateOpen(true) }}
+                className="block w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors mb-2"
+              >
+                🪷 Donate
+              </button>
+            )}
             {sessionState && (
               <button
                 onClick={() => void signOut({ callbackUrl: '/' })}
@@ -190,7 +196,7 @@ export function Navigation() {
         </div>
       )}
     </nav>
-    <DonateModal open={donateOpen} onClose={() => setDonateOpen(false)} />
+    {donationsEnabled && <DonateModal open={donateOpen} onClose={() => setDonateOpen(false)} />}
   </>
   )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useFeature } from '@/lib/use-feature'
 import {
   formatGalleryDate,
   getImageSrc,
@@ -223,6 +224,7 @@ export function GalleryContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session } = useSession()
+  const galleryUploadEnabled = useFeature('galleryUpload') === true
   const [events, setEvents] = useState<EventWithImages[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventWithImages | null>(null)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
@@ -525,7 +527,7 @@ export function GalleryContent() {
                         {isPlaying ? 'Pause Autoplay' : 'Resume Autoplay'}
                       </button>
                     )}
-                    {selectedEvent.googleDriveFolderUrl && session && (
+                    {selectedEvent.googleDriveFolderUrl && session && galleryUploadEnabled && (
                       <a
                         href={selectedEvent.googleDriveFolderUrl}
                         target="_blank"

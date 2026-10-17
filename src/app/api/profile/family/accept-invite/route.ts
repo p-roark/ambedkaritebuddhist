@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireFeature } from '@/lib/feature-flags-server';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/profile/family/accept-invite?code=XXX
 // Returns invite details so the landing page can show context before confirming.
 export async function GET(request: NextRequest) {
+  const disabled = await requireFeature('family');
+  if (disabled) return disabled;
   const code = request.nextUrl.searchParams.get('code');
   if (!code) return NextResponse.json({ error: 'Missing code' }, { status: 400 });
 
@@ -51,6 +54,8 @@ export async function GET(request: NextRequest) {
 // Body: { code: string }
 // Links the authenticated user's account to the family member record.
 export async function POST(request: NextRequest) {
+  const disabled = await requireFeature('family');
+  if (disabled) return disabled;
   const { auth } = await import('@/lib/auth');
   const session = await auth();
   const sessionEmail = String(session?.user?.email ?? '').trim().toLowerCase();

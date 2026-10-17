@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isFeatureEnabled, requireFeature } from '@/lib/feature-flags-server';
 import { requireRegisteredUser } from '@/lib/registration-server';
 
 export const dynamic = 'force-dynamic';
@@ -37,6 +38,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const disabled = await requireFeature('eventRegistration');
+  if (disabled) return disabled;
+
   // Only members who have completed registration can register for events
   const registered = await requireRegisteredUser();
   if (!registered.ok) return registered.response;
@@ -96,9 +100,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const includeFamily = Boolean(body.includeFamily);
-  const selectedFamilyMemberIds = Array.from(
-    new Set((body.selectedFamilyMemberIds ?? []).map((id) => String(id).trim()).filter(Boolean)),
-  );
+  // Family members can only be added while the family feature is on
+  const familyEnabled = await isFeatureEnabled('family');
+  const selectedFamilyMemberIds = familyEnabled
+    ? Array.from(new Set((body.selectedFamilyMemberIds ?? []).map((id) => String(id).trim()).filter(Boolean)))
+    : [];
   const nonMemberGuests = (body.nonMemberGuests ?? [])
     .map((guest) => ({
       name: String(guest.name ?? '').trim(),

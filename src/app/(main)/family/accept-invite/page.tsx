@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { notFound, useRouter, useSearchParams } from 'next/navigation';
-import { FAMILY_FEATURE_ENABLED } from '@/lib/features';
+import { useFeature } from '@/lib/use-feature';
 
 type InviteDetails = {
   memberName: string;
@@ -14,8 +14,10 @@ type InviteDetails = {
 type PageState = 'loading' | 'ready' | 'not-found' | 'expired' | 'already-accepted' | 'success' | 'error';
 
 export default function AcceptInvitePage() {
-  // Family linking is hidden for this release (see lib/features.ts)
-  if (!FAMILY_FEATURE_ENABLED) notFound();
+  // Family linking is controlled by the "family" feature switch
+  const familyEnabled = useFeature('family');
+  if (familyEnabled === null) return null;
+  if (!familyEnabled) notFound();
   return <AcceptInviteFlow />;
 }
 
