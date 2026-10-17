@@ -109,3 +109,15 @@ describe('sender per purpose', () => {
     if (!result.ok) expect(result.hint).toContain('registrations@example.org is a real mailbox');
   });
 });
+
+describe('message headers', () => {
+  it('strips line breaks from subjects and sends to several recipients', async () => {
+    const { sendEmail } = await import('./email');
+    fetchMock.mockResolvedValueOnce(tokenOk()).mockResolvedValueOnce(new Response('{"id":"m1"}', { status: 200 }));
+    await sendEmail('registrations', { to: ['a@example.org', 'b@example.org'], subject: 'Hi\r\nBcc: victim@example.org', html: '<p>x</p>' });
+    const raw = Buffer.from(JSON.parse(String(fetchMock.mock.calls[1][1].body)).raw, 'base64url').toString();
+    expect(raw).toContain('To: a@example.org, b@example.org');
+    expect(raw).toContain('Subject: Hi Bcc: victim@example.org');
+    expect(raw).not.toMatch(/^Bcc:/m);
+  });
+});

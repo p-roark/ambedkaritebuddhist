@@ -1,3 +1,6 @@
+import { eq } from 'drizzle-orm';
+import { getDb } from '@/db';
+import { emailSenders, organizationSettings } from '@/db/schema';
 import type { EmailPurpose } from '@/lib/email-senders';
 
 const FALLBACK_NAME = 'Ambedkarite Buddhist Community of Canada';
@@ -15,11 +18,6 @@ export type ResolvedSender = {
  * admin set one, otherwise the organization email from Settings.
  */
 export async function resolveSender(purpose?: EmailPurpose): Promise<ResolvedSender> {
-  const [{ eq }, { getDb }, { emailSenders, organizationSettings }] = await Promise.all([
-    import('drizzle-orm'),
-    import('@/db'),
-    import('@/db/schema'),
-  ]);
   const db = getDb();
 
   const org = await db
@@ -41,4 +39,10 @@ export async function resolveSender(purpose?: EmailPurpose): Promise<ResolvedSen
   }
 
   return { address: org?.email?.trim() || FALLBACK_ADDRESS, name, source: 'organization' };
+}
+
+/** Organization name and contact email, for email headers/footers. */
+export async function getOrgContact(): Promise<{ orgName: string; contactEmail: string }> {
+  const sender = await resolveSender();
+  return { orgName: sender.name, contactEmail: sender.address };
 }

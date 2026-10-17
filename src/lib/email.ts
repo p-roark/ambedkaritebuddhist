@@ -1,5 +1,6 @@
 import { EMAIL_PURPOSES, type EmailPurpose } from '@/lib/email-senders';
 import { resolveSender, type ResolvedSender } from '@/lib/email-senders-server';
+import { escapeHtml } from '@/lib/email-templates';
 
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.send';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -107,12 +108,15 @@ function encodeHeader(value: string): string {
 async function sendViaGmail(
   accessToken: string,
   sender: { address: string; name: string },
-  { to, subject, html }: { to: string; subject: string; html: string },
+  { to, subject, html }: { to: string | string[]; subject: string; html: string },
 ): Promise<void> {
+  const recipients = (Array.isArray(to) ? to : [to]).map((address) => address.replace(/[\r\n,<>]/g, '').trim()).filter(Boolean);
+  if (recipients.length === 0) throw new Error('[email] No recipients');
   const raw = [
     `From: ${encodeHeader(sender.name.replace(/["\r\n]/g, ''))} <${sender.address}>`,
-    `To: ${to}`,
-    `Subject: ${encodeHeader(subject)}`,
+    `To: ${recipients.join(', ')}`,
+    // Line breaks in a subject would start new headers
+    `Subject: ${encodeHeader(subject.replace(/[\r\n]+/g, ' '))}`,
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=utf-8',
     '',
@@ -154,7 +158,7 @@ function getGmailCredentials(): { serviceAccountEmail: string; privateKey: strin
  */
 export async function sendEmail(
   purpose: EmailPurpose,
-  message: { to: string; subject: string; html: string },
+  message: { to: string | string[]; subject: string; html: string },
 ): Promise<boolean> {
   const credentials = getGmailCredentials();
   if (!credentials) return false;
@@ -231,9 +235,6 @@ function shorten(text: string, max = 400) {
   return clean.length > max ? `${clean.slice(0, max)}…` : clean;
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
-}
 
 /**
  * Sends a test email and reports which step failed, so admins can verify the

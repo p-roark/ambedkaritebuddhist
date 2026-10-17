@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
+import { requireFeature } from '@/lib/feature-flags-server';
 import { validateProfileUpdate } from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
@@ -94,4 +95,50 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   console.log(`Admin ${admin.email} updated member ${id}`);
   return NextResponse.json({ member: await loadMember(id) }, { status: 200 });
+}
+
+// DELETE /api/admin/members/:id — permanently deletes a deactivated member.
+// Behind the "Delete deactivated members" switch. Their sign-in sessions,
+// family members, event registrations and coordinator assignments are deleted
+// with them; invite codes they created move to the deleting admin so shared
+// links keep working; their messages stay, unlinked from the account.
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const admin = await requireAdmin(request);
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const disabled = await requireFeature('memberDeletion');
+  if (disabled) return disabled;
+
+  const { id } = await params;
+  const member = await loadMember(id);
+  if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+  if (member.email.toLowerCase() === admin.email.toLowerCase()) {
+    return NextResponse.json({ error: 'You cannot delete your own account.' }, { status: 400 });
+  }
+  if (member.role === 'ADMIN') {
+    return NextResponse.json({ error: 'Admins cannot be deleted. Change their role to Member first.' }, { status: 400 });
+  }
+  if (member.status === 'active') {
+    return NextResponse.json({ error: 'Deactivate this member before deleting them.' }, { status: 400 });
+  }
+
+  const [{ eq }, { getDb }, { contactMessages, referralCodes, users }] = await Promise.all([
+    import('drizzle-orm'),
+    import('@/db'),
+    import('@/db/schema'),
+  ]);
+  const db = getDb();
+  const adminRow = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, admin.email))
+    .limit(1)
+    .then((rows) => rows[0]);
+  if (!adminRow) return NextResponse.json({ error: 'Your admin account was not found.' }, { status: 400 });
+
+  await db.update(referralCodes).set({ ownerId: adminRow.id }).where(eq(referralCodes.ownerId, id));
+  await db.update(contactMessages).set({ userId: null }).where(eq(contactMessages.userId, id));
+  await db.delete(users).where(eq(users.id, id));
+
+  console.log(`Admin ${admin.email} deleted member ${id} (${member.email})`);
+  return NextResponse.json({ ok: true }, { status: 200 });
 }

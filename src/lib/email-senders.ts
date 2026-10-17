@@ -8,7 +8,7 @@
 export const EMAIL_PURPOSES = {
   registrations: {
     label: 'Member registrations',
-    description: 'Welcome emails to new members and new-registration notices to admins.',
+    description: 'Sends welcome emails to new members. New-registration notices are sent to this address.',
   },
   donations: {
     label: 'Donations',
