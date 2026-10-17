@@ -98,7 +98,6 @@ async function getAccessToken(
 
 // Non-ASCII subjects (e.g. Marathi/Hindi names) must be RFC 2047 encoded
 function encodeHeader(value: string): string {
-  // eslint-disable-next-line no-control-regex
   if (/^[\x00-\x7F]*$/.test(value)) return value;
   return `=?UTF-8?B?${btoa(String.fromCharCode(...new TextEncoder().encode(value)))}?=`;
 }
