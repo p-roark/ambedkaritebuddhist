@@ -14,7 +14,8 @@ vi.mock('@/lib/auth', () => ({
   auth: async () => (state.session ? { user: { ...state.session, name: 'Test', image: null } } : null),
 }));
 
-const { GET: getMember, PATCH: updateMember } = await import('./route');
+const { DELETE: deleteMember, GET: getMember, PATCH: updateMember } = await import('./route');
+const { clearFeatureFlagsCache } = await import('@/lib/feature-flags-server');
 const { GET: exportMembers } = await import('../export/route');
 
 const asAdmin = () => (state.session = { email: 'admin@example.com', role: 'ADMIN' });
@@ -44,6 +45,7 @@ beforeEach(() => {
   state.sqlite = sqlite;
   state.db = db;
   state.session = null;
+  clearFeatureFlagsCache();
   seedUser('u1', 'registered@example.com', { ...completeProfile, registrationCompletedAt: '2026-10-02' });
   seedUser('u2', 'pending@example.com');
   seedUser('u3', 'member@example.com', { registrationCompletedAt: '2026-10-02' });
@@ -120,5 +122,68 @@ describe('GET /api/admin/members/export', () => {
   it('is admin-only', async () => {
     asMember();
     expect((await exportMembers(new NextRequest('http://localhost/api/admin/members/export'))).status).toBe(403);
+  });
+});
+
+describe('DELETE /api/admin/members/:id', () => {
+  const remove = (id: string) =>
+    deleteMember(new NextRequest(`http://localhost/api/admin/members/${id}`, { method: 'DELETE' }), params(id));
+  const exists = (id: string) => Boolean(state.sqlite.prepare('SELECT id FROM "User" WHERE id = ?').get(id));
+  const enableDeletion = () => {
+    state.sqlite
+      .prepare('INSERT INTO "FeatureFlag" (key, enabled, updatedBy, updatedAt) VALUES (?, 1, ?, ?)')
+      .run('memberDeletion', 'admin@example.com', '2026-10-17');
+    clearFeatureFlagsCache();
+  };
+
+  beforeEach(() => {
+    seedUser('admin', 'admin@example.com');
+    state.sqlite.prepare('UPDATE "User" SET role = \'ADMIN\' WHERE id = ?').run('admin');
+    state.sqlite.prepare('UPDATE "User" SET status = \'inactive\' WHERE id = ?').run('u1');
+  });
+
+  it('is refused while the switch is off (the default)', async () => {
+    asAdmin();
+    expect((await remove('u1')).status).toBe(403);
+    expect(exists('u1')).toBe(true);
+  });
+
+  it('deletes a deactivated member, keeping their invite codes and messages', async () => {
+    enableDeletion();
+    state.sqlite
+      .prepare('INSERT INTO "ReferralCode" (id, code, ownerId, maxUses, currentUses, active) VALUES (?, ?, ?, 10, 0, 1)')
+      .run('rc1', 'BHIM-XYZ-9999', 'u1');
+    state.sqlite
+      .prepare('INSERT INTO "ContactMessage" (id, name, email, subject, message, type, userId) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run('msg1', 'Member u1', 'registered@example.com', 'Reactivate', 'Please', 'ACTIVATION_REQUEST', 'u1');
+    state.sqlite
+      .prepare('INSERT INTO "FamilyMember" (id, userId, name, relationship, updatedAt) VALUES (?, ?, ?, ?, ?)')
+      .run('fm1', 'u1', 'Child', 'CHILD', '2026-10-17');
+
+    asAdmin();
+    const res = await remove('u1');
+    expect(res.status).toBe(200);
+    expect(exists('u1')).toBe(false);
+    expect(state.sqlite.prepare('SELECT ownerId FROM "ReferralCode" WHERE id = ?').get('rc1')).toEqual({ ownerId: 'admin' });
+    expect(state.sqlite.prepare('SELECT userId FROM "ContactMessage" WHERE id = ?').get('msg1')).toEqual({ userId: null });
+    expect(state.sqlite.prepare('SELECT id FROM "FamilyMember" WHERE id = ?').get('fm1')).toBeUndefined();
+  });
+
+  it('only deletes deactivated, non-admin members other than yourself', async () => {
+    enableDeletion();
+    asAdmin();
+    expect((await remove('u3')).status).toBe(400); // still active
+    expect((await remove('admin')).status).toBe(400); // self
+    state.sqlite.prepare('UPDATE "User" SET role = \'ADMIN\', status = \'inactive\' WHERE id = ?').run('u2');
+    expect((await remove('u2')).status).toBe(400); // another admin
+    expect((await remove('nope')).status).toBe(404);
+    expect([exists('u3'), exists('admin'), exists('u2')]).toEqual([true, true, true]);
+  });
+
+  it('is admin-only', async () => {
+    enableDeletion();
+    asMember();
+    expect((await remove('u1')).status).toBe(403);
+    expect(exists('u1')).toBe(true);
   });
 });

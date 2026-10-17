@@ -1,5 +1,5 @@
 import { sendEmail } from '@/lib/email';
-import { getAdminRecipients, getOrgContact } from '@/lib/email-senders-server';
+import { getOrgContact, resolveSender } from '@/lib/email-senders-server';
 import { ctaButton, escapeHtml, infoRow, layout, paragraph } from '@/lib/email-templates';
 import { PROVINCE_OPTIONS, RESIDENCY_STATUS_OPTIONS } from '@/lib/registration-config';
 
@@ -32,7 +32,11 @@ export async function sendWelcomeEmail({ member, origin }: { member: RegisteredM
   });
 }
 
-/** Notice to admins that a member completed the registration form. */
+/**
+ * Notice that a member completed the registration form, sent to the
+ * Registrations address in Settings → Email (or the organization email when
+ * that is blank).
+ */
 export async function sendNewRegistrationAdminEmail({
   member,
   isNewMember,
@@ -42,15 +46,13 @@ export async function sendNewRegistrationAdminEmail({
   isNewMember: boolean;
   origin: string;
 }) {
-  const recipients = await getAdminRecipients();
-  if (recipients.length === 0) return false;
-
+  const { address: recipient } = await resolveSender('registrations');
   const branding = await getOrgContact();
   const location = [member.city, labelFor(PROVINCE_OPTIONS, member.province)].filter((v) => v && v !== '—').join(', ') || '—';
   const heading = isNewMember ? 'New member registered' : 'Existing member completed registration';
 
   return sendEmail('registrations', {
-    to: recipients,
+    to: recipient,
     subject: `${heading}: ${member.name}`,
     html: layout(
       branding,

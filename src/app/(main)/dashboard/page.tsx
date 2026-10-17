@@ -8,6 +8,8 @@ import { buildInviteLink } from '@/lib/registration';
 import { FeatureSwitchesPanel } from '@/components/admin/feature-switches-panel';
 import { MemberDetailsDialog } from '@/components/admin/member-details-dialog';
 import { EmailTestPanel } from '@/components/admin/email-test-panel';
+import { DeleteMemberDialog } from '@/components/admin/delete-member-dialog';
+import { useFeature } from '@/lib/use-feature';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
@@ -192,6 +194,8 @@ export default function DashboardPage() {
 
   const [confirmDeactivateMemberId, setConfirmDeactivateMemberId] = useState<string | null>(null);
   const [viewMemberId, setViewMemberId] = useState<string | null>(null);
+  const [deleteMemberId, setDeleteMemberId] = useState<string | null>(null);
+  const memberDeletionEnabled = useFeature('memberDeletion');
   const [showModal, setShowModal] = useState(false);
   const [maxUses, setMaxUses] = useState(10);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -806,6 +810,19 @@ export default function DashboardPage() {
             {viewMemberId && (
               <MemberDetailsDialog memberId={viewMemberId} onClose={() => setViewMemberId(null)} onSaved={() => void loadMembers()} />
             )}
+            {deleteMemberId && (() => {
+              const target = members.find((m) => m.id === deleteMemberId);
+              return target ? (
+                <DeleteMemberDialog
+                  member={target}
+                  onClose={() => setDeleteMemberId(null)}
+                  onDeleted={() => {
+                    setDeleteMemberId(null);
+                    void loadMembers();
+                  }}
+                />
+              ) : null;
+            })()}
             {/* Active Members */}
             <section>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -976,6 +993,14 @@ export default function DashboardPage() {
                           >
                             Activate
                           </button>
+                          {memberDeletionEnabled && m.role !== 'ADMIN' && (
+                            <button
+                              onClick={() => setDeleteMemberId(m.id)}
+                              className="px-3 py-1.5 text-xs font-medium rounded bg-red-100 text-red-800 hover:bg-red-200"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

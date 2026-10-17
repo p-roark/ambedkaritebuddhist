@@ -6,7 +6,7 @@
  * applies until an admin changes the switch for the first time.
  */
 
-export const FEATURE_PAGES = ['Home', 'Events', 'Profile', 'Membership', 'Gallery', 'Donations'] as const;
+export const FEATURE_PAGES = ['Home', 'Events', 'Profile', 'Membership', 'Gallery', 'Donations', 'Members'] as const;
 export type FeaturePage = (typeof FEATURE_PAGES)[number];
 
 type FeatureDefinition = {
@@ -49,6 +49,13 @@ export const FEATURES = {
     page: 'Gallery',
     description: 'Shows signed-in members the "Upload photos to Drive" link on event galleries.',
     defaultEnabled: true,
+  },
+  memberDeletion: {
+    label: 'Delete deactivated members',
+    page: 'Members',
+    description:
+      'Admins can permanently delete a member from Dashboard → Members → Inactive Members. The member must be deactivated first; deletion cannot be undone.',
+    defaultEnabled: false,
   },
 } as const satisfies Record<string, FeatureDefinition>;
 

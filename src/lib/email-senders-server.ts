@@ -1,6 +1,6 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
-import { emailSenders, organizationSettings, users } from '@/db/schema';
+import { emailSenders, organizationSettings } from '@/db/schema';
 import type { EmailPurpose } from '@/lib/email-senders';
 
 const FALLBACK_NAME = 'Ambedkarite Buddhist Community of Canada';
@@ -45,25 +45,4 @@ export async function resolveSender(purpose?: EmailPurpose): Promise<ResolvedSen
 export async function getOrgContact(): Promise<{ orgName: string; contactEmail: string }> {
   const sender = await resolveSender();
   return { orgName: sender.name, contactEmail: sender.address };
-}
-
-/**
- * Admins who should receive notifications: active ADMIN accounts in the
- * database plus anyone listed in the ADMIN_EMAIL setting, without duplicates.
- */
-export async function getAdminRecipients(): Promise<string[]> {
-  const fromEnv = (process.env.ADMIN_EMAIL ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
-
-  let fromDb: string[] = [];
-  try {
-    fromDb = await getDb()
-      .select({ email: users.email })
-      .from(users)
-      .where(and(eq(users.role, 'ADMIN'), eq(users.status, 'active')))
-      .then((rows) => rows.map((r) => r.email.trim().toLowerCase()));
-  } catch (error) {
-    console.error('[email] Could not load admin recipients:', error);
-  }
-
-  return Array.from(new Set([...fromDb, ...fromEnv]));
 }
