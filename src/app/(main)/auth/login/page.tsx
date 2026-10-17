@@ -14,9 +14,22 @@ export default function LoginPage() {
   );
 }
 
+// Auth.js error codes (?error=…) → what the visitor should read
+function signInErrorMessage(code: string | null): string | null {
+  if (!code) return null;
+  if (code === 'AccessDenied') return 'This Google account can’t be used to sign in. Please try a different account.';
+  if (code === 'OAuthCallbackError' || code === 'Configuration' || code === 'OAuthSignin' || code === 'Callback') {
+    return 'Sign-in was cancelled or didn’t finish. Please try again.';
+  }
+  return 'Something went wrong while signing in. Please try again, and contact us if it keeps happening.';
+}
+
 function LoginCard() {
   const searchParams = useSearchParams();
   const callbackUrl = safeCallbackUrl(searchParams.get('callbackUrl'));
+  const errorMessage = signInErrorMessage(searchParams.get('error'));
+  // Arrived from an invite link (/join?code=…): they're accepting an invitation
+  const isInvite = callbackUrl === '/join' || callbackUrl.startsWith('/join?') || callbackUrl.startsWith('/join/');
 
   return (
     <div
@@ -35,9 +48,31 @@ function LoginCard() {
             <div className="flex items-center justify-center mb-4">
               <img src="/images/logo.png" alt="ABCC logo" className="w-16 h-16 rounded-none object-contain shadow-md" />
             </div>
-            <h1 className="text-3xl font-bold text-text-dark font-poppins mb-2">Welcome</h1>
-            <p className="text-text-medium text-base">Sign in with your Google account to access the community</p>
+            <h1 className="text-3xl font-bold text-text-dark font-poppins mb-2">
+              {isInvite ? 'Sign in to accept your invitation' : 'Members sign in'}
+            </h1>
+            <p className="text-text-medium text-base">
+              {isInvite
+                ? 'Use the Google account you would like to register with. You will then complete a short registration form.'
+                : 'Sign in with your Google account to access the community.'}
+            </p>
           </div>
+
+          {errorMessage && (
+            <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {errorMessage}
+            </div>
+          )}
+
+          {!isInvite && (
+            <div role="note" className="mb-5 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <span aria-hidden="true" className="text-lg leading-5">🪷</span>
+              <p>
+                <strong>Not a member yet?</strong> Membership is by invitation. Please use the invite link you received
+                to register.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3">
             <button
@@ -55,10 +90,7 @@ function LoginCard() {
             </button>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 text-center space-y-2">
-            <p className="text-sm text-text-medium">
-              New member? Please use the invite link you received to register.
-            </p>
+          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
             <p className="text-sm text-text-medium">
               Questions?{' '}
               <Link href="/contact" className="text-primary-blue font-semibold hover:text-primary-saffron transition-colors">
