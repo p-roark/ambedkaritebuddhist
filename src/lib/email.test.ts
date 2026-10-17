@@ -1,6 +1,11 @@
 // @vitest-environment node
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { sendTestEmail } from './email';
+
+// Sender lookup reads D1; tests use a fixed sender per purpose
+const resolveSenderMock = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/email-senders-server', () => ({ resolveSender: resolveSenderMock }));
+
+const { sendTestEmail } = await import('./email');
 
 // Throwaway RSA key generated per test run — never a real credential
 let testKeyPem = '';
@@ -21,7 +26,12 @@ beforeEach(() => {
   fetchMock.mockReset();
   vi.stubEnv('GMAIL_SERVICE_ACCOUNT_EMAIL', 'sender@project.iam.gserviceaccount.com');
   vi.stubEnv('GMAIL_PRIVATE_KEY', testKeyPem);
-  vi.stubEnv('GMAIL_SENDER_EMAIL', 'contact@example.org');
+  resolveSenderMock.mockReset();
+  resolveSenderMock.mockImplementation(async (purpose?: string) =>
+    purpose === 'registrations'
+      ? { address: 'registrations@example.org', name: 'Ambedkarite Buddhist Community', source: 'purpose' }
+      : { address: 'contact@example.org', name: 'Ambedkarite Buddhist Community', source: 'organization' },
+  );
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -77,5 +87,25 @@ describe('sendTestEmail', () => {
     expect(raw).toContain('To: admin@example.org');
     expect(raw).toMatch(/^Subject: =\?UTF-8\?B\?/m);
     expect(raw).toContain('Admin &lt;b&gt;');
+  });
+});
+
+describe('sender per purpose', () => {
+  it('signs in as and sends from the purpose address, with the org name', async () => {
+    fetchMock.mockResolvedValueOnce(tokenOk()).mockResolvedValueOnce(new Response('{"id":"m1"}', { status: 200 }));
+    const result = await sendTestEmail('admin@example.org', 'admin@example.org', { purpose: 'registrations' });
+    expect(result).toMatchObject({ ok: true, from: 'registrations@example.org' });
+
+    const assertion = String(new URLSearchParams(String(fetchMock.mock.calls[0][1].body)).get('assertion'));
+    expect(JSON.parse(Buffer.from(assertion.split('.')[1], 'base64url').toString())).toMatchObject({ sub: 'registrations@example.org' });
+    const raw = Buffer.from(JSON.parse(String(fetchMock.mock.calls[1][1].body)).raw, 'base64url').toString();
+    expect(raw).toContain('From: Ambedkarite Buddhist Community <registrations@example.org>');
+  });
+
+  it('names the address in the hint when Google refuses it', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{"error":"invalid_grant","error_description":"Invalid email or User ID"}', { status: 400 }));
+    const result = await sendTestEmail('admin@example.org', 'admin@example.org', { purpose: 'registrations' });
+    expect(result).toMatchObject({ ok: false, stage: 'token', from: 'registrations@example.org' });
+    if (!result.ok) expect(result.hint).toContain('registrations@example.org is a real mailbox');
   });
 });
