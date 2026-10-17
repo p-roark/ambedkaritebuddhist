@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { fetchOrgSettings } from '@/lib/org-settings-client'
 
 interface OrgSettings {
   shortName: string
@@ -30,8 +31,7 @@ export function Footer() {
   const [org, setOrg] = useState<OrgSettings>(defaults)
 
   useEffect(() => {
-    fetch('/api/events?resource=org-settings')
-      .then((r) => r.json() as Promise<{ settings?: Partial<OrgSettings> }>)
+    fetchOrgSettings<Partial<OrgSettings>>()
       .then((data) => {
         if (data.settings) {
           setOrg({

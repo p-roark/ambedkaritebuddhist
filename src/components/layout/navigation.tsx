@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { DonateModal } from './donate-modal'
+import { fetchOrgSettings } from '@/lib/org-settings-client'
 import { useFeature } from '@/lib/use-feature'
 
 export function Navigation() {
@@ -18,8 +19,7 @@ export function Navigation() {
   const donationsEnabled = useFeature('donations') === true
 
   useEffect(() => {
-    fetch('/api/events?resource=org-settings')
-      .then((r) => r.json() as Promise<{ settings?: { shortName?: string; orgName?: string } }>)
+    fetchOrgSettings<{ shortName?: string; orgName?: string }>()
       .then((data) => {
         const name = data.settings?.orgName ?? ''
         if (!name) return
