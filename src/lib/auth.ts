@@ -168,5 +168,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 
-  pages: { signIn: '/auth/login' },
+  // Sign-in problems (e.g. cancelling on Google's screen) land back on our login
+  // page with ?error=…, instead of Auth.js's generic "Server error" page
+  pages: { signIn: '/auth/login', error: '/auth/login' },
 });

@@ -14,9 +14,20 @@ export default function LoginPage() {
   );
 }
 
+// Auth.js error codes (?error=…) → what the visitor should read
+function signInErrorMessage(code: string | null): string | null {
+  if (!code) return null;
+  if (code === 'AccessDenied') return 'This Google account can’t be used to sign in. Please try a different account.';
+  if (code === 'OAuthCallbackError' || code === 'Configuration' || code === 'OAuthSignin' || code === 'Callback') {
+    return 'Sign-in was cancelled or didn’t finish. Please try again.';
+  }
+  return 'Something went wrong while signing in. Please try again, and contact us if it keeps happening.';
+}
+
 function LoginCard() {
   const searchParams = useSearchParams();
   const callbackUrl = safeCallbackUrl(searchParams.get('callbackUrl'));
+  const errorMessage = signInErrorMessage(searchParams.get('error'));
   // Arrived from an invite link (/join?code=…): they're accepting an invitation
   const isInvite = callbackUrl === '/join' || callbackUrl.startsWith('/join?') || callbackUrl.startsWith('/join/');
 
@@ -46,6 +57,12 @@ function LoginCard() {
                 : 'Sign in with your Google account to access the community.'}
             </p>
           </div>
+
+          {errorMessage && (
+            <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {errorMessage}
+            </div>
+          )}
 
           {!isInvite && (
             <div role="note" className="mb-5 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
