@@ -6,6 +6,11 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 UNDER_CONSTRUCTION = "false"
 
+# Workers Logs: per-request CPU/wall time and errors in the dashboard
+# (Workers → <worker> → Logs). Included in the free plan.
+[observability]
+enabled = true
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"

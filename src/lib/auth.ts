@@ -1,6 +1,11 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
+// The jwt callback runs on every session read (each page view and API call).
+// Re-read role/membership from D1 at most this often; sign-in and an explicit
+// session update() always re-read immediately.
+const TOKEN_SYNC_INTERVAL_MS = 60_000;
+
 const providers = [];
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -25,7 +30,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return account?.provider === 'google' && Boolean(user.email);
     },
 
-    async jwt({ token }) {
+    async jwt({ token, trigger }) {
+      const now = Date.now();
+      const isFresh = typeof token.syncedAt === 'number' && now - token.syncedAt < TOKEN_SYNC_INTERVAL_MS;
+      if (isFresh && trigger !== 'signIn' && trigger !== 'update') return token;
+
       const adminEmails = (process.env.ADMIN_EMAIL ?? '')
         .split(',')
         .map((e) => e.trim().toLowerCase())
@@ -67,6 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch {
           // D1 unavailable — continue without DB row
         }
+        token.syncedAt = now;
         return token;
       }
 
@@ -128,11 +138,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } else {
             token.pendingFamilyInvite = null;
           }
+          token.syncedAt = now;
         } else {
           // New Google user — not yet in DB, must register via an invite link
           token.registrationStatus = 'invite_required';
           token.isMember = false;
           token.isCoordinator = false;
+          token.syncedAt = now;
         }
       } catch {
         // D1 not configured yet — keep defaults, don't block auth
