@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isFeatureEnabled } from '@/lib/feature-flags-server';
 import { normalizeInviteCode } from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
@@ -7,6 +8,9 @@ export const dynamic = 'force-dynamic';
 // Public: checks an invite code without using it, so /join can show a
 // friendly message before the user signs in.
 export async function GET(request: NextRequest) {
+  if (!(await isFeatureEnabled('memberRegistration'))) {
+    return NextResponse.json({ valid: false, reason: 'paused' }, { status: 200 });
+  }
   const code = normalizeInviteCode(request.nextUrl.searchParams.get('code'));
   if (!code) return NextResponse.json({ valid: false, reason: 'invalid' }, { status: 200 });
 

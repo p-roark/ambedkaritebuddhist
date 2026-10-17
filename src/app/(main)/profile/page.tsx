@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FAMILY_FEATURE_ENABLED } from '@/lib/features';
+import { useFeature } from '@/lib/use-feature';
 import { PROVINCE_OPTIONS, RESIDENCY_STATUS_OPTIONS } from '@/lib/registration-config';
 
 type Profile = {
@@ -59,6 +59,7 @@ export default function ProfilePage() {
   const [showDetails, setShowDetails] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const familyEnabled = useFeature('family');
 
   const [newMember, setNewMember] = useState({
     name: '',
@@ -78,7 +79,7 @@ export default function ProfilePage() {
     const profileData = (await profileRes.json()) as { profile: Profile };
     setProfile(profileData.profile);
 
-    if (FAMILY_FEATURE_ENABLED) {
+    if (familyEnabled) {
       const familyRes = await fetch('/api/profile/family', { cache: 'no-store' });
       if (!familyRes.ok) throw new Error('Failed to load family members');
       const familyData = (await familyRes.json()) as { familyMembers: FamilyMember[] };
@@ -87,7 +88,7 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (status !== 'authenticated' || familyEnabled === null) return;
     let alive = true;
     const run = async () => {
       try {
@@ -102,7 +103,8 @@ export default function ProfilePage() {
     return () => {
       alive = false;
     };
-  }, [status]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, familyEnabled]);
 
   const saveProfile = async () => {
     if (!profile) return;
@@ -209,13 +211,13 @@ export default function ProfilePage() {
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white font-poppins">{profile.name}</h1>
             <p className="text-sm text-white/80 mt-0.5">
-              {FAMILY_FEATURE_ENABLED ? 'Manage your profile settings and family members' : 'Manage your profile settings'}
+              {familyEnabled ? 'Manage your profile settings and family members' : 'Manage your profile settings'}
             </p>
           </div>
         </div>
       </div>
 
-      {FAMILY_FEATURE_ENABLED && session?.user?.pendingFamilyInvite && (
+      {familyEnabled && session?.user?.pendingFamilyInvite && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
           <div className="max-w-6xl mx-auto flex items-center gap-3 text-sm text-amber-800">
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -329,7 +331,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {FAMILY_FEATURE_ENABLED && (
+        {familyEnabled && (
         <div className="bg-white rounded-2xl border border-background-gray shadow-sm p-6">
           <h2 className="text-xl font-bold text-text-dark">Family Members</h2>
           <p className="text-sm text-text-medium mt-1">Add and manage family members for registrations and planning.</p>

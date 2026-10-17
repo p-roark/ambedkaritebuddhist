@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { fetchOrgSettings } from '@/lib/org-settings-client';
 
 interface OrgInfo {
   email: string;
@@ -30,9 +31,8 @@ export default function ContactPage() {
   useEffect(() => {
     const loadContactData = async () => {
       try {
-        const response = await fetch('/api/events?resource=org-settings');
-        const data = (await response.json()) as { settings: OrgInfo };
-        setOrg(data.settings);
+        const data = await fetchOrgSettings<OrgInfo>();
+        if (data.settings) setOrg(data.settings);
       } catch (error) {
         console.error('Failed to load contact info:', error);
       } finally {

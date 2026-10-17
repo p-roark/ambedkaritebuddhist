@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireFeature } from '@/lib/feature-flags-server';
 import { requireRegisteredUser } from '@/lib/registration-server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest) {
+  const disabled = await requireFeature('family');
+  if (disabled) return disabled;
   const registered = await requireRegisteredUser();
   if (!registered.ok) return registered.response;
   const { userId } = registered;
@@ -23,6 +26,8 @@ export async function GET(_request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const disabled = await requireFeature('family');
+  if (disabled) return disabled;
   const registered = await requireRegisteredUser();
   if (!registered.ok) return registered.response;
   const { userId } = registered;
@@ -98,6 +103,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const disabled = await requireFeature('family');
+  if (disabled) return disabled;
   const registered = await requireRegisteredUser();
   if (!registered.ok) return registered.response;
   const { userId } = registered;
@@ -138,6 +145,8 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const disabled = await requireFeature('family');
+  if (disabled) return disabled;
   const registered = await requireRegisteredUser();
   if (!registered.ok) return registered.response;
   const { userId } = registered;
