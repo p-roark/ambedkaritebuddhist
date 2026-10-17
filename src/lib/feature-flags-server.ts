@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
 import { FEATURES, resolveFeatureFlags, type FeatureFlags, type FeatureKey } from '@/lib/feature-flags';
 
-// Cached per Worker isolate so most requests skip D1. A change made by an
-// admin applies immediately on the isolate that handled it and within this
-// window everywhere else.
-const CACHE_MS = 30_000;
+// Briefly cached per Worker isolate so bursts of requests share one D1 read.
+// A change made by an admin applies immediately on the isolate that handled
+// it and within this window everywhere else.
+const CACHE_MS = 5_000;
 
 let cache: { at: number; flags: FeatureFlags } | null = null;
 
-export async function getFeatureFlags(): Promise<FeatureFlags> {
+/** `fresh` skips the cache (used by /api/features so pages always see the current state). */
+export async function getFeatureFlags(options: { fresh?: boolean } = {}): Promise<FeatureFlags> {
   const now = Date.now();
-  if (cache && now - cache.at < CACHE_MS) return cache.flags;
+  if (!options.fresh && cache && now - cache.at < CACHE_MS) return cache.flags;
 
   try {
     const [{ getDb }, { featureFlags }] = await Promise.all([import('@/db'), import('@/db/schema')]);

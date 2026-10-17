@@ -53,7 +53,7 @@ export function FeatureSwitchesPanel() {
       if (!res.ok) throw new Error('Failed to save');
       await load();
       resetFeatureFlags();
-      setMessage(`${row.label} turned ${enabled ? 'on' : 'off'}. It can take up to a minute to apply for all visitors.`);
+      setMessage(`${row.label} turned ${enabled ? 'on' : 'off'}. Visitors see the change on their next page load.`);
     } catch {
       setMessage(`Could not update ${row.label}. Please try again.`);
     } finally {
@@ -68,7 +68,7 @@ export function FeatureSwitchesPanel() {
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Features</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Turn parts of the website on or off. Changes apply to all visitors within about a minute.
+          Turn parts of the website on or off. Visitors see changes on their next page load.
         </p>
       </div>
 

@@ -81,8 +81,10 @@ export default function EventsPage() {
   const { status } = useSession()
   const registrationEnabled = useFeature('eventRegistration')
   const familyEnabled = useFeature('family')
+  // While the event registration switch is off, nothing about registration is shown
+  const showRegistration = registrationEnabled === true
   // Registration is open only when the event allows it and the site-wide switch is on
-  const isRegistrationOpen = (event: EventItem) => event.status === 'Registration Started' && registrationEnabled === true
+  const isRegistrationOpen = (event: EventItem) => event.status === 'Registration Started' && showRegistration
   const router = useRouter()
   const [events, setEvents] = useState<EventItem[]>([])
   const [registrationByEvent, setRegistrationByEvent] = useState<Record<string, { registrationStatus: string; paymentStatus: string }>>({})
@@ -345,6 +347,7 @@ export default function EventsPage() {
                       ) : (
                         <span className="text-xs px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full font-medium">Free</span>
                       )}
+                      {showRegistration && (
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                         isRegistrationOpen(event)
                           ? 'bg-blue-50 text-blue-700 border border-blue-100'
@@ -352,7 +355,8 @@ export default function EventsPage() {
                       }`}>
                         {isRegistrationOpen(event) ? 'Registration Open' : 'Registration Coming Soon'}
                       </span>
-                      {event.maxAttendees != null && (() => {
+                      )}
+                      {showRegistration && event.maxAttendees != null && (() => {
                         const count = registrationCounts[event.id] ?? 0
                         const remaining = event.maxAttendees - count
                         return remaining > 0 ? (
@@ -399,7 +403,7 @@ export default function EventsPage() {
                               Manage
                             </Link>
                           )}
-                          {reg ? (
+                          {!showRegistration ? null : reg ? (
                             <>
                               <span className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
                                 reg.registrationStatus === 'Confirmed' ? 'bg-green-100 text-green-700' :

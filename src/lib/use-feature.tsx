@@ -3,28 +3,31 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { FeatureFlags, FeatureKey } from '@/lib/feature-flags';
 
-// One shared request per page load for every component that checks a switch
+// Components that check switches at the same time share one request; it isn't
+// reused afterwards, so every page shows the switches' current state.
 let pending: Promise<FeatureFlags> | null = null;
+// Mounted useFeature() hooks, re-run when the switches are reloaded
+const listeners = new Set<() => void>();
 
 function loadFeatureFlags(): Promise<FeatureFlags> {
   if (!pending) {
-    pending = fetch('/api/features')
+    pending = fetch('/api/features', { cache: 'no-store' })
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to load features (${r.status})`);
         return r.json() as Promise<{ flags: FeatureFlags }>;
       })
       .then((data) => data.flags)
-      .catch((error: unknown) => {
-        pending = null; // allow a retry on the next call
-        throw error;
+      .finally(() => {
+        pending = null;
       });
   }
   return pending;
 }
 
-/** Forget the loaded switches (e.g. after an admin changes one). */
+/** Reload the switches everywhere on the page (e.g. after an admin changes one). */
 export function resetFeatureFlags() {
   pending = null;
+  listeners.forEach((listener) => listener());
 }
 
 /**
@@ -37,11 +40,16 @@ export function useFeature(key: FeatureKey): boolean | null {
 
   useEffect(() => {
     let alive = true;
-    loadFeatureFlags()
-      .then((flags) => alive && setEnabled(flags[key]))
-      .catch(() => alive && setEnabled(false));
+    const load = () => {
+      loadFeatureFlags()
+        .then((flags) => alive && setEnabled(flags[key]))
+        .catch(() => alive && setEnabled(false));
+    };
+    load();
+    listeners.add(load);
     return () => {
       alive = false;
+      listeners.delete(load);
     };
   }, [key]);
 
