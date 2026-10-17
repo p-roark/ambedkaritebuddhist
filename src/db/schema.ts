@@ -245,6 +245,15 @@ export const organizationSettings = sqliteTable('OrganizationSettings', {
 
 // ─── Donation objectives ──────────────────────────────────────────────────────
 
+// --- Email sender per purpose (see src/lib/email-senders.ts) ----------------
+
+export const emailSenders = sqliteTable('EmailSender', {
+  purpose:   text('purpose').primaryKey(),
+  address:   text('address').notNull(),
+  updatedBy: text('updatedBy'), // admin email
+  updatedAt: text('updatedAt').notNull(),
+});
+
 // --- Feature switches (see src/lib/feature-flags.ts) -------------------------
 
 export const featureFlags = sqliteTable('FeatureFlag', {

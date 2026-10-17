@@ -1,5 +1,6 @@
-const FROM_NAME = 'Ambedkarite Buddhist Community';
-const FROM_ADDRESS = 'contact@ambedkaritebuddhist.org';
+import { EMAIL_PURPOSES, type EmailPurpose } from '@/lib/email-senders';
+import { resolveSender, type ResolvedSender } from '@/lib/email-senders-server';
+
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.send';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
@@ -96,16 +97,22 @@ async function getAccessToken(
   return data.access_token;
 }
 
+// Non-ASCII subjects (e.g. Marathi/Hindi names) must be RFC 2047 encoded
+function encodeHeader(value: string): string {
+  if (/^[\x00-\x7F]*$/.test(value)) return value;
+  return `=?UTF-8?B?${btoa(String.fromCharCode(...new TextEncoder().encode(value)))}?=`;
+}
+
 // Build a raw RFC 2822 message and send it via the Gmail API
 async function sendViaGmail(
   accessToken: string,
-  senderEmail: string,
+  sender: { address: string; name: string },
   { to, subject, html }: { to: string; subject: string; html: string },
 ): Promise<void> {
   const raw = [
-    `From: ${FROM_NAME} <${senderEmail}>`,
+    `From: ${encodeHeader(sender.name.replace(/["\r\n]/g, ''))} <${sender.address}>`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeHeader(subject)}`,
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=utf-8',
     '',
@@ -129,17 +136,33 @@ async function sendViaGmail(
   }
 }
 
-function getGmailConfig(): { serviceAccountEmail: string; privateKey: string; senderEmail: string } | null {
+function getGmailCredentials(): { serviceAccountEmail: string; privateKey: string } | null {
   const serviceAccountEmail = process.env.GMAIL_SERVICE_ACCOUNT_EMAIL;
   const privateKey = process.env.GMAIL_PRIVATE_KEY;
-  const senderEmail = process.env.GMAIL_SENDER_EMAIL ?? FROM_ADDRESS;
 
   if (!serviceAccountEmail || !privateKey) {
     console.warn('[email] GMAIL_SERVICE_ACCOUNT_EMAIL or GMAIL_PRIVATE_KEY not set — email will be skipped');
     return null;
   }
 
-  return { serviceAccountEmail, privateKey, senderEmail };
+  return { serviceAccountEmail, privateKey };
+}
+
+/**
+ * Sends an email from the sender configured for `purpose` (or the organization
+ * email). Returns false when email isn't configured; throws on delivery errors.
+ */
+export async function sendEmail(
+  purpose: EmailPurpose,
+  message: { to: string; subject: string; html: string },
+): Promise<boolean> {
+  const credentials = getGmailCredentials();
+  if (!credentials) return false;
+
+  const sender = await resolveSender(purpose);
+  const accessToken = await getAccessToken(credentials.serviceAccountEmail, credentials.privateKey, sender.address);
+  await sendViaGmail(accessToken, sender, message);
+  return true;
 }
 
 export async function sendFamilyInviteEmail({
@@ -153,15 +176,10 @@ export async function sendFamilyInviteEmail({
   relationship: string;
   inviteCode: string;
 }): Promise<void> {
-  const config = getGmailConfig();
-  if (!config) return;
-
   const baseUrl = process.env.NEXTAUTH_URL ?? 'https://ambedkaritebuddhist.org';
   const magicLink = `${baseUrl}/family/accept-invite?code=${inviteCode}`;
 
-  const accessToken = await getAccessToken(config.serviceAccountEmail, config.privateKey, config.senderEmail);
-
-  await sendViaGmail(accessToken, config.senderEmail, {
+  await sendEmail('familyInvites', {
     to,
     subject: `${inviterName} has added you as a family member`,
     html: `
@@ -193,4 +211,112 @@ export async function sendFamilyInviteEmail({
       </div>
     `,
   });
+}
+
+export type EmailTestResult =
+  | { ok: true; from: string; to: string }
+  | {
+      ok: false;
+      stage: 'config' | 'key' | 'token' | 'send';
+      message: string;
+      hint: string;
+      missing?: string[];
+      from?: string;
+    };
+
+export type EmailTestTarget = { purpose?: EmailPurpose };
+
+function shorten(text: string, max = 400) {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  return clean.length > max ? `${clean.slice(0, max)}…` : clean;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+}
+
+/**
+ * Sends a test email and reports which step failed, so admins can verify the
+ * Gmail setup. Messages contain Google's error text but never secret values.
+ */
+export async function sendTestEmail(
+  to: string,
+  requestedBy: string,
+  { purpose }: EmailTestTarget = {},
+): Promise<EmailTestResult> {
+  const serviceAccountEmail = process.env.GMAIL_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GMAIL_PRIVATE_KEY;
+
+  const missing = [
+    !serviceAccountEmail && 'GMAIL_SERVICE_ACCOUNT_EMAIL',
+    !privateKey && 'GMAIL_PRIVATE_KEY',
+  ].filter(Boolean) as string[];
+  if (missing.length > 0 || !serviceAccountEmail || !privateKey) {
+    return {
+      ok: false,
+      stage: 'config',
+      missing,
+      message: `Email isn't configured: ${missing.join(' and ')} ${missing.length === 1 ? 'is' : 'are'} not set on this Worker.`,
+      hint: 'Add them in Cloudflare → Workers → this Worker → Settings → Variables and Secrets (type "Secret"), then try again.',
+    };
+  }
+
+  const sender: ResolvedSender = await resolveSender(purpose);
+  const from = sender.address;
+
+  let jwt: string;
+  try {
+    jwt = await buildServiceAccountJwt(serviceAccountEmail, privateKey, from);
+  } catch (error) {
+    return {
+      ok: false,
+      stage: 'key',
+      from,
+      message: `The private key could not be read (${shorten(error instanceof Error ? error.message : String(error), 120)}).`,
+      hint: 'Paste the "private_key" value from the service account JSON file into GMAIL_PRIVATE_KEY, including the BEGIN/END PRIVATE KEY lines.',
+    };
+  }
+
+  const tokenRes = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
+  });
+  if (!tokenRes.ok) {
+    const detail = shorten(await tokenRes.text());
+    return {
+      ok: false,
+      stage: 'token',
+      from,
+      message: `Google refused the sign-in for ${from}: ${detail}`,
+      hint: detail.includes('unauthorized_client')
+        ? 'Domain-wide delegation is missing: in Google Workspace Admin → Security → API controls → Domain-wide delegation, add the service account\'s client ID with the scope https://www.googleapis.com/auth/gmail.send.'
+        : `Check that ${from} is a real mailbox in your Google Workspace (not a group or alias) and that the service account key is still active.`,
+    };
+  }
+  const { access_token: accessToken } = (await tokenRes.json()) as { access_token: string };
+
+  try {
+    const sentAt = new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' });
+    await sendViaGmail(accessToken, sender, {
+      to,
+      subject: `Test email from the ABCC website${purpose ? ` (${EMAIL_PURPOSES[purpose].label})` : ''} ☸️`,
+      html: `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1F2937">
+          <h2 style="color:#2D4D9B">Email is working 🪷</h2>
+          <p>This test email was sent from the ABCC website by ${escapeHtml(requestedBy)} on ${escapeHtml(sentAt)} (Toronto time).</p>
+          <p style="color:#6B7280;font-size:13px">Sent from ${escapeHtml(from)}. No action is needed.</p>
+        </div>`,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      stage: 'send',
+      from,
+      message: shorten(error instanceof Error ? error.message : String(error)),
+      hint: 'Google accepted the sign-in but Gmail refused to send. Check that the sender mailbox exists and can send email.',
+    };
+  }
+
+  return { ok: true, from, to };
 }

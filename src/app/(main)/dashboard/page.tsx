@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { buildInviteLink } from '@/lib/registration';
 import { FeatureSwitchesPanel } from '@/components/admin/feature-switches-panel';
 import { MemberDetailsDialog } from '@/components/admin/member-details-dialog';
+import { EmailTestPanel } from '@/components/admin/email-test-panel';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
@@ -1709,6 +1710,7 @@ export default function DashboardPage() {
 
         {activeTab === 'settings' && (
           <div className="space-y-6">
+            <EmailTestPanel adminEmail={String(session.user.email ?? '')} />
             <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
               {/* Card header */}
               <div className="px-8 py-6 bg-gradient-to-r from-primary-blue to-[#7F56D9] flex items-center gap-4">
