@@ -20,6 +20,7 @@ const { GET: exportMembers } = await import('../export/route');
 const asAdmin = () => (state.session = { email: 'admin@example.com', role: 'ADMIN' });
 const asMember = () => (state.session = { email: 'member@example.com', role: 'MEMBER' });
 const params = (id: string) => ({ params: Promise.resolve({ id }) });
+const body = async (res: Response) => (await res.json()) as { member?: Record<string, unknown>; fieldErrors?: Record<string, string> };
 
 function seedUser(id: string, email: string, extra: Record<string, string | null> = {}) {
   const fields = { name: 'Member ' + id, referredBy: 'BHIM-ABC-1234', registrationCompletedAt: null, ...extra };
@@ -53,7 +54,7 @@ describe('GET /api/admin/members/:id', () => {
     asAdmin();
     const res = await getMember(new NextRequest('http://localhost/api/admin/members/u1'), params('u1'));
     expect(res.status).toBe(200);
-    expect((await res.json()).member).toMatchObject({ email: 'registered@example.com', phone: '416-555-0123', residencyStatus: 'CITIZEN' });
+    expect((await body(res)).member).toMatchObject({ email: 'registered@example.com', phone: '416-555-0123', residencyStatus: 'CITIZEN' });
   });
 
   it('is admin-only and 404s for unknown members', async () => {
@@ -69,14 +70,14 @@ describe('PATCH /api/admin/members/:id', () => {
     asAdmin();
     const res = await patch('u1', { ...completeProfile, city: 'Mississauga', postalCode: 'l5b1m2', notes: 'Volunteer' });
     expect(res.status).toBe(200);
-    expect((await res.json()).member).toMatchObject({ city: 'Mississauga', postalCode: 'L5B 1M2', notes: 'Volunteer' });
+    expect((await body(res)).member).toMatchObject({ city: 'Mississauga', postalCode: 'L5B 1M2', notes: 'Volunteer' });
   });
 
   it('keeps mandatory fields required for registered members', async () => {
     asAdmin();
     const res = await patch('u1', { ...completeProfile, phone: '' });
     expect(res.status).toBe(400);
-    expect((await res.json()).fieldErrors).toHaveProperty('phone');
+    expect((await body(res)).fieldErrors).toHaveProperty('phone');
   });
 
   it('allows partial details for members who have not registered, but validates what is entered', async () => {
@@ -84,7 +85,7 @@ describe('PATCH /api/admin/members/:id', () => {
     expect((await patch('u2', { name: 'Pending Person', city: 'Ottawa' })).status).toBe(200);
     const bad = await patch('u2', { name: 'Pending Person', postalCode: '12345' });
     expect(bad.status).toBe(400);
-    expect((await bad.json()).fieldErrors).toHaveProperty('postalCode');
+    expect((await body(bad)).fieldErrors).toHaveProperty('postalCode');
   });
 
   it('never changes email, role or status', async () => {
