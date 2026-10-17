@@ -1,0 +1,81 @@
+// @vitest-environment node
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { sendTestEmail } from './email';
+
+// Throwaway RSA key generated per test run — never a real credential
+let testKeyPem = '';
+beforeAll(async () => {
+  const pair = await crypto.subtle.generateKey(
+    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+    true,
+    ['sign', 'verify'],
+  );
+  const der = Buffer.from(await crypto.subtle.exportKey('pkcs8', pair.privateKey)).toString('base64');
+  // Stored the way Cloudflare secrets often keep it: literal \n sequences
+  testKeyPem = `-----BEGIN PRIVATE KEY-----\\n${der.match(/.{1,64}/g)?.join('\\n')}\\n-----END PRIVATE KEY-----\\n`;
+});
+
+const fetchMock = vi.fn();
+beforeEach(() => {
+  vi.stubGlobal('fetch', fetchMock);
+  fetchMock.mockReset();
+  vi.stubEnv('GMAIL_SERVICE_ACCOUNT_EMAIL', 'sender@project.iam.gserviceaccount.com');
+  vi.stubEnv('GMAIL_PRIVATE_KEY', testKeyPem);
+  vi.stubEnv('GMAIL_SENDER_EMAIL', 'contact@example.org');
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
+
+const tokenOk = () => new Response(JSON.stringify({ access_token: 'token-123' }), { status: 200 });
+
+describe('sendTestEmail', () => {
+  it('reports missing secrets by name without calling Google', async () => {
+    vi.stubEnv('GMAIL_PRIVATE_KEY', '');
+    const result = await sendTestEmail('admin@example.org', 'admin@example.org');
+    expect(result).toMatchObject({ ok: false, stage: 'config', missing: ['GMAIL_PRIVATE_KEY'] });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('reports an unreadable private key', async () => {
+    vi.stubEnv('GMAIL_PRIVATE_KEY', '-----BEGIN PRIVATE KEY-----\\nnot-a-key\\n-----END PRIVATE KEY-----');
+    const result = await sendTestEmail('admin@example.org', 'admin@example.org');
+    expect(result).toMatchObject({ ok: false, stage: 'key' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('explains missing domain-wide delegation', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{"error":"unauthorized_client","error_description":"Client is unauthorized"}', { status: 401 }));
+    const result = await sendTestEmail('admin@example.org', 'admin@example.org');
+    expect(result).toMatchObject({ ok: false, stage: 'token', from: 'contact@example.org' });
+    if (!result.ok) expect(result.hint).toContain('Domain-wide delegation');
+  });
+
+  it('reports Gmail send failures', async () => {
+    fetchMock.mockResolvedValueOnce(tokenOk()).mockResolvedValueOnce(new Response('{"error":{"message":"Mail service not enabled"}}', { status: 400 }));
+    const result = await sendTestEmail('admin@example.org', 'admin@example.org');
+    expect(result).toMatchObject({ ok: false, stage: 'send' });
+    if (!result.ok) expect(result.message).toContain('Mail service not enabled');
+  });
+
+  it('signs in with a valid JWT and sends to the admin', async () => {
+    fetchMock.mockResolvedValueOnce(tokenOk()).mockResolvedValueOnce(new Response('{"id":"m1"}', { status: 200 }));
+    const result = await sendTestEmail('admin@example.org', 'Admin <b>');
+    expect(result).toEqual({ ok: true, from: 'contact@example.org', to: 'admin@example.org' });
+
+    // Token request: a 3-part RS256 JWT for the sender mailbox
+    const tokenBody = new URLSearchParams(String(fetchMock.mock.calls[0][1].body));
+    const [header, payload, signature] = String(tokenBody.get('assertion')).split('.');
+    expect(JSON.parse(Buffer.from(header, 'base64url').toString())).toEqual({ alg: 'RS256', typ: 'JWT' });
+    expect(JSON.parse(Buffer.from(payload, 'base64url').toString())).toMatchObject({ sub: 'contact@example.org' });
+    expect(signature.length).toBeGreaterThan(100);
+
+    // Send request: correct headers, UTF-8 encoded subject, escaped name
+    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe('Bearer token-123');
+    const raw = Buffer.from(JSON.parse(String(fetchMock.mock.calls[1][1].body)).raw, 'base64url').toString();
+    expect(raw).toContain('To: admin@example.org');
+    expect(raw).toMatch(/^Subject: =\?UTF-8\?B\?/m);
+    expect(raw).toContain('Admin &lt;b&gt;');
+  });
+});
