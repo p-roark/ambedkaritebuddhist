@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestDb, type TestSqlite } from '@/test/sqlite-db';
 
 // Real migrations on in-memory SQLite (see src/test/sqlite-db.ts)
@@ -15,6 +15,17 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('@/db', () => ({ getDb: () => state.db }));
+// Capture emails instead of calling Gmail
+const sendEmailMock = vi.hoisted(() => vi.fn(async () => true));
+vi.mock('@/lib/email', () => ({ sendEmail: sendEmailMock }));
+// Collect background work so each test can wait for it (no leaking into the next test)
+const backgroundTasks = vi.hoisted(() => [] as Promise<unknown>[]);
+vi.mock('@/lib/background', () => ({
+  runInBackground: (_label: string, task: Promise<unknown>) => void backgroundTasks.push(task),
+}));
+const settleBackground = async () => {
+  while (backgroundTasks.length) await Promise.allSettled(backgroundTasks.splice(0));
+};
 vi.mock('@/lib/auth', () => ({
   auth: async () => {
     const email = state.requestEmail.getStore() ?? state.sessionEmail;
@@ -68,7 +79,10 @@ function userRow(email: string) {
   return state.sqlite.prepare('SELECT * FROM "User" WHERE email = ?').get(email) as Record<string, unknown> | undefined;
 }
 
+afterEach(settleBackground);
+
 beforeEach(() => {
+  sendEmailMock.mockClear();
   const { sqlite, db } = createTestDb();
   clearFeatureFlagsCache();
   state.sqlite = sqlite;
@@ -233,5 +247,44 @@ describe('memberRegistration switch', () => {
     seedUser('new.member@example.com', { referredBy: 'BHIM-OLD-0001' });
     pauseRegistration();
     expect((await post(validForm)).status).toBe(200);
+  });
+});
+
+describe('registration emails', () => {
+  type SentEmail = [string, { to: string | string[]; subject: string; html: string }];
+  const sent = () => sendEmailMock.mock.calls as unknown as SentEmail[];
+
+  it('welcomes new members and notifies admins from the registrations sender', async () => {
+    seedCode('BHIM-ABC-1234');
+    expect((await post({ ...validForm, name: 'Ravi <b>Kamble</b>', code: 'BHIM-ABC-1234' })).status).toBe(200);
+
+    await settleBackground();
+    expect(sendEmailMock).toHaveBeenCalledTimes(2);
+    const welcome = sent().find(([, m]) => m.to === 'new.member@example.com');
+    const notice = sent().find(([, m]) => Array.isArray(m.to));
+    expect(welcome?.[0]).toBe('registrations');
+    expect(welcome?.[1].html).toContain('Welcome, Ravi &lt;b&gt;Kamble&lt;/b&gt;!');
+    expect(welcome?.[1].html).toContain('http://localhost/profile');
+    expect(notice?.[0]).toBe('registrations');
+    expect(notice?.[1].to).toEqual(['admin@example.com']);
+    expect(notice?.[1].subject).toBe('New member registered: Ravi <b>Kamble</b>');
+    expect(notice?.[1].html).toContain('BHIM-ABC-1234');
+    expect(notice?.[1].html).toContain('Canadian Citizen');
+    expect(notice?.[1].html).not.toContain('<b>Kamble');
+  });
+
+  it('only notifies admins when an existing member completes the form', async () => {
+    seedUser('new.member@example.com', { referredBy: 'BHIM-OLD-0001' });
+    expect((await post(validForm)).status).toBe(200);
+
+    await settleBackground();
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+    expect(sent()[0][1].subject).toBe('Existing member completed registration: Savitri Phule');
+  });
+
+  it('sends nothing when registration fails', async () => {
+    expect((await post(validForm)).status).toBe(400); // no invite code
+    await settleBackground();
+    expect(sendEmailMock).not.toHaveBeenCalled();
   });
 });

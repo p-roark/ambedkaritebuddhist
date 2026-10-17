@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { runInBackground } from '@/lib/background';
 import { requireFeature } from '@/lib/feature-flags-server';
 import { DISCLAIMER_VERSION } from '@/lib/registration-config';
 import { normalizeInviteCode, normalizePostalCode, normalizeProvince, validateRegistration } from '@/lib/registration';
@@ -161,6 +162,21 @@ export async function POST(request: NextRequest) {
       }
       throw error;
     }
+
+    // Welcome email (new members only) and admin notice, sent after the response
+    const isNewMember = current.registrationStatus === 'invite_required';
+    const member = {
+      name: parsed.value.name,
+      email: current.email,
+      city: parsed.value.city,
+      province: parsed.value.province,
+      residencyStatus: parsed.value.residencyStatus,
+      inviteCode: referredBy,
+    };
+    const origin = request.nextUrl.origin;
+    const { sendNewRegistrationAdminEmail, sendWelcomeEmail } = await import('@/lib/emails/registration');
+    if (isNewMember) runInBackground('welcome email', sendWelcomeEmail({ member, origin }));
+    runInBackground('new registration admin email', sendNewRegistrationAdminEmail({ member, isNewMember, origin }));
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
