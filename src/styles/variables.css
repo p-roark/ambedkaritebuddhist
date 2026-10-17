@@ -85,15 +85,11 @@
   --z-tooltip: 1070;
 }
 
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-white: #1F2937;
-    --color-light-gray: #111827;
-    --color-text-dark: #F3F4F6;
-    --color-text-medium: #D1D5DB;
-    --color-text-light: #9CA3AF;
-  }
+/* The site is light-only: phones in dark mode must not swap the text colours
+   (light text on the white sections made it unreadable). color-scheme also
+   keeps form controls and scrollbars light. */
+:root {
+  color-scheme: light;
 }
 
 /* Reduced motion support */
