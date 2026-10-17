@@ -52,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (isAdminEmail) {
         token.role = 'ADMIN';
         token.isMember = true;
+        token.registrationStatus = 'complete';
         try {
           const [{ eq }, { getDb }, { users }] = await Promise.all([
             import('drizzle-orm'),
@@ -89,15 +90,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const db = getDb();
         const row = await db
-          .select({ role: users.role, id: users.id, status: users.status, activationRequestStatus: users.activationRequestStatus })
+          .select({
+            role: users.role,
+            id: users.id,
+            status: users.status,
+            activationRequestStatus: users.activationRequestStatus,
+            referredBy: users.referredBy,
+            registrationCompletedAt: users.registrationCompletedAt,
+          })
           .from(users)
           .where(eq(users.email, tokenEmail))
           .limit(1)
           .then((r) => r[0]);
 
         if (row) {
+          const { getRegistrationStatus } = await import('@/lib/registration');
           token.role                    = row.role;
-          token.isMember                = true;
+          token.registrationStatus      = getRegistrationStatus(row);
+          token.isMember                = token.registrationStatus === 'complete';
           token.sub                     = row.id;
           token.status                  = row.status;
           token.activationRequestStatus = row.activationRequestStatus;
@@ -111,21 +121,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isCoordinator = coordRows.length > 0;
 
           // Check for a pending family invite matching this email (Option 2: email-match)
-          const { familyMembers } = await import('@/db/schema');
-          const { and } = await import('drizzle-orm');
-          const pendingInvite = await db
-            .select({ inviteCode: familyMembers.inviteCode })
-            .from(familyMembers)
-            .where(and(
-              eq(familyMembers.email, tokenEmail),
-              eq(familyMembers.inviteStatus, 'pending'),
-            ))
-            .limit(1)
-            .then(r => r[0]);
-          token.pendingFamilyInvite = pendingInvite?.inviteCode ?? null;
+          const { FAMILY_FEATURE_ENABLED } = await import('@/lib/features');
+          if (FAMILY_FEATURE_ENABLED) {
+            const { familyMembers } = await import('@/db/schema');
+            const { and } = await import('drizzle-orm');
+            const pendingInvite = await db
+              .select({ inviteCode: familyMembers.inviteCode })
+              .from(familyMembers)
+              .where(and(
+                eq(familyMembers.email, tokenEmail),
+                eq(familyMembers.inviteStatus, 'pending'),
+              ))
+              .limit(1)
+              .then(r => r[0]);
+            token.pendingFamilyInvite = pendingInvite?.inviteCode ?? null;
+          } else {
+            token.pendingFamilyInvite = null;
+          }
           token.syncedAt = now;
         } else {
-          // New Google user — not yet in DB, needs referral code
+          // New Google user — not yet in DB, must register via an invite link
+          token.registrationStatus = 'invite_required';
           token.isMember = false;
           token.isCoordinator = false;
           token.syncedAt = now;
@@ -146,6 +162,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.activationRequestStatus = (token.activationRequestStatus as string) ?? 'none';
         session.user.isCoordinator          = Boolean(token.isCoordinator);
         session.user.pendingFamilyInvite    = (token.pendingFamilyInvite as string | null | undefined) ?? null;
+        session.user.registrationStatus     = token.registrationStatus ?? 'invite_required';
       }
       return session;
     },

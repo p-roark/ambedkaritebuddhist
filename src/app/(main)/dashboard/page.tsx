@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { buildInviteLink } from '@/lib/registration';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
@@ -46,6 +47,7 @@ type Member = {
   role: string;
   status: string;
   joinedAt: string;
+  registrationCompletedAt: string | null;
 };
 
 type EventItem = {
@@ -149,6 +151,7 @@ export default function DashboardPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [messageNoteDraft, setMessageNoteDraft] = useState('');
@@ -558,6 +561,17 @@ export default function DashboardPage() {
     setCopied(false);
   };
 
+  const copyInviteLink = async (code: ReferralCode) => {
+    const link = buildInviteLink(window.location.origin, code.code);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedCodeId(code.id);
+      setTimeout(() => setCopiedCodeId((current) => (current === code.id ? null : current)), 2000);
+    } catch {
+      window.prompt('Copy this invite link:', link);
+    }
+  };
+
   const toggleCode = async (id: string, nextActive: boolean) => {
     const res = await fetch('/api/admin/referral-codes', {
       method: 'PATCH',
@@ -767,7 +781,12 @@ export default function DashboardPage() {
                       const normalizedRole: Role = m.role === 'ADMIN' ? 'ADMIN' : 'MEMBER';
                       return (
                         <tr key={m.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{m.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {m.name}
+                            {!m.registrationCompletedAt && m.role !== 'ADMIN' && (
+                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Registration pending</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
@@ -1208,7 +1227,12 @@ export default function DashboardPage() {
                           {c.currentUses >= c.maxUses ? 'Exhausted' : c.active ? 'Active' : 'Disabled'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 flex flex-wrap gap-2">
+                        {c.active && c.currentUses < c.maxUses && (
+                          <button onClick={() => void copyInviteLink(c)} className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100">
+                            <span aria-live="polite">{copiedCodeId === c.id ? 'Copied!' : 'Copy invite link'}</span>
+                          </button>
+                        )}
                         {c.currentUses >= c.maxUses ? (
                           <span className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 rounded cursor-not-allowed">Exhausted</span>
                         ) : (

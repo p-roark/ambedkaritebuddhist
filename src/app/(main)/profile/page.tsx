@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { FAMILY_FEATURE_ENABLED } from '@/lib/features';
+import { PROVINCE_OPTIONS, RESIDENCY_STATUS_OPTIONS } from '@/lib/registration-config';
 
 type Profile = {
   id: string;
@@ -17,6 +19,7 @@ type Profile = {
   city: string | null;
   province: string | null;
   postalCode: string | null;
+  residencyStatus: string | null;
   education: string | null;
   interests: string | null;
   notes: string | null;
@@ -70,20 +73,17 @@ export default function ProfilePage() {
   }, [status, router]);
 
   const loadData = async () => {
-    const [profileRes, familyRes] = await Promise.all([
-      fetch('/api/profile', { cache: 'no-store' }),
-      fetch('/api/profile/family', { cache: 'no-store' }),
-    ]);
-
-    if (!profileRes.ok || !familyRes.ok) {
-      throw new Error('Failed to load profile');
-    }
-
+    const profileRes = await fetch('/api/profile', { cache: 'no-store' });
+    if (!profileRes.ok) throw new Error('Failed to load profile');
     const profileData = (await profileRes.json()) as { profile: Profile };
-    const familyData = (await familyRes.json()) as { familyMembers: FamilyMember[] };
-
     setProfile(profileData.profile);
-    setFamilyMembers(familyData.familyMembers);
+
+    if (FAMILY_FEATURE_ENABLED) {
+      const familyRes = await fetch('/api/profile/family', { cache: 'no-store' });
+      if (!familyRes.ok) throw new Error('Failed to load family members');
+      const familyData = (await familyRes.json()) as { familyMembers: FamilyMember[] };
+      setFamilyMembers(familyData.familyMembers);
+    }
   };
 
   useEffect(() => {
@@ -112,9 +112,10 @@ export default function ProfilePage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile),
     });
-    const data = (await res.json()) as { error?: string };
+    const data = (await res.json()) as { error?: string; fieldErrors?: Record<string, string> };
     if (!res.ok) {
-      setMessage(data.error ?? 'Failed to save profile');
+      const details = Object.values(data.fieldErrors ?? {}).join(' ');
+      setMessage([data.error ?? 'Failed to save profile', details].filter(Boolean).join(' '));
       return;
     }
     setMessage('Profile saved.');
@@ -207,12 +208,14 @@ export default function ProfilePage() {
           )}
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white font-poppins">{profile.name}</h1>
-            <p className="text-sm text-white/80 mt-0.5">Manage your profile settings and family members</p>
+            <p className="text-sm text-white/80 mt-0.5">
+              {FAMILY_FEATURE_ENABLED ? 'Manage your profile settings and family members' : 'Manage your profile settings'}
+            </p>
           </div>
         </div>
       </div>
 
-      {session?.user?.pendingFamilyInvite && (
+      {FAMILY_FEATURE_ENABLED && session?.user?.pendingFamilyInvite && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
           <div className="max-w-6xl mx-auto flex items-center gap-3 text-sm text-amber-800">
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -236,22 +239,57 @@ export default function ProfilePage() {
             <p className="text-sm text-text-medium mt-0.5">Update your contact and profile information.</p>
           </div>
 
-          {message && <p className="mt-3 text-sm text-primary-blue bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">{message}</p>}
+          {message && <p role="status" className="mt-3 text-sm text-primary-blue bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">{message}</p>}
 
           <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Full Name</span>
-              <input value={profile.name ?? ''} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              <span className="mb-1 block font-medium text-slate-700">Full Name<span className="text-red-700" aria-hidden="true"> *</span></span>
+              <input autoComplete="name" required value={profile.name ?? ''} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
             </label>
             <label className="text-sm">
               <span className="mb-1 block font-medium text-slate-700">Email</span>
               <input value={profile.email ?? ''} disabled className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-400 cursor-not-allowed" />
             </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Phone<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input type="tel" autoComplete="tel" required value={profile.phone ?? ''} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Residency Status in Canada<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <select required value={profile.residencyStatus ?? ''} onChange={(e) => setProfile({ ...profile, residencyStatus: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors">
+                  <option value="">Select residency status</option>
+                  {RESIDENCY_STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Street Address<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input autoComplete="address-line1" required value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Apartment, unit, etc.</span>
+                <input autoComplete="address-line2" value={profile.addressLine2 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine2: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">City<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input autoComplete="address-level2" required value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Province / Territory<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <select autoComplete="address-level1" required value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors">
+                  <option value="">Select province or territory</option>
+                  {PROVINCE_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Postal Code<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input autoComplete="postal-code" required value={profile.postalCode ?? ''} onChange={(e) => setProfile({ ...profile, postalCode: e.target.value.toUpperCase() })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
           </div>
 
           <button
             type="button"
             onClick={() => setShowDetails((v) => !v)}
+            aria-expanded={showDetails}
             className="mt-4 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
           >
             <svg
@@ -265,33 +303,9 @@ export default function ProfilePage() {
 
           {showDetails && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Phone</span>
-                <input value={profile.phone ?? ''} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
+              <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Alternate Phone</span>
-                <input value={profile.altPhone ?? ''} onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm md:col-span-2">
-                <span className="mb-1 block font-medium text-slate-700">Address Line 1</span>
-                <input value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm md:col-span-2">
-                <span className="mb-1 block font-medium text-slate-700">Address Line 2</span>
-                <input value={profile.addressLine2 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine2: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">City</span>
-                <input value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Province/State</span>
-                <input value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Postal Code</span>
-                <input value={profile.postalCode ?? ''} onChange={(e) => setProfile({ ...profile, postalCode: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+                <input type="tel" value={profile.altPhone ?? ''} onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
               </label>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Education</span>
@@ -315,6 +329,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {FAMILY_FEATURE_ENABLED && (
         <div className="bg-white rounded-2xl border border-background-gray shadow-sm p-6">
           <h2 className="text-xl font-bold text-text-dark">Family Members</h2>
           <p className="text-sm text-text-medium mt-1">Add and manage family members for registrations and planning.</p>
@@ -485,6 +500,7 @@ export default function ProfilePage() {
             {familyMembers.length === 0 && <p className="text-sm text-slate-500">No family members added yet.</p>}
           </div>
         </div>
+        )}
       </div>
     </div>
   );
