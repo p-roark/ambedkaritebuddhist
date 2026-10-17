@@ -358,20 +358,25 @@ export default function DashboardPage() {
   if (!session) return null;
   const isAdmin = session.user.role === 'ADMIN';
 
-  const activeMembers = members.filter((m) => m.status === 'active');
+  // Members who haven't submitted the registration form aren't counted as active
+  const isRegistrationPending = (m: Member) => !m.registrationCompletedAt && m.role !== 'ADMIN';
+  const activeMembers = members.filter((m) => m.status === 'active' && !isRegistrationPending(m));
+  const pendingRegistrations = members.filter((m) => m.status === 'active' && isRegistrationPending(m));
   const inactiveMembers = members.filter((m) => m.status !== 'active');
   const activationRequests = messages.filter((m) => m.type === 'ACTIVATION_REQUEST' && m.status === 'PENDING');
   const pendingMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'PENDING');
   const resolvedMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'RESOLVED');
 
-  const tabs: Array<{ id: Tab; label: string }> = isAdmin
+  const pendingCount = pendingMessages.length + activationRequests.length;
+
+  const tabs: Array<{ id: Tab; label: string; badge?: number }> = isAdmin
     ? [
         { id: 'leadership', label: `Leadership (${leadershipRolesList.length})` },
-        { id: 'members', label: `Members (${activeMembers.length} active${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
+        { id: 'members', label: `Members (${activeMembers.length} active${pendingRegistrations.length > 0 ? `, ${pendingRegistrations.length} pending` : ''}${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
         { id: 'events', label: `Events (${events.length})` },
         { id: 'cover-images', label: `Cover Images (${coverImages.length})` },
         { id: 'referrals', label: 'Referral Codes' },
-        { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
+        { id: 'messages', label: 'Messages', badge: pendingCount },
         { id: 'donations', label: `Donations (${donationRecords.length})` },
         { id: 'features', label: 'Features' },
         { id: 'settings', label: 'Settings' },
@@ -650,6 +655,28 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {isAdmin && pendingCount > 0 && activeTab !== 'messages' && (
+        <div role="status" className="bg-amber-50 border-y border-amber-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-amber-900">
+              <span aria-hidden="true">📬 </span>
+              <strong>{pendingCount} pending message{pendingCount === 1 ? '' : 's'}</strong> need{pendingCount === 1 ? 's' : ''} your attention
+              {activationRequests.length > 0 && (
+                <> (including {activationRequests.length} account activation request{activationRequests.length === 1 ? '' : 's'})</>
+              )}
+              .
+            </p>
+            <button
+              type="button"
+              onClick={() => setActiveTab('messages')}
+              className="px-4 py-2 text-sm font-semibold text-white bg-amber-700 rounded-md hover:bg-amber-800"
+            >
+              Review messages
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto scrollbar-none">
           <nav className="flex space-x-6 min-w-max">
@@ -657,13 +684,21 @@ export default function DashboardPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`py-4 px-1 border-b-2 text-sm font-medium whitespace-nowrap transition-colors inline-flex items-center ${
                   activeTab === tab.id
                     ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : tab.badge
+                      ? 'border-transparent text-red-700 font-semibold hover:text-red-800'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {tab.label}
+                {tab.badge ? (
+                  <span className="ml-2 inline-flex min-w-[1.25rem] h-5 px-1.5 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold">
+                    {tab.badge}
+                    <span className="sr-only"> pending</span>
+                  </span>
+                ) : null}
               </button>
             ))}
           </nav>
@@ -726,7 +761,7 @@ export default function DashboardPage() {
                         className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">— Unassigned —</option>
-                        {activeMembers.map((m) => (
+                        {members.filter((m) => m.status === 'active').map((m) => (
                           <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
                         ))}
                       </select>
@@ -799,9 +834,6 @@ export default function DashboardPage() {
                         <tr key={m.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {m.name}
-                            {!m.registrationCompletedAt && m.role !== 'ADMIN' && (
-                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Registration pending</span>
-                            )}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
                           <td className="px-6 py-4">
@@ -846,6 +878,56 @@ export default function DashboardPage() {
                     {activeMembers.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">No active members.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Pending Registrations */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900">Pending Registrations ({pendingRegistrations.length})</h2>
+              <p className="text-sm text-gray-600 mt-1 mb-4">
+                Signed in but haven&apos;t submitted the registration form yet. They move to Active Members once they do.
+              </p>
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {['Member', 'Email', 'Joined', 'Actions'].map((h) => (
+                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {pendingRegistrations.map((m) => (
+                      <tr key={m.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {m.name}
+                          <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Registration pending</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
+                        <td className="px-6 py-4 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setViewMemberId(m.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeactivateMemberId(m.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-amber-100 text-amber-700 hover:bg-amber-200"
+                          >
+                            Deactivate
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pendingRegistrations.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-500">No pending registrations.</td>
                       </tr>
                     )}
                   </tbody>
@@ -2254,7 +2336,7 @@ export default function DashboardPage() {
                   await handleDeactivateMember(confirmDeactivateMemberId);
                   setConfirmDeactivateMemberId(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-amber-700 rounded-md hover:bg-amber-800"
               >
                 Deactivate
               </button>

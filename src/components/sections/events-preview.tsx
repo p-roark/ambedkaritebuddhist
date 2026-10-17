@@ -61,10 +61,10 @@ function InfoIcon() {
 export function EventsPreview({ subtitle, title, description, events }: EventsPreviewProps) {
   const { status } = useSession()
   const registrationEnabled = useFeature('eventRegistration')
-  // While the event registration switch is off, open events show as "Coming Soon"
-  const isRegistrationOpen = (event: EventCard) => event.registrationStatus === 'open' && registrationEnabled === true
-  const isComingSoon = (event: EventCard) =>
-    event.registrationStatus === 'not-started' || (event.registrationStatus === 'open' && registrationEnabled !== true)
+  // While the event registration switch is off, nothing about registration is shown
+  const showRegistration = registrationEnabled === true
+  const isRegistrationOpen = (event: EventCard) => event.registrationStatus === 'open' && showRegistration
+  const isComingSoon = (event: EventCard) => event.registrationStatus === 'not-started'
   const router = useRouter()
 
   const [infoEventId, setInfoEventId] = useState<string | null>(null)
@@ -141,6 +141,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                 </div>
 
                 {/* Event status chip */}
+                {(event.externalLink || event.status === 'past' || showRegistration) && (
                 <div className="mb-4">
                   {event.externalLink ? (
                     <span className="text-xs px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-medium">External Event</span>
@@ -158,6 +159,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                     </span>
                   )}
                 </div>
+                )}
 
                 {/* Footer: Info + Action */}
                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
@@ -195,7 +197,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                             Manage
                           </Link>
                         )}
-                        {event.userRegistrationStatus ? (
+                        {!showRegistration ? null : event.userRegistrationStatus ? (
                           <>
                             <span className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
                               event.userRegistrationStatus === 'Confirmed' ? 'bg-green-100 text-green-700' :
