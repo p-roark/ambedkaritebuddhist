@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { buildInviteLink } from '@/lib/registration';
+import { MemberDetailsDialog } from '@/components/admin/member-details-dialog';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
@@ -188,6 +189,7 @@ export default function DashboardPage() {
   const [newEventMessage, setNewEventMessage] = useState('');
 
   const [confirmDeactivateMemberId, setConfirmDeactivateMemberId] = useState<string | null>(null);
+  const [viewMemberId, setViewMemberId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [maxUses, setMaxUses] = useState(10);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -763,9 +765,21 @@ export default function DashboardPage() {
 
         {activeTab === 'members' && (
           <div className="space-y-8">
+            {viewMemberId && (
+              <MemberDetailsDialog memberId={viewMemberId} onClose={() => setViewMemberId(null)} onSaved={() => void loadMembers()} />
+            )}
             {/* Active Members */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Members ({activeMembers.length})</h2>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Active Members ({activeMembers.length})</h2>
+                <a
+                  href="/api/admin/members/export"
+                  download
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Download CSV
+                </a>
+              </div>
               <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -805,7 +819,13 @@ export default function DashboardPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-4 flex flex-wrap gap-2">
+                            <button
+                              onClick={() => setViewMemberId(m.id)}
+                              className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                            >
+                              View
+                            </button>
                             <button
                               onClick={() => setConfirmDeactivateMemberId(m.id)}
                               disabled={isSelf}
@@ -858,7 +878,13 @@ export default function DashboardPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setViewMemberId(m.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                          >
+                            View
+                          </button>
                           <button
                             onClick={() => handleActivateMember(m.id)}
                             className="px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200"

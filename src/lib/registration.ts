@@ -130,6 +130,63 @@ export function validateProfileFields(raw: unknown): ValidationResult<ProfileFie
   };
 }
 
+// Name is always required; other fields may be blank for unregistered members
+export type PartialProfileFields = { name: string } & { [K in Exclude<keyof ProfileFields, 'name'>]: ProfileFields[K] | null };
+
+/**
+ * Validates profile fields for an admin edit. For members who have completed
+ * registration the mandatory fields stay mandatory; for members who haven't,
+ * blank fields are allowed but anything entered must still be valid.
+ */
+export function validateProfileUpdate(
+  raw: unknown,
+  options: { requireComplete: boolean },
+): ValidationResult<PartialProfileFields, ProfileFieldName> {
+  if (options.requireComplete) return validateProfileFields(raw);
+
+  const body = (raw ?? {}) as Record<string, unknown>;
+  const errors: Partial<Record<ProfileFieldName, string>> = {};
+  const optional = (field: ProfileFieldName) => text(body[field]) || null;
+
+  const name = text(body.name);
+  if (!name) errors.name = 'Full name is required.';
+  else if (name.length > MAX_LENGTH) errors.name = 'Full name is too long.';
+
+  const phone = optional('phone');
+  if (phone && !isValidPhone(phone)) errors.phone = 'Enter a valid phone number, e.g. 416-555-0123.';
+
+  for (const field of ['addressLine1', 'addressLine2', 'city'] as const) {
+    if ((optional(field) ?? '').length > MAX_LENGTH) errors[field] = 'This value is too long.';
+  }
+
+  const provinceInput = optional('province');
+  const province = provinceInput ? normalizeProvince(provinceInput) : null;
+  if (provinceInput && !province) errors.province = 'Select a province or territory.';
+
+  const postalInput = optional('postalCode');
+  const postalCode = postalInput ? normalizePostalCode(postalInput) : null;
+  if (postalInput && !postalCode) errors.postalCode = 'Enter a valid Canadian postal code, e.g. M5V 2T6.';
+
+  const residencyInput = optional('residencyStatus');
+  if (residencyInput && !isResidencyStatus(residencyInput)) errors.residencyStatus = 'Select a residency status.';
+
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+
+  return {
+    ok: true,
+    value: {
+      name,
+      phone,
+      addressLine1: optional('addressLine1'),
+      addressLine2: optional('addressLine2'),
+      city: optional('city'),
+      province,
+      postalCode,
+      residencyStatus: (residencyInput as ResidencyStatus | null) ?? null,
+    },
+  };
+}
+
 /** Validates the first-time registration form: profile fields plus the required disclaimer. */
 export function validateRegistration(raw: unknown): ValidationResult<ProfileFields, RegistrationFieldName> {
   const body = (raw ?? {}) as Record<string, unknown>;
