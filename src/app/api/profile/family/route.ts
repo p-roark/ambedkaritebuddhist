@@ -1,52 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pickDisplayName } from '@/lib/user-name';
+import { requireRegisteredUser } from '@/lib/registration-server';
 
 export const dynamic = 'force-dynamic';
 
-async function getOrCreateUserId() {
-  const { auth } = await import('@/lib/auth');
-  const session = await auth();
-  const email = String(session?.user?.email ?? '').trim().toLowerCase();
-  if (!email) return null;
-
-  const [{ eq }, { getDb }, { users }] = await Promise.all([
-    import('drizzle-orm'),
-    import('@/db'),
-    import('@/db/schema'),
-  ]);
-  const db = getDb();
-  const existing = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1)
-    .then((rows) => rows[0]);
-
-  if (existing) return existing.id;
-
-  const now = new Date().toISOString();
-  const userId = crypto.randomUUID();
-  await db.insert(users).values({
-    id: userId,
-    name: pickDisplayName({
-      sessionName: session?.user?.name,
-      email,
-    }),
-    email,
-    passwordHash: '',
-    role: 'MEMBER',
-    image: String(session?.user?.image ?? '') || null,
-    emailVerified: now,
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  return userId;
-}
-
 export async function GET(_request: NextRequest) {
-  const userId = await getOrCreateUserId();
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const registered = await requireRegisteredUser();
+  if (!registered.ok) return registered.response;
+  const { userId } = registered;
 
   const [{ eq }, { getDb }, { familyMembers }] = await Promise.all([
     import('drizzle-orm'),
@@ -63,8 +23,9 @@ export async function GET(_request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getOrCreateUserId();
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const registered = await requireRegisteredUser();
+  if (!registered.ok) return registered.response;
+  const { userId } = registered;
 
   const body = (await request.json()) as {
     name?: string;
@@ -137,8 +98,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const userId = await getOrCreateUserId();
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const registered = await requireRegisteredUser();
+  if (!registered.ok) return registered.response;
+  const { userId } = registered;
 
   const body = (await request.json()) as {
     id?: string;
@@ -176,8 +138,9 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const userId = await getOrCreateUserId();
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const registered = await requireRegisteredUser();
+  if (!registered.ok) return registered.response;
+  const { userId } = registered;
 
   const body = (await request.json()) as { id?: string };
   if (!body.id) return NextResponse.json({ error: 'Member id is required' }, { status: 400 });

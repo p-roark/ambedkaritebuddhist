@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pickDisplayName } from '@/lib/user-name';
+import { requireRegisteredUser } from '@/lib/registration-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,10 +37,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { auth } = await import('@/lib/auth');
-  const session = await auth();
-  const email = String(session?.user?.email ?? '').trim().toLowerCase();
-  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Only members who have completed registration can register for events
+  const registered = await requireRegisteredUser();
+  if (!registered.ok) return registered.response;
+  const user = { id: registered.userId };
 
   const { id: eventId } = await params;
   const body = (await request.json()) as {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     nonMemberGuests?: Array<{ name?: string; age?: number }>;
   };
 
-  const [{ and, eq }, { getDb }, { eventRegistrations, events, familyMembers, users }] = await Promise.all([
+  const [{ and, eq }, { getDb }, { eventRegistrations, events, familyMembers }] = await Promise.all([
     import('drizzle-orm'),
     import('@/db'),
     import('@/db/schema'),
@@ -77,20 +77,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   // Check max attendees (only for new registrations — existing ones are updates)
   if (event.maxAttendees != null) {
-    const existingUser = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, email))
+    const alreadyRegistered = await db
+      .select({ id: eventRegistrations.id })
+      .from(eventRegistrations)
+      .where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.userId, user.id)))
       .limit(1)
       .then((r) => r[0]);
-    const alreadyRegistered = existingUser
-      ? await db
-          .select({ id: eventRegistrations.id })
-          .from(eventRegistrations)
-          .where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.userId, existingUser.id)))
-          .limit(1)
-          .then((r) => r[0])
-      : null;
     if (!alreadyRegistered) {
       const totalRegistered = await db
         .select({ id: eventRegistrations.id })
@@ -101,33 +93,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ error: 'This event has reached its maximum number of attendees' }, { status: 409 });
       }
     }
-  }
-
-  let user = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1)
-    .then((rows) => rows[0]);
-
-  if (!user) {
-    const now = new Date().toISOString();
-    const userId = crypto.randomUUID();
-    await db.insert(users).values({
-      id: userId,
-      name: pickDisplayName({
-        sessionName: session?.user?.name,
-        email,
-      }),
-      email,
-      passwordHash: '',
-      role: 'MEMBER',
-      image: String(session?.user?.image ?? '') || null,
-      emailVerified: now,
-      createdAt: now,
-      updatedAt: now,
-    });
-    user = { id: userId };
   }
 
   const includeFamily = Boolean(body.includeFamily);

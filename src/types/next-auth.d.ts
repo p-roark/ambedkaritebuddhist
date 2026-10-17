@@ -1,4 +1,5 @@
 import { DefaultSession } from 'next-auth';
+import type { RegistrationStatus } from '@/lib/registration';
 
 declare module 'next-auth' {
   interface Session {
@@ -10,6 +11,7 @@ declare module 'next-auth' {
       status?: string;
       activationRequestStatus?: string;
       pendingFamilyInvite?: string | null;
+      registrationStatus?: RegistrationStatus;
     } & DefaultSession['user'];
   }
 
@@ -26,5 +28,6 @@ declare module 'next-auth/jwt' {
     status?: string;
     activationRequestStatus?: string;
     pendingFamilyInvite?: string | null;
+    registrationStatus?: RegistrationStatus;
   }
 }

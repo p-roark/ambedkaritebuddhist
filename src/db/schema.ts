@@ -25,6 +25,10 @@ export const users = sqliteTable('User', {
   emailVerified: text('emailVerified'),                  // ISO date string
   image:        text('image'),
   referredBy:   text('referredBy'),
+  residencyStatus:         text('residencyStatus'),         // see RESIDENCY_STATUS_OPTIONS
+  registrationCompletedAt: text('registrationCompletedAt'), // ISO date; null until the registration form is submitted
+  disclaimerAcceptedAt:    text('disclaimerAcceptedAt'),    // ISO date
+  disclaimerVersion:       text('disclaimerVersion'),
   createdAt:    text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt:    text('updatedAt').notNull().default(sql`(datetime('now'))`),
 });

@@ -39,6 +39,8 @@ export function Navigation() {
   }, [pathname])
 
   const isAdmin = sessionState?.user?.role === 'ADMIN'
+  const showSignIn = status === 'unauthenticated' && pathname !== '/auth/login'
+  const signInHref = `/auth/login?callbackUrl=${encodeURIComponent(pathname || '/')}`
 
   const isActive = (href: string) => pathname === href
 
@@ -113,6 +115,14 @@ export function Navigation() {
                 </button>
               </>
             )}
+            {showSignIn && (
+              <Link
+                href={signInHref}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Mobile: hamburger */}
@@ -167,6 +177,14 @@ export function Navigation() {
               >
                 Sign Out
               </button>
+            )}
+            {showSignIn && (
+              <Link
+                href={signInHref}
+                className="block w-full text-center px-4 py-2.5 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+              >
+                Sign In
+              </Link>
             )}
           </div>
         </div>
