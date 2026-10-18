@@ -4,9 +4,6 @@
  * Field options and consent text live here so they can be updated without
  * touching the form or API code. When the consent wording changes, bump
  * DISCLAIMER_VERSION — each member's accepted version is stored on their record.
- *
- * TODO(registration): replace the placeholder residency options with the final
- * list from Sumit before release.
  */
 
 export const RESIDENCY_STATUS_OPTIONS = [
