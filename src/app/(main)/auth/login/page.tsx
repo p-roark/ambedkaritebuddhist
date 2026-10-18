@@ -4,7 +4,9 @@ import { Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { EmailSignInForm } from '@/components/auth/email-sign-in-form';
 import { safeCallbackUrl } from '@/lib/registration';
+import { useFeature } from '@/lib/use-feature';
 
 export default function LoginPage() {
   return (
@@ -17,6 +19,7 @@ export default function LoginPage() {
 // Auth.js error codes (?error=…) → what the visitor should read
 function signInErrorMessage(code: string | null): string | null {
   if (!code) return null;
+  if (code === 'CredentialsSignin') return 'This sign-in link has expired or was already used. Please request a new one.';
   if (code === 'AccessDenied') return 'This Google account can’t be used to sign in. Please try a different account.';
   if (code === 'OAuthCallbackError' || code === 'Configuration' || code === 'OAuthSignin' || code === 'Callback') {
     return 'Sign-in was cancelled or didn’t finish. Please try again.';
@@ -30,6 +33,7 @@ function LoginCard() {
   const errorMessage = signInErrorMessage(searchParams.get('error'));
   // Arrived from an invite link (/join?code=…): they're accepting an invitation
   const isInvite = callbackUrl === '/join' || callbackUrl.startsWith('/join?') || callbackUrl.startsWith('/join/');
+  const emailSignIn = useFeature('emailSignIn') === true;
 
   return (
     <div
@@ -53,8 +57,10 @@ function LoginCard() {
             </h1>
             <p className="text-text-medium text-base">
               {isInvite
-                ? 'Use the Google account you would like to register with. You will then complete a short registration form.'
-                : 'Sign in with your Google account to access the community.'}
+                ? `Use the ${emailSignIn ? 'Google account or email address' : 'Google account'} you would like to register with. You will then complete a short registration form.`
+                : emailSignIn
+                  ? 'Sign in with Google or with a link sent to your email.'
+                  : 'Sign in with your Google account to access the community.'}
             </p>
           </div>
 
@@ -89,6 +95,17 @@ function LoginCard() {
               Continue with Google
             </button>
           </div>
+
+          {emailSignIn && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-sm text-text-medium" aria-hidden="true">
+                <span className="h-px flex-1 bg-slate-200" />
+                or
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
+              <EmailSignInForm callbackUrl={callbackUrl} />
+            </>
+          )}
 
           <div className="mt-6 pt-6 border-t border-slate-100 text-center">
             <p className="text-sm text-text-medium">

@@ -54,7 +54,7 @@ describe('admin email senders API', () => {
     const res = await listSenders(new NextRequest('http://localhost/api/admin/email-senders'));
     const body = (await res.json()) as SendersBody;
     expect(body.defaultAddress).toBe('info@abcc.example');
-    expect(body.senders.map((s) => s.purpose)).toEqual(['registrations', 'donations', 'events', 'familyInvites']);
+    expect(body.senders.map((s) => s.purpose)).toEqual(['registrations', 'signIn', 'donations', 'events', 'familyInvites']);
     expect(body.senders.find((s) => s.purpose === 'donations')).toMatchObject({ address: 'donate@abcc.example', updatedBy: 'admin@example.com' });
   });
 
