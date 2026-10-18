@@ -10,6 +10,7 @@ type RegisteredMember = {
   province: string | null;
   residencyStatus: string | null;
   inviteCode: string | null;
+  boardInterest: boolean;
 };
 
 const labelFor = (options: ReadonlyArray<{ value: string; label: string }>, value: string | null) =>
@@ -62,6 +63,7 @@ export async function sendNewRegistrationAdminEmail({
         ${infoRow('Email', member.email)}
         ${infoRow('Location', location)}
         ${infoRow('Residency status', labelFor(RESIDENCY_STATUS_OPTIONS, member.residencyStatus))}
+        ${infoRow('Board / committee interest', member.boardInterest ? 'Yes' : 'No')}
         ${infoRow('Invite code', member.inviteCode ?? '—')}
       </table>
       <p style="margin:0">${ctaButton(`${origin}/dashboard`, 'Open the dashboard')}</p>`,

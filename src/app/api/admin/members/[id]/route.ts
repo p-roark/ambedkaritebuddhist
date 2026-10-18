@@ -35,6 +35,8 @@ async function loadMember(id: string) {
       registrationCompletedAt: users.registrationCompletedAt,
       disclaimerAcceptedAt: users.disclaimerAcceptedAt,
       disclaimerVersion: users.disclaimerVersion,
+      ageConfirmedAt: users.ageConfirmedAt,
+      boardInterest: users.boardInterest,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
     })

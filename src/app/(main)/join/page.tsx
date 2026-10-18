@@ -145,7 +145,7 @@ function JoinFlow() {
                 <h2 className="text-xl font-bold text-text-dark">Complete your registration</h2>
                 <p className="text-base text-text-medium mt-1">
                   {view.isExistingMember
-                    ? 'We have updated our membership records. Please confirm your details and accept the member declaration to continue.'
+                    ? 'We have updated our membership records. Please confirm your details and give your consent to continue.'
                     : 'Please fill in your details below. Your registration is complete once this form is submitted.'}
                 </p>
               </div>

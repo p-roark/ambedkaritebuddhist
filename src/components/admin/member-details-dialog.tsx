@@ -24,6 +24,8 @@ type MemberDetails = {
   registrationCompletedAt: string | null;
   disclaimerAcceptedAt: string | null;
   disclaimerVersion: string | null;
+  ageConfirmedAt: string | null;
+  boardInterest: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -182,7 +184,9 @@ export function MemberDetailsDialog({ memberId, onClose, onSaved }: MemberDetail
                   ['Role', member.role],
                   ['Account status', member.status],
                   ['Registration', member.registrationCompletedAt ? `Completed ${formatDate(member.registrationCompletedAt)}` : 'Pending'],
-                  ['Declaration', member.disclaimerAcceptedAt ? `${formatDate(member.disclaimerAcceptedAt)} (${member.disclaimerVersion ?? '—'})` : 'Not accepted'],
+                  ['Consent', member.disclaimerAcceptedAt ? `${formatDate(member.disclaimerAcceptedAt)} (${member.disclaimerVersion ?? '—'})` : 'Not given'],
+                  ['18 or older', member.ageConfirmedAt ? `Confirmed ${formatDate(member.ageConfirmedAt)}` : 'Not confirmed'],
+                  ['Board / committee interest', member.boardInterest ? 'Yes' : 'No'],
                   ['Invite code', member.referredBy ?? '—'],
                   ['Joined', formatDate(member.createdAt)],
                 ].map(([label, value]) => (

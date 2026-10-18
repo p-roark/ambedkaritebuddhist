@@ -20,6 +20,7 @@ const validForm = {
   province: 'ON',
   postalCode: 'm5h2n2',
   residencyStatus: 'PERMANENT_RESIDENT',
+  ageConfirmed: true,
   disclaimerAccepted: true,
 };
 
@@ -64,11 +65,25 @@ describe('validateRegistration', () => {
         province: 'ON',
         postalCode: 'M5H 2N2',
         residencyStatus: 'PERMANENT_RESIDENT',
+        boardInterest: false,
       },
     });
   });
 
-  it('requires the disclaimer to be accepted', () => {
+  it('requires the age confirmation', () => {
+    const result = validateRegistration({ ...validForm, ageConfirmed: false });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(Object.keys(result.errors)).toEqual(['ageConfirmed']);
+  });
+
+  it('records board/committee interest only when ticked', () => {
+    const without = validateRegistration(validForm);
+    const withInterest = validateRegistration({ ...validForm, boardInterest: true });
+    expect(without.ok && without.value.boardInterest).toBe(false);
+    expect(withInterest.ok && withInterest.value.boardInterest).toBe(true);
+  });
+
+  it('requires the consent to be given', () => {
     const result = validateRegistration({ ...validForm, disclaimerAccepted: false });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(Object.keys(result.errors)).toEqual(['disclaimerAccepted']);
@@ -83,7 +98,7 @@ describe('validateRegistration', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(Object.keys(result.errors).sort()).toEqual(
-        ['addressLine1', 'city', 'disclaimerAccepted', 'name', 'phone', 'postalCode', 'province', 'residencyStatus'].sort(),
+        ['addressLine1', 'ageConfirmed', 'city', 'disclaimerAccepted', 'name', 'phone', 'postalCode', 'province', 'residencyStatus'].sort(),
       );
     }
   });
