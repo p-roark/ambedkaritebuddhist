@@ -12,8 +12,13 @@ export async function POST(request: NextRequest) {
       message?: string;
     };
 
+    // Messages from signed-in users are linked to their account and always use
+    // their sign-in email, so they can't be sent in someone else's name.
+    const { auth } = await import('@/lib/auth');
+    const sessionEmail = String((await auth())?.user?.email ?? '').trim().toLowerCase();
+
     const name = String(body.name ?? '').trim();
-    const email = String(body.email ?? '').trim().toLowerCase();
+    const email = sessionEmail || String(body.email ?? '').trim().toLowerCase();
     const phone = String(body.phone ?? '').trim();
     const subject = String(body.subject ?? '').trim();
     const message = String(body.message ?? '').trim();
@@ -27,11 +32,20 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const [{ getDb }, { contactMessages }] = await Promise.all([
+    const [{ eq }, { getDb }, { contactMessages, users }] = await Promise.all([
+      import('drizzle-orm'),
       import('@/db'),
       import('@/db/schema'),
     ]);
     const db = getDb();
+    const userId = sessionEmail
+      ? await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, sessionEmail))
+          .limit(1)
+          .then((rows) => rows[0]?.id ?? null)
+      : null;
     await db.insert(contactMessages).values({
       id: crypto.randomUUID(),
       name,
@@ -40,6 +54,7 @@ export async function POST(request: NextRequest) {
       subject,
       message,
       status: 'PENDING',
+      userId,
       adminNote: null,
       createdAt: now,
       updatedAt: now,
