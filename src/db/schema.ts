@@ -298,6 +298,16 @@ export const donations = sqliteTable('Donation', {
   createdIdx:   index('Donation_createdAt_idx').on(t.createdAt),
 }));
 
+// ─── Email sign-in links ─────────────────────────────────────────────────────
+
+export const signInLinks = sqliteTable('SignInLink', {
+  tokenHash: text('tokenHash').primaryKey(), // SHA-256 of the token in the emailed link
+  email:     text('email').notNull(),
+  ip:        text('ip'),
+  expiresAt: text('expiresAt').notNull(),
+  createdAt: text('createdAt').notNull(),
+});
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;

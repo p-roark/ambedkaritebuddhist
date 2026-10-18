@@ -235,13 +235,13 @@ export async function GET(request: Request) {
 
 - **NextAuth.js v5 (beta)** — `next-auth@5.0.0-beta.30`
 - **Strategy:** JWT (no database sessions — `jwt` strategy is required for edge runtime)
-- **Providers:** Google OAuth (optional, requires env vars) + Credentials (email/password)
+- **Providers:** Google OAuth (requires env vars) + `email-link` (one-time links emailed to members; behind the "Email sign-in link" feature switch, off by default)
 
 ### Configuration
 
 `src/lib/auth.ts` — full NextAuth config with:
 
-- **signIn callback:** Validates Google provider email
+- **signIn callback:** Allows Google or a verified email link, always with an email
 - **jwt callback:** Fetches user role and membership from D1 and adds to token
 - **session callback:** Maps JWT token fields to the `session.user` object
 
@@ -280,6 +280,8 @@ Admin status is determined by:
 
 - Sign-in page: `/auth/login`
 - NextAuth handler: `/api/auth/[...nextauth]`
+- Email sign-in link: `POST /api/sign-in-link` emails a one-time link (only to an existing account's email, or to a new person arriving from a valid invite link; the reply is the same either way). The link opens `/auth/email-link`, whose "Sign in" button calls the `email-link` provider. Links are stored hashed in `SignInLink`, expire after 15 minutes, work once, and are limited to 3 per email per 15 minutes and 10 per network address per hour (`src/lib/email-sign-in.ts`).
+- Either way of signing in reaches the same account: the jwt callback looks the member up by email.
 - No register page yet (placeholder directory exists at `src/app/(auth)/auth/register/`)
 
 ---

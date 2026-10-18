@@ -50,6 +50,13 @@ export const FEATURES = {
     description: 'Shows signed-in members the "Upload photos to Drive" link on event galleries.',
     defaultEnabled: true,
   },
+  emailSignIn: {
+    label: 'Email sign-in link',
+    page: 'Membership',
+    description:
+      'Adds "Email me a sign-in link" to the login page, for people who don’t want to use Google. The link is sent from the Sign-in links address in Settings → Email and works once, for 15 minutes.',
+    defaultEnabled: false,
+  },
   memberDeletion: {
     label: 'Delete deactivated members',
     page: 'Members',

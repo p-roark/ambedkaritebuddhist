@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
 // The jwt callback runs on every session read (each page view and API call).
@@ -17,6 +18,28 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   );
 }
 
+// One-time links emailed from /api/sign-in-link (feature switch "Email sign-in
+// link"). The link opens /auth/email-link, which posts the email and token here.
+providers.push(
+  CredentialsProvider({
+    id: 'email-link',
+    name: 'Email link',
+    credentials: { email: {}, token: {} },
+    async authorize(credentials) {
+      const email = String(credentials?.email ?? '').trim().toLowerCase();
+      const token = String(credentials?.token ?? '');
+      const [{ isFeatureEnabled }, { consumeSignInLink }] = await Promise.all([
+        import('@/lib/feature-flags-server'),
+        import('@/lib/email-sign-in'),
+      ]);
+      if (!(await isFeatureEnabled('emailSignIn'))) return null;
+      const verified = await consumeSignInLink(email, token);
+      // Role and membership are read from the account with this email in the jwt callback
+      return verified ? { id: verified, email: verified, role: 'MEMBER' } : null;
+    },
+  }),
+);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
 
@@ -25,9 +48,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
 
   callbacks: {
-    // Only allow OAuth sign-in with a real email
+    // Google, or a verified email sign-in link; always with an email
     async signIn({ user, account }) {
-      return account?.provider === 'google' && Boolean(user.email);
+      return (account?.provider === 'google' || account?.provider === 'email-link') && Boolean(user.email);
     },
 
     async jwt({ token, trigger }) {

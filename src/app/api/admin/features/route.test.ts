@@ -48,7 +48,8 @@ describe('admin features API', () => {
     asAdmin();
     const res = await listFeatures(new NextRequest('http://localhost/api/admin/features'));
     const data = (await res.json()) as { features: Array<{ key: string; enabled: boolean; updatedBy: string | null }> };
-    expect(data.features.map((f) => f.key)).toEqual(['eventRegistration', 'family', 'memberRegistration', 'donations', 'galleryUpload', 'memberDeletion']);
+    expect(data.features.map((f) => f.key)).toEqual(['eventRegistration', 'family', 'memberRegistration', 'donations', 'galleryUpload', 'emailSignIn', 'memberDeletion']);
+    expect(data.features.find((f) => f.key === 'emailSignIn')).toMatchObject({ enabled: false });
     expect(data.features.find((f) => f.key === 'memberDeletion')).toMatchObject({ enabled: false });
     expect(data.features.find((f) => f.key === 'family')).toMatchObject({ enabled: false, updatedBy: null });
   });
