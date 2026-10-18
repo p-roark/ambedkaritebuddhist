@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
@@ -39,6 +40,15 @@ providers.push(
     },
   }),
 );
+
+/**
+ * Email-link sign-ins carry no name or photo (Google sign-ins do), so take them
+ * from the member's account; values from Google are kept.
+ */
+function fillProfileFromAccount(token: JWT, account: { name: string | null; image: string | null }) {
+  if (!token.name && account.name) token.name = account.name;
+  if (!token.picture && account.image) token.picture = account.image;
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
@@ -83,9 +93,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             import('@/db/schema'),
           ]);
           const db = getDb();
-          const existing = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.email, tokenEmail)).limit(1).then((r) => r[0]);
+          const existing = await db.select({ id: users.id, role: users.role, name: users.name, image: users.image }).from(users).where(eq(users.email, tokenEmail)).limit(1).then((r) => r[0]);
           if (existing) {
             token.sub = existing.id;
+            fillProfileFromAccount(token, existing);
             if (existing.role !== 'ADMIN') {
               const { eq: eq2 } = await import('drizzle-orm');
               await db.update(users).set({ role: 'ADMIN' }).where(eq2(users.id, existing.id));
@@ -120,6 +131,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             activationRequestStatus: users.activationRequestStatus,
             referredBy: users.referredBy,
             registrationCompletedAt: users.registrationCompletedAt,
+            name: users.name,
+            image: users.image,
           })
           .from(users)
           .where(eq(users.email, tokenEmail))
@@ -134,6 +147,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.sub                     = row.id;
           token.status                  = row.status;
           token.activationRequestStatus = row.activationRequestStatus;
+          fillProfileFromAccount(token, row);
 
           // Check if this user is a coordinator of any event
           const coordRows = await db

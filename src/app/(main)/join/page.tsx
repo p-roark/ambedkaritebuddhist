@@ -4,9 +4,11 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { EmailSignInForm } from '@/components/auth/email-sign-in-form';
 import { RegistrationForm, type RegistrationFormValues } from '@/components/auth/registration-form';
 import { clearPendingInviteCode, readPendingInviteCode, savePendingInviteCode } from '@/lib/pending-invite';
 import { normalizeInviteCode, type RegistrationStatus } from '@/lib/registration';
+import { useFeature } from '@/lib/use-feature';
 
 type ViewState =
   | { kind: 'loading' }
@@ -43,6 +45,8 @@ function JoinFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = normalizeInviteCode(searchParams.get('code'));
+  const inviteCallbackUrl = `/join?code=${encodeURIComponent(code ?? '')}`;
+  const emailSignIn = useFeature('emailSignIn') === true;
   const [view, setView] = useState<ViewState>({ kind: 'loading' });
   // Refreshing the session after submit briefly changes `status`; don't re-resolve then
   const completedRef = useRef(false);
@@ -127,15 +131,28 @@ function JoinFlow() {
             <div className="text-center space-y-5 py-4">
               <h2 className="text-xl font-bold text-text-dark">You&apos;re invited to join our community 🪷</h2>
               <p className="text-base text-text-medium">
-                Sign in securely with your Google account to continue. You&apos;ll then complete a short registration form.
+                {emailSignIn
+                  ? 'Sign in with Google or with a link sent to your email to continue.'
+                  : 'Sign in securely with your Google account to continue.'}{' '}
+                You&apos;ll then complete a short registration form.
               </p>
               <button
                 type="button"
-                onClick={() => signIn('google', { callbackUrl: `/join?code=${encodeURIComponent(code ?? '')}` })}
+                onClick={() => signIn('google', { callbackUrl: inviteCallbackUrl })}
                 className="inline-flex items-center justify-center gap-3 py-3 px-6 border-2 border-slate-200 rounded-2xl text-text-dark font-semibold hover:border-primary-blue hover:bg-blue-50 transition-all"
               >
                 Continue with Google
               </button>
+              {emailSignIn && (
+                <div className="mx-auto max-w-sm text-left">
+                  <div className="my-5 flex items-center gap-3 text-sm text-text-medium" aria-hidden="true">
+                    <span className="h-px flex-1 bg-slate-200" />
+                    or
+                    <span className="h-px flex-1 bg-slate-200" />
+                  </div>
+                  <EmailSignInForm callbackUrl={inviteCallbackUrl} />
+                </div>
+              )}
             </div>
           )}
 
