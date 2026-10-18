@@ -39,7 +39,10 @@ export type ProfileFields = {
 };
 
 export type ProfileFieldName = keyof ProfileFields;
-export type RegistrationFieldName = ProfileFieldName | 'disclaimerAccepted';
+export type RegistrationFieldName = ProfileFieldName | 'ageConfirmed' | 'disclaimerAccepted';
+
+/** Profile fields plus the registration-only answers. */
+export type RegistrationFields = ProfileFields & { boardInterest: boolean };
 
 export type ValidationResult<T, K extends string> =
   | { ok: true; value: T }
@@ -187,16 +190,23 @@ export function validateProfileUpdate(
   };
 }
 
-/** Validates the first-time registration form: profile fields plus the required disclaimer. */
-export function validateRegistration(raw: unknown): ValidationResult<ProfileFields, RegistrationFieldName> {
+/**
+ * Validates the registration form: profile fields, the required age
+ * confirmation and consent, and the optional board/committee interest.
+ */
+export function validateRegistration(raw: unknown): ValidationResult<RegistrationFields, RegistrationFieldName> {
   const body = (raw ?? {}) as Record<string, unknown>;
   const profile = validateProfileFields(body);
+  const ageConfirmed = body.ageConfirmed === true;
   const disclaimerAccepted = body.disclaimerAccepted === true;
 
-  if (profile.ok && disclaimerAccepted) return profile;
+  if (profile.ok && ageConfirmed && disclaimerAccepted) {
+    return { ok: true, value: { ...profile.value, boardInterest: body.boardInterest === true } };
+  }
 
   const errors: Partial<Record<RegistrationFieldName, string>> = profile.ok ? {} : { ...profile.errors };
-  if (!disclaimerAccepted) errors.disclaimerAccepted = 'You must accept the member declaration to register.';
+  if (!ageConfirmed) errors.ageConfirmed = 'You must be 18 years of age or older to become a member.';
+  if (!disclaimerAccepted) errors.disclaimerAccepted = 'Please give your consent to submit your application.';
   return { ok: false, errors };
 }
 

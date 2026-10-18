@@ -29,6 +29,8 @@ export const users = sqliteTable('User', {
   registrationCompletedAt: text('registrationCompletedAt'), // ISO date; null until the registration form is submitted
   disclaimerAcceptedAt:    text('disclaimerAcceptedAt'),    // ISO date
   disclaimerVersion:       text('disclaimerVersion'),
+  ageConfirmedAt:          text('ageConfirmedAt'),          // ISO date the member confirmed they are 18 or older
+  boardInterest:           integer('boardInterest', { mode: 'boolean' }).notNull().default(false),
   createdAt:    text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt:    text('updatedAt').notNull().default(sql`(datetime('now'))`),
 });

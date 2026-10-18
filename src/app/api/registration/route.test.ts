@@ -50,6 +50,7 @@ const validForm = {
   province: 'ON',
   postalCode: 'M5H 2N2',
   residencyStatus: 'CITIZEN',
+  ageConfirmed: true,
   disclaimerAccepted: true,
 };
 
@@ -113,6 +114,8 @@ describe('POST /api/registration', () => {
     });
     expect(user?.registrationCompletedAt).toBeTruthy();
     expect(user?.disclaimerAcceptedAt).toBeTruthy();
+    expect(user?.ageConfirmedAt).toBeTruthy();
+    expect(user?.boardInterest).toBe(0);
     expect(codeUses('BHIM-ABC-1234')).toBe(1);
   });
 
@@ -188,6 +191,15 @@ describe('GET /api/registration', () => {
     expect(data.registrationStatus).toBe('profile_required');
     expect(data.prefill).toMatchObject({ email: 'new.member@example.com', province: 'ON', postalCode: 'M5H 2N2' });
   });
+
+  it('pre-selects Ontario when no province is saved', async () => {
+    seedUser('new.member@example.com', { referredBy: 'BHIM-OLD-0001' });
+    state.sqlite.prepare('UPDATE "User" SET province = ? WHERE email = ?').run('BC', 'new.member@example.com');
+    expect(((await (await getRegistration()).json()) as { prefill: { province: string } }).prefill.province).toBe('BC');
+
+    state.sqlite.prepare('UPDATE "User" SET province = NULL WHERE email = ?').run('new.member@example.com');
+    expect(((await (await getRegistration()).json()) as { prefill: { province: string } }).prefill.province).toBe('ON');
+  });
 });
 
 describe('GET /api/registration/validate', () => {
@@ -258,7 +270,7 @@ describe('registration emails', () => {
 
   it('welcomes new members and sends the notice to the organization email by default', async () => {
     seedCode('BHIM-ABC-1234');
-    expect((await post({ ...validForm, name: 'Ravi <b>Kamble</b>', code: 'BHIM-ABC-1234' })).status).toBe(200);
+    expect((await post({ ...validForm, name: 'Ravi <b>Kamble</b>', boardInterest: true, code: 'BHIM-ABC-1234' })).status).toBe(200);
 
     await settleBackground();
     expect(sendEmailMock).toHaveBeenCalledTimes(2);
@@ -272,6 +284,8 @@ describe('registration emails', () => {
     expect(notice?.[1].subject).toBe('New member registered: Ravi <b>Kamble</b>');
     expect(notice?.[1].html).toContain('BHIM-ABC-1234');
     expect(notice?.[1].html).toContain('Canadian Citizen');
+    expect(notice?.[1].html).toMatch(/Board \/ committee interest.*Yes/s);
+    expect(userRow('new.member@example.com')?.boardInterest).toBe(1);
     expect(notice?.[1].html).not.toContain('<b>Kamble');
   });
 

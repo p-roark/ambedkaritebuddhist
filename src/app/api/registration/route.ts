@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runInBackground } from '@/lib/background';
 import { requireFeature } from '@/lib/feature-flags-server';
-import { DISCLAIMER_VERSION } from '@/lib/registration-config';
+import { DEFAULT_PROVINCE, DISCLAIMER_VERSION } from '@/lib/registration-config';
 import { normalizeInviteCode, normalizePostalCode, normalizeProvince, validateRegistration } from '@/lib/registration';
 import { getCurrentUser } from '@/lib/registration-server';
 import { pickDisplayName } from '@/lib/user-name';
@@ -49,7 +49,7 @@ export async function GET() {
           addressLine1: row?.addressLine1 ?? '',
           addressLine2: row?.addressLine2 ?? '',
           city: row?.city ?? '',
-          province: normalizeProvince(row?.province) ?? '',
+          province: normalizeProvince(row?.province) ?? DEFAULT_PROVINCE,
           postalCode: normalizePostalCode(row?.postalCode) ?? row?.postalCode ?? '',
           residencyStatus: row?.residencyStatus ?? '',
         },
@@ -63,7 +63,8 @@ export async function GET() {
 }
 
 // POST /api/registration
-// Body: registration form fields + disclaimerAccepted + code (required for new members).
+// Body: registration form fields + ageConfirmed + disclaimerAccepted + boardInterest
+// + code (required for new members).
 // Completes registration: consumes the invite code (if needed) and saves the profile.
 export async function POST(request: NextRequest) {
   try {
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
       registrationCompletedAt: now,
       disclaimerAcceptedAt: now,
       disclaimerVersion: DISCLAIMER_VERSION,
+      ageConfirmedAt: now,
       updatedAt: now,
     };
 
@@ -172,6 +174,7 @@ export async function POST(request: NextRequest) {
       province: parsed.value.province,
       residencyStatus: parsed.value.residencyStatus,
       inviteCode: referredBy,
+      boardInterest: parsed.value.boardInterest,
     };
     const origin = request.nextUrl.origin;
     const { sendNewRegistrationAdminEmail, sendWelcomeEmail } = await import('@/lib/emails/registration');

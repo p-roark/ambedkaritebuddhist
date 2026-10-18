@@ -2,8 +2,9 @@
 
 import { useRef, useState } from 'react';
 import {
+  AGE_CONFIRMATION_LABEL,
+  BOARD_INTEREST_LABEL,
   DISCLAIMER_CHECKBOX_LABEL,
-  DISCLAIMER_PARAGRAPHS,
   DISCLAIMER_TITLE,
   PROVINCE_OPTIONS,
   RESIDENCY_STATUS_OPTIONS,
@@ -29,13 +30,14 @@ interface RegistrationFormProps {
 }
 
 type FieldErrors = Partial<Record<RegistrationFieldName, string>>;
+type Checkboxes = { ageConfirmed: boolean; boardInterest: boolean; disclaimerAccepted: boolean };
 
 const inputClass =
   'w-full px-3 py-2.5 border rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors';
 
 export function RegistrationForm({ initialValues, inviteCode, onSuccess }: RegistrationFormProps) {
   const [values, setValues] = useState(initialValues);
-  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [checks, setChecks] = useState<Checkboxes>({ ageConfirmed: false, boardInterest: false, disclaimerAccepted: false });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -46,6 +48,11 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
     if (errors[field as RegistrationFieldName]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
+  const setCheck = (field: keyof Checkboxes, checked: boolean) => {
+    setChecks((prev) => ({ ...prev, [field]: checked }));
+    if (field !== 'boardInterest' && errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
   const showErrors = (fieldErrors: FieldErrors, message: string) => {
     setErrors(fieldErrors);
     setFormError(message);
@@ -54,7 +61,7 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...values, disclaimerAccepted, code: inviteCode ?? undefined };
+    const payload = { ...values, ...checks, code: inviteCode ?? undefined };
 
     const check = validateRegistration(payload);
     if (!check.ok) {
@@ -104,6 +111,31 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
       {required && <span className="text-red-700" aria-hidden="true"> *</span>}
     </label>
   );
+
+  const checkbox = (field: keyof Checkboxes, text: string, required: boolean) => {
+    const id = `reg-${field}`;
+    const error = field === 'boardInterest' ? undefined : errors[field];
+    return (
+      <div>
+        <div className="flex items-start gap-3">
+          <input
+            id={id}
+            type="checkbox"
+            checked={checks[field]}
+            onChange={(e) => setCheck(field, e.target.checked)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? `${id}-error` : undefined}
+            className="mt-1 h-5 w-5 shrink-0 rounded border-slate-400 text-primary-blue focus:ring-primary-blue"
+          />
+          <label htmlFor={id} className="text-sm font-medium text-text-dark">
+            {text}
+            {required && <span className="text-red-700" aria-hidden="true"> *</span>}
+          </label>
+        </div>
+        {field !== 'boardInterest' && errorText(field)}
+      </div>
+    );
+  };
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
@@ -170,27 +202,14 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
         </div>
       </div>
 
+      <div className="space-y-3">
+        {checkbox('ageConfirmed', AGE_CONFIRMATION_LABEL, true)}
+        {checkbox('boardInterest', BOARD_INTEREST_LABEL, false)}
+      </div>
+
       <fieldset className={`rounded-2xl border p-4 ${errors.disclaimerAccepted ? 'border-red-500' : 'border-slate-200'} bg-background-light`}>
         <legend className="px-1 text-base font-semibold text-text-dark">{DISCLAIMER_TITLE}</legend>
-        <div className="max-h-56 overflow-y-auto space-y-2 text-sm text-text-dark" tabIndex={0} aria-label={DISCLAIMER_TITLE}>
-          {DISCLAIMER_PARAGRAPHS.map((p) => <p key={p}>{p}</p>)}
-        </div>
-        <div className="mt-4 flex items-start gap-3">
-          <input
-            {...fieldProps('disclaimerAccepted')}
-            type="checkbox"
-            checked={disclaimerAccepted}
-            onChange={(e) => {
-              setDisclaimerAccepted(e.target.checked);
-              if (errors.disclaimerAccepted) setErrors((prev) => ({ ...prev, disclaimerAccepted: undefined }));
-            }}
-            className="mt-1 h-5 w-5 rounded border-slate-400 text-primary-blue focus:ring-primary-blue"
-          />
-          <label htmlFor="reg-disclaimerAccepted" className="text-sm font-medium text-text-dark">
-            {DISCLAIMER_CHECKBOX_LABEL} <span className="text-red-700" aria-hidden="true">*</span>
-          </label>
-        </div>
-        {errorText('disclaimerAccepted')}
+        {checkbox('disclaimerAccepted', DISCLAIMER_CHECKBOX_LABEL, true)}
       </fieldset>
 
       <button
@@ -198,7 +217,7 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
         disabled={submitting}
         className="w-full md:w-auto px-8 py-3 rounded-xl bg-primary-blue text-white text-base font-bold hover:bg-primary-blue/90 disabled:opacity-60 transition-colors"
       >
-        {submitting ? 'Submitting…' : 'Complete Registration'}
+        {submitting ? 'Submitting…' : 'Submit Application'}
       </button>
     </form>
   );
