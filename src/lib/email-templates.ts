@@ -27,10 +27,20 @@ export function layout(branding: EmailBranding, bodyHtml: string): string {
 </div>`;
 }
 
-/** Call-to-action button; only http(s) links are allowed. */
-export function ctaButton(href: string, label: string): string {
-  const safeHref = /^https?:\/\//i.test(href) ? escapeHtml(href) : '#';
-  return `<a href="${safeHref}" style="display:inline-block;background:#E8B20E;color:#1F2937;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:15px">${escapeHtml(label)}</a>`;
+const BUTTON_STYLES = {
+  primary: 'background:#E8B20E;color:#1F2937;border:2px solid #E8B20E',
+  secondary: 'background:#ffffff;color:#2D4D9B;border:2px solid #2D4D9B',
+} as const;
+
+/** Call-to-action button; only http(s) and mailto: links are allowed. */
+export function ctaButton(href: string, label: string, variant: keyof typeof BUTTON_STYLES = 'primary'): string {
+  const safeHref = /^(https?:\/\/|mailto:)/i.test(href) ? escapeHtml(href) : '#';
+  return `<a href="${safeHref}" style="display:inline-block;${BUTTON_STYLES[variant]};font-weight:700;padding:10px 26px;border-radius:8px;text-decoration:none;font-size:15px;margin:0 8px 8px 0">${escapeHtml(label)}</a>`;
+}
+
+/** Escaped text that keeps the writer's line breaks (e.g. a message body). */
+export function multilineText(text: string): string {
+  return `<div style="margin:0 0 16px;padding:16px;background:#F6F6F6;border-radius:8px;color:#1F2937;font-size:15px;line-height:1.5;white-space:pre-wrap">${escapeHtml(text)}</div>`;
 }
 
 /** Table row with an escaped label and value. */

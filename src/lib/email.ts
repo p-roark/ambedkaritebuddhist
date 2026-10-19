@@ -1,6 +1,14 @@
-import { EMAIL_PURPOSES, type EmailPurpose } from '@/lib/email-senders';
+import { EMAIL_PURPOSES, isValidEmailAddress, type EmailPurpose } from '@/lib/email-senders';
 import { resolveSender, type ResolvedSender } from '@/lib/email-senders-server';
 import { escapeHtml } from '@/lib/email-templates';
+
+export type EmailMessage = {
+  to: string | string[];
+  subject: string;
+  html: string;
+  /** Where replies go (e.g. the person who wrote in), instead of the sender */
+  replyTo?: string;
+};
 
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.send';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -108,13 +116,15 @@ function encodeHeader(value: string): string {
 async function sendViaGmail(
   accessToken: string,
   sender: { address: string; name: string },
-  { to, subject, html }: { to: string | string[]; subject: string; html: string },
+  { to, subject, html, replyTo }: EmailMessage,
 ): Promise<void> {
   const recipients = (Array.isArray(to) ? to : [to]).map((address) => address.replace(/[\r\n,<>]/g, '').trim()).filter(Boolean);
   if (recipients.length === 0) throw new Error('[email] No recipients');
   const raw = [
     `From: ${encodeHeader(sender.name.replace(/["\r\n]/g, ''))} <${sender.address}>`,
     `To: ${recipients.join(', ')}`,
+    // Only a plain, valid address — anything else could inject headers
+    ...(replyTo && isValidEmailAddress(replyTo) ? [`Reply-To: ${replyTo}`] : []),
     // Line breaks in a subject would start new headers
     `Subject: ${encodeHeader(subject.replace(/[\r\n]+/g, ' '))}`,
     'MIME-Version: 1.0',
@@ -156,10 +166,7 @@ function getGmailCredentials(): { serviceAccountEmail: string; privateKey: strin
  * Sends an email from the sender configured for `purpose` (or the organization
  * email). Returns false when email isn't configured; throws on delivery errors.
  */
-export async function sendEmail(
-  purpose: EmailPurpose,
-  message: { to: string | string[]; subject: string; html: string },
-): Promise<boolean> {
+export async function sendEmail(purpose: EmailPurpose, message: EmailMessage): Promise<boolean> {
   const credentials = getGmailCredentials();
   if (!credentials) return false;
 

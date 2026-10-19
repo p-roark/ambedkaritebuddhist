@@ -120,4 +120,16 @@ describe('message headers', () => {
     expect(raw).toContain('Subject: Hi Bcc: victim@example.org');
     expect(raw).not.toMatch(/^Bcc:/m);
   });
+
+  it('adds Reply-To only for a plain valid address', async () => {
+    const { sendEmail } = await import('./email');
+    const rawOf = (n: number) => Buffer.from(JSON.parse(String(fetchMock.mock.calls[n][1].body)).raw, 'base64url').toString();
+    fetchMock.mockResolvedValueOnce(tokenOk()).mockResolvedValueOnce(new Response('{"id":"m1"}', { status: 200 }));
+    await sendEmail('contact', { to: 'inbox@example.org', subject: 'S', html: 'x', replyTo: 'writer@example.com' });
+    expect(rawOf(1)).toMatch(/^Reply-To: writer@example\.com\r$/m);
+
+    fetchMock.mockResolvedValueOnce(tokenOk()).mockResolvedValueOnce(new Response('{"id":"m2"}', { status: 200 }));
+    await sendEmail('contact', { to: 'inbox@example.org', subject: 'S', html: 'x', replyTo: 'a@example.com\r\nBcc: victim@example.org' });
+    expect(rawOf(3)).not.toMatch(/^(Reply-To|Bcc):/m);
+  });
 });
