@@ -101,7 +101,9 @@ function JoinFlow() {
   const handleSuccess = async () => {
     completedRef.current = true;
     clearPendingInviteCode();
-    await update();
+    // update() without data only re-reads the cached session; passing data makes
+    // Auth.js rebuild it from the database (role, registration status, name)
+    await update({});
     setView({ kind: 'done' });
   };
 

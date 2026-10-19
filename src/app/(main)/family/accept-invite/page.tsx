@@ -72,7 +72,9 @@ function AcceptInviteFlow() {
       return;
     }
     // Refresh the JWT so pendingFamilyInvite is cleared from session
-    await update();
+    // update() without data only re-reads the cached session; passing data makes
+    // Auth.js rebuild it from the database (role, registration status, name)
+    await update({});
     setPageState('success');
   }
 

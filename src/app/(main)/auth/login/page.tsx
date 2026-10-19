@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense } from 'react';
-import { signIn } from 'next-auth/react';
+import { Suspense, useEffect } from 'react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { EmailSignInForm } from '@/components/auth/email-sign-in-form';
 import { safeCallbackUrl } from '@/lib/registration';
 import { useFeature } from '@/lib/use-feature';
@@ -34,6 +34,14 @@ function LoginCard() {
   // Arrived from an invite link (/join?code=…): they're accepting an invitation
   const isInvite = callbackUrl === '/join' || callbackUrl.startsWith('/join?') || callbackUrl.startsWith('/join/');
   const emailSignIn = useFeature('emailSignIn') === true;
+  const { status } = useSession();
+  const router = useRouter();
+
+  // Already signed in — including in another tab, e.g. from an emailed sign-in
+  // link — so there's nothing to do here: continue to where they were going
+  useEffect(() => {
+    if (status === 'authenticated') router.replace(callbackUrl);
+  }, [status, callbackUrl, router]);
 
   return (
     <div
