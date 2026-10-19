@@ -10,6 +10,10 @@ export const EMAIL_PURPOSES = {
     label: 'Member registrations',
     description: 'Sends welcome emails to new members. New-registration notices are sent to this address.',
   },
+  contact: {
+    label: 'Contact messages',
+    description: 'Messages sent from the Contact Us page are emailed to this address (and sent from it).',
+  },
   signIn: {
     label: 'Sign-in links',
     description: 'One-time email sign-in links (when the "Email sign-in link" feature is on).',

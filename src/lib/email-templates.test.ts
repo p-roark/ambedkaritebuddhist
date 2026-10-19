@@ -12,5 +12,7 @@ describe('email templates', () => {
   it('only allows http(s) links in buttons', () => {
     expect(ctaButton('https://site.example/profile', 'Go')).toContain('href="https://site.example/profile"');
     expect(ctaButton('javascript:alert(1)', 'Go')).toContain('href="#"');
+    expect(ctaButton('mailto:a%40b.example?subject=Hi', 'Reply', 'secondary')).toContain('href="mailto:a%40b.example?subject=Hi"');
+    expect(ctaButton('data:text/html,x', 'Go')).toContain('href="#"');
   });
 });

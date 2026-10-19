@@ -13,7 +13,8 @@ import { useFeature } from '@/lib/use-feature';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings' | 'donations' | 'features';
+const TABS = ['leadership', 'members', 'events', 'cover-images', 'referrals', 'messages', 'settings', 'donations', 'features'] as const;
+type Tab = (typeof TABS)[number];
 
 type OrgSettings = {
   orgName: string;
@@ -231,7 +232,10 @@ export default function DashboardPage() {
   const [editObjActive, setEditObjActive] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/auth/login');
+    // Keep where they were going (e.g. a message linked from an email) through sign-in
+    if (status === 'unauthenticated') {
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    }
   }, [status, router]);
 
   const loadOrgSettings = async () => {
@@ -293,6 +297,7 @@ export default function DashboardPage() {
     if (!res.ok) throw new Error('Failed to load messages');
     const data = (await res.json()) as { messages: ContactMessage[] };
     setMessages(data.messages);
+    return data.messages;
   };
 
   const loadCoverImages = async () => {
@@ -327,7 +332,16 @@ export default function DashboardPage() {
     const loadAll = async () => {
       try {
         if (isAdmin) {
-          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadMessages(), loadDonations()]);
+          const [loadedMessages] = await Promise.all([loadMessages(), loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadDonations()]);
+          // Links from notification emails: /dashboard?tab=messages&message=<id>
+          const params = new URLSearchParams(window.location.search);
+          const linkedTab = params.get('tab');
+          if (alive && linkedTab && (TABS as readonly string[]).includes(linkedTab)) setActiveTab(linkedTab as Tab);
+          const linkedMessage = loadedMessages.find((m) => m.id === params.get('message'));
+          if (alive && linkedMessage) {
+            setActiveTab('messages');
+            setSelectedMessage(linkedMessage);
+          }
         } else {
           // Non-admin: try loading events — API returns 403 if not a coordinator
           const res = await fetch('/api/admin/events', { cache: 'no-store' });
