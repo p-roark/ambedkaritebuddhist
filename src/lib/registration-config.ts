@@ -42,7 +42,7 @@ export const DISCLAIMER_CHECKBOX_LABEL =
 
 export const AGE_CONFIRMATION_LABEL = 'I confirm I am 18 years of age or older.';
 
-export const BOARD_INTEREST_LABEL = 'Interested in serving on board or committee.';
+export const BOARD_INTEREST_LABEL = 'Interested in serving on ABCC board or committee.';
 
 /** Province pre-selected on the registration form when the member has none saved. */
 export const DEFAULT_PROVINCE = 'ON';
