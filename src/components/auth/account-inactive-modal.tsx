@@ -27,7 +27,9 @@ export function AccountInactiveModal() {
         return;
       }
       setSent(true);
-      await update();
+      // update() without data only re-reads the cached session; passing data makes
+      // Auth.js rebuild it from the database (role, registration status, name)
+      await update({});
     } catch {
       setError('Failed to send request. Please try again.');
     } finally {

@@ -1,4 +1,6 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
+import { FeatureGate } from '@/lib/use-feature'
 
 export const metadata: Metadata = {
   title: 'Donate | ABCC',
@@ -16,6 +18,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="min-h-screen bg-white">
+      <FeatureGate feature="donations" fallback={<DonationsClosed />}>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h1 className="text-4xl md:text-5xl font-bold text-text-dark mb-12">Support Our Community</h1>
 
@@ -67,6 +70,19 @@ export default function Page() {
           </p>
         </div>
       </section>
+      </FeatureGate>
     </div>
+  )
+}
+
+function DonationsClosed() {
+  return (
+    <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <h1 className="text-3xl md:text-4xl font-bold text-text-dark mb-4">Donations are paused</h1>
+      <p className="text-lg text-gray-700">
+        We are not accepting donations through the website at the moment. Thank you for your support.{' '}
+        <Link href="/contact" className="text-primary-blue font-semibold underline">Contact us</Link> if you have any questions.
+      </p>
+    </section>
   )
 }

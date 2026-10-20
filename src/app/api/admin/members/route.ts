@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
       role: users.role,
       status: users.status,
       joinedAt: users.createdAt,
+      registrationCompletedAt: users.registrationCompletedAt,
     })
     .from(users)
     .where(

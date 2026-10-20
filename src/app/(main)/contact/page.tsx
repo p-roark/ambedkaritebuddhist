@@ -1,6 +1,8 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { fetchOrgSettings } from '@/lib/org-settings-client';
 
 interface OrgInfo {
   email: string;
@@ -13,7 +15,11 @@ interface OrgInfo {
   country: string;
 }
 
+type ContactPrefill = { name: string; email: string; phone: string };
+
 export default function ContactPage() {
+  const { status } = useSession();
+  const signedIn = status === 'authenticated';
   const [org, setOrg] = useState<OrgInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -30,9 +36,8 @@ export default function ContactPage() {
   useEffect(() => {
     const loadContactData = async () => {
       try {
-        const response = await fetch('/api/events?resource=org-settings');
-        const data = (await response.json()) as { settings: OrgInfo };
-        setOrg(data.settings);
+        const data = await fetchOrgSettings<OrgInfo>();
+        if (data.settings) setOrg(data.settings);
       } catch (error) {
         console.error('Failed to load contact info:', error);
       } finally {
@@ -42,6 +47,30 @@ export default function ContactPage() {
 
     void loadContactData();
   }, []);
+
+  // Signed-in members: fill in their name, email and phone from their profile
+  // (without overwriting anything already typed). Their email is the Google
+  // sign-in email and can't be changed here.
+  useEffect(() => {
+    if (!signedIn) return;
+    let alive = true;
+    fetch('/api/registration', { cache: 'no-store' })
+      .then((res) => (res.ok ? (res.json() as Promise<{ prefill: ContactPrefill }>) : null))
+      .then((data) => {
+        if (!alive || !data) return;
+        const { name, email, phone } = data.prefill;
+        setForm((prev) => ({
+          ...prev,
+          name: prev.name || name,
+          email,
+          phone: prev.phone || phone,
+        }));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [signedIn]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -64,7 +93,8 @@ export default function ContactPage() {
 
       setSuccess(true);
       setMessage('Your message was sent successfully. An admin will respond soon.');
-      setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+      // Keep a signed-in member's details for their next message
+      setForm((prev) => (signedIn ? { ...prev, subject: '', message: '' } : { name: '', email: '', phone: '', subject: '', message: '' }));
     } catch {
       setMessage('Unable to submit right now. Please try again.');
     } finally {
@@ -173,14 +203,17 @@ export default function ContactPage() {
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1.5 block font-semibold text-text-dark">Email <span className="text-red-400">*</span></span>
+                  <span className="mb-1.5 block font-semibold text-text-dark">
+                    Email {signedIn ? <span className="text-text-medium font-normal">(from your Google account)</span> : <span className="text-red-400">*</span>}
+                  </span>
                   <input
                     required
                     type="email"
                     value={form.email}
+                    readOnly={signedIn}
                     onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                     placeholder="you@example.com"
-                    className={inputClass}
+                    className={signedIn ? `${inputClass.replace('bg-white', 'bg-slate-50')} text-slate-600` : inputClass}
                   />
                 </label>
               </div>

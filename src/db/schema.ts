@@ -25,6 +25,12 @@ export const users = sqliteTable('User', {
   emailVerified: text('emailVerified'),                  // ISO date string
   image:        text('image'),
   referredBy:   text('referredBy'),
+  residencyStatus:         text('residencyStatus'),         // see RESIDENCY_STATUS_OPTIONS
+  registrationCompletedAt: text('registrationCompletedAt'), // ISO date; null until the registration form is submitted
+  disclaimerAcceptedAt:    text('disclaimerAcceptedAt'),    // ISO date
+  disclaimerVersion:       text('disclaimerVersion'),
+  ageConfirmedAt:          text('ageConfirmedAt'),          // ISO date the member confirmed they are 18 or older
+  boardInterest:           integer('boardInterest', { mode: 'boolean' }).notNull().default(false),
   createdAt:    text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt:    text('updatedAt').notNull().default(sql`(datetime('now'))`),
 });
@@ -152,16 +158,24 @@ export const eventRegistrations = sqliteTable('EventRegistration', {
 // --- Family members ----------------------------------------------------------
 
 export const familyMembers = sqliteTable('FamilyMember', {
-  id:          text('id').primaryKey(),
-  userId:      text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  name:        text('name').notNull(),
+  id:           text('id').primaryKey(),
+  userId:       text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name:         text('name').notNull(),
   relationship: text('relationship').notNull(),
-  age:         integer('age'),
-  notes:       text('notes'),
+  age:          integer('age'),
+  notes:        text('notes'),
+  // Reconciliation fields
+  email:           text('email'),
+  inviteCode:      text('inviteCode'),
+  inviteStatus:    text('inviteStatus').notNull().default('none'), // none | pending | accepted | expired
+  inviteExpiresAt: text('inviteExpiresAt'),
+  linkedUserId:    text('linkedUserId').references(() => users.id, { onDelete: 'set null' }),
   createdAt:   text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt:   text('updatedAt').notNull().default(sql`(datetime('now'))`),
 }, (t) => ({
-  userIdx: index('FamilyMember_user_idx').on(t.userId),
+  userIdx:       index('FamilyMember_user_idx').on(t.userId),
+  inviteCodeIdx: uniqueIndex('FamilyMember_inviteCode_key').on(t.inviteCode),
+  emailIdx:      index('FamilyMember_email_idx').on(t.email),
 }));
 
 // --- Contact messages --------------------------------------------------------
@@ -233,6 +247,24 @@ export const organizationSettings = sqliteTable('OrganizationSettings', {
 
 // ─── Donation objectives ──────────────────────────────────────────────────────
 
+// --- Email sender per purpose (see src/lib/email-senders.ts) ----------------
+
+export const emailSenders = sqliteTable('EmailSender', {
+  purpose:   text('purpose').primaryKey(),
+  address:   text('address').notNull(),
+  updatedBy: text('updatedBy'), // admin email
+  updatedAt: text('updatedAt').notNull(),
+});
+
+// --- Feature switches (see src/lib/feature-flags.ts) -------------------------
+
+export const featureFlags = sqliteTable('FeatureFlag', {
+  key:       text('key').primaryKey(),
+  enabled:   integer('enabled', { mode: 'boolean' }).notNull(),
+  updatedBy: text('updatedBy'), // admin email
+  updatedAt: text('updatedAt').notNull(),
+});
+
 export const donationObjectives = sqliteTable('DonationObjective', {
   id:            text('id').primaryKey(),
   title:         text('title').notNull(),
@@ -266,6 +298,16 @@ export const donations = sqliteTable('Donation', {
   createdIdx:   index('Donation_createdAt_idx').on(t.createdAt),
 }));
 
+// ─── Email sign-in links ─────────────────────────────────────────────────────
+
+export const signInLinks = sqliteTable('SignInLink', {
+  tokenHash: text('tokenHash').primaryKey(), // SHA-256 of the token in the emailed link
+  email:     text('email').notNull(),
+  ip:        text('ip'),
+  expiresAt: text('expiresAt').notNull(),
+  createdAt: text('createdAt').notNull(),
+});
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;
@@ -276,7 +318,7 @@ export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
 export type EventRegistration = typeof eventRegistrations.$inferSelect;
 export type NewEventRegistration = typeof eventRegistrations.$inferInsert;
-export type FamilyMember = typeof familyMembers.$inferSelect;
+export type FamilyMember    = typeof familyMembers.$inferSelect;
 export type NewFamilyMember = typeof familyMembers.$inferInsert;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type NewContactMessage = typeof contactMessages.$inferInsert;

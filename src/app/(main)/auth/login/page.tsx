@@ -1,9 +1,48 @@
 'use client';
 
-import { signIn } from 'next-auth/react';
+import { Suspense, useEffect } from 'react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EmailSignInForm } from '@/components/auth/email-sign-in-form';
+import { safeCallbackUrl } from '@/lib/registration';
+import { useFeature } from '@/lib/use-feature';
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginCard />
+    </Suspense>
+  );
+}
+
+// Auth.js error codes (?error=…) → what the visitor should read
+function signInErrorMessage(code: string | null): string | null {
+  if (!code) return null;
+  if (code === 'CredentialsSignin') return 'This sign-in link has expired or was already used. Please request a new one.';
+  if (code === 'AccessDenied') return 'This Google account can’t be used to sign in. Please try a different account.';
+  if (code === 'OAuthCallbackError' || code === 'Configuration' || code === 'OAuthSignin' || code === 'Callback') {
+    return 'Sign-in was cancelled or didn’t finish. Please try again.';
+  }
+  return 'Something went wrong while signing in. Please try again, and contact us if it keeps happening.';
+}
+
+function LoginCard() {
+  const searchParams = useSearchParams();
+  const callbackUrl = safeCallbackUrl(searchParams.get('callbackUrl'));
+  const errorMessage = signInErrorMessage(searchParams.get('error'));
+  // Arrived from an invite link (/join?code=…): they're accepting an invitation
+  const isInvite = callbackUrl === '/join' || callbackUrl.startsWith('/join?') || callbackUrl.startsWith('/join/');
+  const emailSignIn = useFeature('emailSignIn') === true;
+  const { status } = useSession();
+  const router = useRouter();
+
+  // Already signed in — including in another tab, e.g. from an emailed sign-in
+  // link — so there's nothing to do here: continue to where they were going
+  useEffect(() => {
+    if (status === 'authenticated') router.replace(callbackUrl);
+  }, [status, callbackUrl, router]);
+
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
@@ -21,17 +60,41 @@ export default function LoginPage() {
             <div className="flex items-center justify-center mb-4">
               <img src="/images/logo.png" alt="ABCC logo" className="w-16 h-16 rounded-none object-contain shadow-md" />
             </div>
-            <h1 className="text-3xl font-bold text-text-dark font-poppins mb-2">Welcome Back</h1>
-            <p className="text-text-medium text-base">Sign in to access your community account</p>
+            <h1 className="text-3xl font-bold text-text-dark font-poppins mb-2">
+              {isInvite ? 'Sign in to accept your invitation' : 'Members sign in'}
+            </h1>
+            <p className="text-text-medium text-base">
+              {isInvite
+                ? `Use the ${emailSignIn ? 'Google account or email address' : 'Google account'} you would like to register with. You will then complete a short registration form.`
+                : emailSignIn
+                  ? 'Sign in with Google or with a link sent to your email.'
+                  : 'Sign in with your Google account to access the community.'}
+            </p>
           </div>
+
+          {errorMessage && (
+            <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {errorMessage}
+            </div>
+          )}
+
+          {!isInvite && (
+            <div role="note" className="mb-5 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <span aria-hidden="true" className="text-lg leading-5">🪷</span>
+              <p>
+                <strong>Not a member yet?</strong> Membership is by invitation. Please use the invite link you received
+                to register.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3">
             <button
               type="button"
-              onClick={() => signIn('google', { callbackUrl: '/' })}
+              onClick={() => signIn('google', { callbackUrl })}
               className="w-full flex items-center justify-center gap-3 py-3.5 px-4 border-2 border-slate-200 rounded-2xl text-text-dark font-semibold hover:border-primary-blue hover:bg-blue-50 transition-all"
             >
-              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg aria-hidden="true" className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
@@ -39,19 +102,18 @@ export default function LoginPage() {
               </svg>
               Continue with Google
             </button>
-
-            <button
-              type="button"
-              disabled
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-[#1877F2] rounded-2xl text-white font-semibold opacity-40 cursor-not-allowed"
-            >
-              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.791-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
-              </svg>
-              Continue with Facebook
-              <span className="text-xs opacity-70">(coming soon)</span>
-            </button>
           </div>
+
+          {emailSignIn && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-sm text-text-medium" aria-hidden="true">
+                <span className="h-px flex-1 bg-slate-200" />
+                or
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
+              <EmailSignInForm callbackUrl={callbackUrl} />
+            </>
+          )}
 
           <div className="mt-6 pt-6 border-t border-slate-100 text-center">
             <p className="text-sm text-text-medium">

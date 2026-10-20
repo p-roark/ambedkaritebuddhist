@@ -4,10 +4,17 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { buildInviteLink } from '@/lib/registration';
+import { FeatureSwitchesPanel } from '@/components/admin/feature-switches-panel';
+import { MemberDetailsDialog } from '@/components/admin/member-details-dialog';
+import { EmailTestPanel } from '@/components/admin/email-test-panel';
+import { DeleteMemberDialog } from '@/components/admin/delete-member-dialog';
+import { useFeature } from '@/lib/use-feature';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-type Tab = 'leadership' | 'members' | 'events' | 'cover-images' | 'referrals' | 'messages' | 'settings' | 'donations';
+const TABS = ['leadership', 'members', 'events', 'cover-images', 'referrals', 'messages', 'settings', 'donations', 'features'] as const;
+type Tab = (typeof TABS)[number];
 
 type OrgSettings = {
   orgName: string;
@@ -46,6 +53,7 @@ type Member = {
   role: string;
   status: string;
   joinedAt: string;
+  registrationCompletedAt: string | null;
 };
 
 type EventItem = {
@@ -149,6 +157,7 @@ export default function DashboardPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [messageNoteDraft, setMessageNoteDraft] = useState('');
@@ -185,6 +194,9 @@ export default function DashboardPage() {
   const [newEventMessage, setNewEventMessage] = useState('');
 
   const [confirmDeactivateMemberId, setConfirmDeactivateMemberId] = useState<string | null>(null);
+  const [viewMemberId, setViewMemberId] = useState<string | null>(null);
+  const [deleteMemberId, setDeleteMemberId] = useState<string | null>(null);
+  const memberDeletionEnabled = useFeature('memberDeletion');
   const [showModal, setShowModal] = useState(false);
   const [maxUses, setMaxUses] = useState(10);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -220,7 +232,10 @@ export default function DashboardPage() {
   const [editObjActive, setEditObjActive] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/auth/login');
+    // Keep where they were going (e.g. a message linked from an email) through sign-in
+    if (status === 'unauthenticated') {
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    }
   }, [status, router]);
 
   const loadOrgSettings = async () => {
@@ -282,6 +297,7 @@ export default function DashboardPage() {
     if (!res.ok) throw new Error('Failed to load messages');
     const data = (await res.json()) as { messages: ContactMessage[] };
     setMessages(data.messages);
+    return data.messages;
   };
 
   const loadCoverImages = async () => {
@@ -316,7 +332,16 @@ export default function DashboardPage() {
     const loadAll = async () => {
       try {
         if (isAdmin) {
-          await Promise.all([loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadMessages(), loadDonations()]);
+          const [loadedMessages] = await Promise.all([loadMessages(), loadOrgSettings(), loadLeadership(), loadMembers(), loadEvents(), loadCoverImages(), loadReferralCodes(), loadDonations()]);
+          // Links from notification emails: /dashboard?tab=messages&message=<id>
+          const params = new URLSearchParams(window.location.search);
+          const linkedTab = params.get('tab');
+          if (alive && linkedTab && (TABS as readonly string[]).includes(linkedTab)) setActiveTab(linkedTab as Tab);
+          const linkedMessage = loadedMessages.find((m) => m.id === params.get('message'));
+          if (alive && linkedMessage) {
+            setActiveTab('messages');
+            setSelectedMessage(linkedMessage);
+          }
         } else {
           // Non-admin: try loading events — API returns 403 if not a coordinator
           const res = await fetch('/api/admin/events', { cache: 'no-store' });
@@ -352,21 +377,27 @@ export default function DashboardPage() {
   if (!session) return null;
   const isAdmin = session.user.role === 'ADMIN';
 
-  const activeMembers = members.filter((m) => m.status === 'active');
+  // Members who haven't submitted the registration form aren't counted as active
+  const isRegistrationPending = (m: Member) => !m.registrationCompletedAt && m.role !== 'ADMIN';
+  const activeMembers = members.filter((m) => m.status === 'active' && !isRegistrationPending(m));
+  const pendingRegistrations = members.filter((m) => m.status === 'active' && isRegistrationPending(m));
   const inactiveMembers = members.filter((m) => m.status !== 'active');
   const activationRequests = messages.filter((m) => m.type === 'ACTIVATION_REQUEST' && m.status === 'PENDING');
   const pendingMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'PENDING');
   const resolvedMessages = messages.filter((m) => m.type !== 'ACTIVATION_REQUEST' && m.status === 'RESOLVED');
 
-  const tabs: Array<{ id: Tab; label: string }> = isAdmin
+  const pendingCount = pendingMessages.length + activationRequests.length;
+
+  const tabs: Array<{ id: Tab; label: string; badge?: number }> = isAdmin
     ? [
         { id: 'leadership', label: `Leadership (${leadershipRolesList.length})` },
-        { id: 'members', label: `Members (${activeMembers.length} active${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
+        { id: 'members', label: `Members (${activeMembers.length} active${pendingRegistrations.length > 0 ? `, ${pendingRegistrations.length} pending` : ''}${inactiveMembers.length > 0 ? `, ${inactiveMembers.length} inactive` : ''})` },
         { id: 'events', label: `Events (${events.length})` },
         { id: 'cover-images', label: `Cover Images (${coverImages.length})` },
         { id: 'referrals', label: 'Referral Codes' },
-        { id: 'messages', label: `Messages (${pendingMessages.length + activationRequests.length} pending)` },
+        { id: 'messages', label: 'Messages', badge: pendingCount },
         { id: 'donations', label: `Donations (${donationRecords.length})` },
+        { id: 'features', label: 'Features' },
         { id: 'settings', label: 'Settings' },
       ]
     : [{ id: 'events', label: `My Events (${events.length})` }];
@@ -558,6 +589,17 @@ export default function DashboardPage() {
     setCopied(false);
   };
 
+  const copyInviteLink = async (code: ReferralCode) => {
+    const link = buildInviteLink(window.location.origin, code.code);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedCodeId(code.id);
+      setTimeout(() => setCopiedCodeId((current) => (current === code.id ? null : current)), 2000);
+    } catch {
+      window.prompt('Copy this invite link:', link);
+    }
+  };
+
   const toggleCode = async (id: string, nextActive: boolean) => {
     const res = await fetch('/api/admin/referral-codes', {
       method: 'PATCH',
@@ -632,6 +674,28 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {isAdmin && pendingCount > 0 && activeTab !== 'messages' && (
+        <div role="status" className="bg-amber-50 border-y border-amber-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-amber-900">
+              <span aria-hidden="true">📬 </span>
+              <strong>{pendingCount} pending message{pendingCount === 1 ? '' : 's'}</strong> need{pendingCount === 1 ? 's' : ''} your attention
+              {activationRequests.length > 0 && (
+                <> (including {activationRequests.length} account activation request{activationRequests.length === 1 ? '' : 's'})</>
+              )}
+              .
+            </p>
+            <button
+              type="button"
+              onClick={() => setActiveTab('messages')}
+              className="px-4 py-2 text-sm font-semibold text-white bg-amber-700 rounded-md hover:bg-amber-800"
+            >
+              Review messages
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto scrollbar-none">
           <nav className="flex space-x-6 min-w-max">
@@ -639,13 +703,21 @@ export default function DashboardPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`py-4 px-1 border-b-2 text-sm font-medium whitespace-nowrap transition-colors inline-flex items-center ${
                   activeTab === tab.id
                     ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : tab.badge
+                      ? 'border-transparent text-red-700 font-semibold hover:text-red-800'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {tab.label}
+                {tab.badge ? (
+                  <span className="ml-2 inline-flex min-w-[1.25rem] h-5 px-1.5 items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold">
+                    {tab.badge}
+                    <span className="sr-only"> pending</span>
+                  </span>
+                ) : null}
               </button>
             ))}
           </nav>
@@ -708,7 +780,7 @@ export default function DashboardPage() {
                         className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">— Unassigned —</option>
-                        {activeMembers.map((m) => (
+                        {members.filter((m) => m.status === 'active').map((m) => (
                           <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
                         ))}
                       </select>
@@ -749,9 +821,34 @@ export default function DashboardPage() {
 
         {activeTab === 'members' && (
           <div className="space-y-8">
+            {viewMemberId && (
+              <MemberDetailsDialog memberId={viewMemberId} onClose={() => setViewMemberId(null)} onSaved={() => void loadMembers()} />
+            )}
+            {deleteMemberId && (() => {
+              const target = members.find((m) => m.id === deleteMemberId);
+              return target ? (
+                <DeleteMemberDialog
+                  member={target}
+                  onClose={() => setDeleteMemberId(null)}
+                  onDeleted={() => {
+                    setDeleteMemberId(null);
+                    void loadMembers();
+                  }}
+                />
+              ) : null;
+            })()}
             {/* Active Members */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Members ({activeMembers.length})</h2>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Active Members ({activeMembers.length})</h2>
+                <a
+                  href="/api/admin/members/export"
+                  download
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Download CSV
+                </a>
+              </div>
               <div className="bg-white shadow rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -767,7 +864,9 @@ export default function DashboardPage() {
                       const normalizedRole: Role = m.role === 'ADMIN' ? 'ADMIN' : 'MEMBER';
                       return (
                         <tr key={m.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{m.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {m.name}
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
@@ -786,7 +885,13 @@ export default function DashboardPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-4 flex flex-wrap gap-2">
+                            <button
+                              onClick={() => setViewMemberId(m.id)}
+                              className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                            >
+                              View
+                            </button>
                             <button
                               onClick={() => setConfirmDeactivateMemberId(m.id)}
                               disabled={isSelf}
@@ -805,6 +910,56 @@ export default function DashboardPage() {
                     {activeMembers.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">No active members.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Pending Registrations */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900">Pending Registrations ({pendingRegistrations.length})</h2>
+              <p className="text-sm text-gray-600 mt-1 mb-4">
+                Signed in but haven&apos;t submitted the registration form yet. They move to Active Members once they do.
+              </p>
+              <div className="bg-white shadow rounded-lg overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {['Member', 'Email', 'Joined', 'Actions'].map((h) => (
+                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {pendingRegistrations.map((m) => (
+                      <tr key={m.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {m.name}
+                          <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Registration pending</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.email}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
+                        <td className="px-6 py-4 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setViewMemberId(m.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeactivateMemberId(m.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-amber-100 text-amber-700 hover:bg-amber-200"
+                          >
+                            Deactivate
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pendingRegistrations.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-500">No pending registrations.</td>
                       </tr>
                     )}
                   </tbody>
@@ -839,13 +994,27 @@ export default function DashboardPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">{m.joinedAt}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setViewMemberId(m.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                          >
+                            View
+                          </button>
                           <button
                             onClick={() => handleActivateMember(m.id)}
                             className="px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200"
                           >
                             Activate
                           </button>
+                          {memberDeletionEnabled && m.role !== 'ADMIN' && (
+                            <button
+                              onClick={() => setDeleteMemberId(m.id)}
+                              className="px-3 py-1.5 text-xs font-medium rounded bg-red-100 text-red-800 hover:bg-red-200"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1173,6 +1342,8 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {activeTab === 'features' && <FeatureSwitchesPanel />}
+
         {activeTab === 'referrals' && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -1208,7 +1379,12 @@ export default function DashboardPage() {
                           {c.currentUses >= c.maxUses ? 'Exhausted' : c.active ? 'Active' : 'Disabled'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 flex flex-wrap gap-2">
+                        {c.active && c.currentUses < c.maxUses && (
+                          <button onClick={() => void copyInviteLink(c)} className="px-3 py-1.5 text-xs font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100">
+                            <span aria-live="polite">{copiedCodeId === c.id ? 'Copied!' : 'Copy invite link'}</span>
+                          </button>
+                        )}
                         {c.currentUses >= c.maxUses ? (
                           <span className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 rounded cursor-not-allowed">Exhausted</span>
                         ) : (
@@ -1573,6 +1749,7 @@ export default function DashboardPage() {
 
         {activeTab === 'settings' && (
           <div className="space-y-6">
+            <EmailTestPanel adminEmail={String(session.user.email ?? '')} />
             <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
               {/* Card header */}
               <div className="px-8 py-6 bg-gradient-to-r from-primary-blue to-[#7F56D9] flex items-center gap-4">
@@ -2200,7 +2377,7 @@ export default function DashboardPage() {
                   await handleDeactivateMember(confirmDeactivateMemberId);
                   setConfirmDeactivateMemberId(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-amber-700 rounded-md hover:bg-amber-800"
               >
                 Deactivate
               </button>

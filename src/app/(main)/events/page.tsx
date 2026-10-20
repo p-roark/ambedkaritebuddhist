@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { normalizeImagePath } from '@/lib/image-path'
+import { useFeature } from '@/lib/use-feature'
 
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended'
 
@@ -78,6 +79,12 @@ function InfoIcon() {
 
 export default function EventsPage() {
   const { status } = useSession()
+  const registrationEnabled = useFeature('eventRegistration')
+  const familyEnabled = useFeature('family')
+  // While the event registration switch is off, nothing about registration is shown
+  const showRegistration = registrationEnabled === true
+  // Registration is open only when the event allows it and the site-wide switch is on
+  const isRegistrationOpen = (event: EventItem) => event.status === 'Registration Started' && showRegistration
   const router = useRouter()
   const [events, setEvents] = useState<EventItem[]>([])
   const [registrationByEvent, setRegistrationByEvent] = useState<Record<string, { registrationStatus: string; paymentStatus: string }>>({})
@@ -140,12 +147,17 @@ export default function EventsPage() {
 
   useEffect(() => {
     const run = async () => {
-      try { await loadEvents(); await loadFamilyMembers() }
+      try { await loadEvents() }
       catch (error) { console.error(error) }
       finally { setLoading(false) }
     }
     void run()
   }, [status])
+
+  useEffect(() => {
+    if (familyEnabled) void loadFamilyMembers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [familyEnabled, status])
 
   const upcoming = useMemo(() => events.filter((e) => e.status !== 'Event Ended'), [events])
   const past = useMemo(() => events.filter((e) => e.status === 'Event Ended'), [events])
@@ -335,14 +347,16 @@ export default function EventsPage() {
                       ) : (
                         <span className="text-xs px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full font-medium">Free</span>
                       )}
+                      {showRegistration && (
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                        event.status === 'Registration Started'
+                        isRegistrationOpen(event)
                           ? 'bg-blue-50 text-blue-700 border border-blue-100'
                           : 'bg-slate-100 text-slate-500'
                       }`}>
-                        {event.status === 'Registration Started' ? 'Registration Open' : 'Registration Coming Soon'}
+                        {isRegistrationOpen(event) ? 'Registration Open' : 'Registration Coming Soon'}
                       </span>
-                      {event.maxAttendees != null && (() => {
+                      )}
+                      {showRegistration && event.maxAttendees != null && (() => {
                         const count = registrationCounts[event.id] ?? 0
                         const remaining = event.maxAttendees - count
                         return remaining > 0 ? (
@@ -389,7 +403,7 @@ export default function EventsPage() {
                               Manage
                             </Link>
                           )}
-                          {reg ? (
+                          {!showRegistration ? null : reg ? (
                             <>
                               <span className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
                                 reg.registrationStatus === 'Confirmed' ? 'bg-green-100 text-green-700' :
@@ -400,13 +414,13 @@ export default function EventsPage() {
                                  reg.registrationStatus === 'Pending Registration' ? 'Pending' :
                                  reg.registrationStatus}
                               </span>
-                              {event.status === 'Registration Started' && (
+                              {isRegistrationOpen(event) && (
                                 <button onClick={() => openEditModal(event)} className="text-xs px-3 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors">
                                   Edit
                                 </button>
                               )}
                             </>
-                          ) : event.status === 'Registration Started' ? (
+                          ) : isRegistrationOpen(event) ? (
                             <button onClick={() => openRegisterModal(event)} className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors">
                               Register
                             </button>
@@ -608,16 +622,17 @@ export default function EventsPage() {
                   <div className="w-1 h-5 rounded-full bg-primary-blue flex-shrink-0" />
                   <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Attendees</h4>
                 </div>
-                <p className="text-sm text-gray-500 mb-3">You are counted as 1 adult. Add family members or guests below.</p>
+                <p className="text-sm text-gray-500 mb-3">You are counted as 1 adult. Add {familyEnabled ? 'family members or guests' : 'guests'} below.</p>
 
                 <label className="flex items-center gap-3 text-sm rounded-xl border border-slate-200 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
                   <input type="checkbox" className="w-4 h-4 accent-primary-blue" checked={includeFamily} onChange={(e) => setIncludeFamily(e.target.checked)} />
-                  <span className="font-medium text-gray-800">Add family members or guests</span>
+                  <span className="font-medium text-gray-800">{familyEnabled ? 'Add family members or guests' : 'Add guests'}</span>
                 </label>
 
                 {includeFamily && (
                   <div className="mt-3 space-y-4">
                     {/* Family members from profile */}
+                    {familyEnabled && (
                     <div className="rounded-xl border border-slate-200 p-4">
                       <p className="text-sm font-semibold text-gray-800 mb-2">Family Members (from profile)</p>
                       {familyMembers.length === 0 ? (
@@ -641,6 +656,7 @@ export default function EventsPage() {
                         </div>
                       )}
                     </div>
+                    )}
 
                     {/* Non-member guests */}
                     <div className="rounded-xl border border-slate-200 p-4">

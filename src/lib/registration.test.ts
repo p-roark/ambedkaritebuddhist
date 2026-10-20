@@ -1,0 +1,158 @@
+import { describe, expect, it } from 'vitest';
+import {
+  buildInviteLink,
+  getRegistrationStatus,
+  isValidPhone,
+  normalizeInviteCode,
+  normalizePostalCode,
+  normalizeProvince,
+  safeCallbackUrl,
+  validateProfileFields,
+  validateRegistration,
+} from './registration';
+
+const validForm = {
+  name: 'Savitri Phule',
+  phone: '(416) 555-0123',
+  addressLine1: '100 Queen St W',
+  addressLine2: '',
+  city: 'Toronto',
+  province: 'ON',
+  postalCode: 'm5h2n2',
+  residencyStatus: 'PERMANENT_RESIDENT',
+  ageConfirmed: true,
+  disclaimerAccepted: true,
+};
+
+describe('getRegistrationStatus', () => {
+  it('requires an invite when there is no user record', () => {
+    expect(getRegistrationStatus(null)).toBe('invite_required');
+  });
+
+  it('requires an invite for users created without a referral code', () => {
+    expect(getRegistrationStatus({ role: 'MEMBER', referredBy: null, registrationCompletedAt: null })).toBe('invite_required');
+  });
+
+  it('requires only the profile form for existing referred members', () => {
+    expect(getRegistrationStatus({ role: 'MEMBER', referredBy: 'BHIM-ABC-1234', registrationCompletedAt: null })).toBe('profile_required');
+  });
+
+  it('requires only the profile form for leaders', () => {
+    expect(getRegistrationStatus({ role: 'LEADER', referredBy: null, registrationCompletedAt: null })).toBe('profile_required');
+  });
+
+  it('is complete once the form has been submitted', () => {
+    expect(getRegistrationStatus({ role: 'MEMBER', referredBy: 'BHIM-ABC-1234', registrationCompletedAt: '2026-10-15T00:00:00Z' })).toBe('complete');
+  });
+
+  it('treats admins as complete', () => {
+    expect(getRegistrationStatus({ role: 'ADMIN', referredBy: null, registrationCompletedAt: null })).toBe('complete');
+    expect(getRegistrationStatus(null, { isAdmin: true })).toBe('complete');
+  });
+});
+
+describe('validateRegistration', () => {
+  it('accepts a complete form and normalises values', () => {
+    const result = validateRegistration(validForm);
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        name: 'Savitri Phule',
+        phone: '(416) 555-0123',
+        addressLine1: '100 Queen St W',
+        addressLine2: null,
+        city: 'Toronto',
+        province: 'ON',
+        postalCode: 'M5H 2N2',
+        residencyStatus: 'PERMANENT_RESIDENT',
+        boardInterest: false,
+      },
+    });
+  });
+
+  it('requires the age confirmation', () => {
+    const result = validateRegistration({ ...validForm, ageConfirmed: false });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(Object.keys(result.errors)).toEqual(['ageConfirmed']);
+  });
+
+  it('records board/committee interest only when ticked', () => {
+    const without = validateRegistration(validForm);
+    const withInterest = validateRegistration({ ...validForm, boardInterest: true });
+    expect(without.ok && without.value.boardInterest).toBe(false);
+    expect(withInterest.ok && withInterest.value.boardInterest).toBe(true);
+  });
+
+  it('requires the consent to be given', () => {
+    const result = validateRegistration({ ...validForm, disclaimerAccepted: false });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(Object.keys(result.errors)).toEqual(['disclaimerAccepted']);
+  });
+
+  it('does not accept a truthy string as disclaimer acceptance', () => {
+    expect(validateRegistration({ ...validForm, disclaimerAccepted: 'true' }).ok).toBe(false);
+  });
+
+  it('reports every missing required field', () => {
+    const result = validateRegistration({});
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(Object.keys(result.errors).sort()).toEqual(
+        ['addressLine1', 'ageConfirmed', 'city', 'disclaimerAccepted', 'name', 'phone', 'postalCode', 'province', 'residencyStatus'].sort(),
+      );
+    }
+  });
+
+  it('rejects unknown residency status values', () => {
+    const result = validateProfileFields({ ...validForm, residencyStatus: 'ALIEN' });
+    expect(result.ok).toBe(false);
+  });
+
+  it('rejects overly long values', () => {
+    const result = validateProfileFields({ ...validForm, city: 'x'.repeat(201) });
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe('field normalisers', () => {
+  it('normalises province codes and names', () => {
+    expect(normalizeProvince('on')).toBe('ON');
+    expect(normalizeProvince('British Columbia')).toBe('BC');
+    expect(normalizeProvince('Texas')).toBeNull();
+    expect(normalizeProvince(undefined)).toBeNull();
+  });
+
+  it('validates Canadian postal codes', () => {
+    expect(normalizePostalCode('k1a 0b1')).toBe('K1A 0B1');
+    expect(normalizePostalCode('K1A-0B1')).toBe('K1A 0B1');
+    expect(normalizePostalCode('D1A 0B1')).toBeNull(); // D is not a valid first letter
+    expect(normalizePostalCode('12345')).toBeNull();
+  });
+
+  it('validates phone numbers', () => {
+    expect(isValidPhone('416-555-0123')).toBe(true);
+    expect(isValidPhone('+91 98765 43210')).toBe(true);
+    expect(isValidPhone('555-0123')).toBe(false);
+    expect(isValidPhone('call me')).toBe(false);
+  });
+
+  it('normalises invite codes, including digits in the middle segment', () => {
+    expect(normalizeInviteCode(' bhim-a2b-xy34 ')).toBe('BHIM-A2B-XY34');
+    expect(normalizeInviteCode('BHIM-ABC-123')).toBeNull();
+    expect(normalizeInviteCode(null)).toBeNull();
+  });
+});
+
+describe('links', () => {
+  it('builds the pre-filled invite link', () => {
+    expect(buildInviteLink('https://example.org/', 'BHIM-ABC-1234')).toBe('https://example.org/join?code=BHIM-ABC-1234');
+  });
+
+  it('only allows same-site callback URLs', () => {
+    expect(safeCallbackUrl('/events')).toBe('/events');
+    expect(safeCallbackUrl('https://evil.example')).toBe('/');
+    expect(safeCallbackUrl('//evil.example')).toBe('/');
+    expect(safeCallbackUrl('/\\evil.example')).toBe('/');
+    expect(safeCallbackUrl(null)).toBe('/');
+  });
+});

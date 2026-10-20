@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useFeature } from '@/lib/use-feature';
+import { PROVINCE_OPTIONS, RESIDENCY_STATUS_OPTIONS } from '@/lib/registration-config';
 
 type Profile = {
   id: string;
@@ -16,6 +19,7 @@ type Profile = {
   city: string | null;
   province: string | null;
   postalCode: string | null;
+  residencyStatus: string | null;
   education: string | null;
   interests: string | null;
   notes: string | null;
@@ -28,6 +32,9 @@ type FamilyMember = {
   relationship: string;
   age: number | null;
   notes: string | null;
+  email: string | null;
+  inviteStatus: string;
+  linkedUserId: string | null;
 };
 
 const RELATIONSHIP_OPTIONS = [
@@ -44,7 +51,7 @@ const RELATIONSHIP_OPTIONS = [
 ];
 
 export default function ProfilePage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -52,12 +59,14 @@ export default function ProfilePage() {
   const [showDetails, setShowDetails] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const familyEnabled = useFeature('family');
 
   const [newMember, setNewMember] = useState({
     name: '',
     relationship: '',
     age: '',
     notes: '',
+    email: '',
   });
 
   useEffect(() => {
@@ -65,24 +74,21 @@ export default function ProfilePage() {
   }, [status, router]);
 
   const loadData = async () => {
-    const [profileRes, familyRes] = await Promise.all([
-      fetch('/api/profile', { cache: 'no-store' }),
-      fetch('/api/profile/family', { cache: 'no-store' }),
-    ]);
-
-    if (!profileRes.ok || !familyRes.ok) {
-      throw new Error('Failed to load profile');
-    }
-
+    const profileRes = await fetch('/api/profile', { cache: 'no-store' });
+    if (!profileRes.ok) throw new Error('Failed to load profile');
     const profileData = (await profileRes.json()) as { profile: Profile };
-    const familyData = (await familyRes.json()) as { familyMembers: FamilyMember[] };
-
     setProfile(profileData.profile);
-    setFamilyMembers(familyData.familyMembers);
+
+    if (familyEnabled) {
+      const familyRes = await fetch('/api/profile/family', { cache: 'no-store' });
+      if (!familyRes.ok) throw new Error('Failed to load family members');
+      const familyData = (await familyRes.json()) as { familyMembers: FamilyMember[] };
+      setFamilyMembers(familyData.familyMembers);
+    }
   };
 
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (status !== 'authenticated' || familyEnabled === null) return;
     let alive = true;
     const run = async () => {
       try {
@@ -97,7 +103,8 @@ export default function ProfilePage() {
     return () => {
       alive = false;
     };
-  }, [status]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, familyEnabled]);
 
   const saveProfile = async () => {
     if (!profile) return;
@@ -107,9 +114,10 @@ export default function ProfilePage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile),
     });
-    const data = (await res.json()) as { error?: string };
+    const data = (await res.json()) as { error?: string; fieldErrors?: Record<string, string> };
     if (!res.ok) {
-      setMessage(data.error ?? 'Failed to save profile');
+      const details = Object.values(data.fieldErrors ?? {}).join(' ');
+      setMessage([data.error ?? 'Failed to save profile', details].filter(Boolean).join(' '));
       return;
     }
     setMessage('Profile saved.');
@@ -129,6 +137,7 @@ export default function ProfilePage() {
         relationship: newMember.relationship.trim(),
         age: newMember.age ? Number(newMember.age) : null,
         notes: newMember.notes.trim(),
+        email: newMember.email.trim() || undefined,
       }),
     });
     const data = (await res.json()) as { error?: string };
@@ -137,7 +146,7 @@ export default function ProfilePage() {
       return;
     }
 
-    setNewMember({ name: '', relationship: '', age: '', notes: '' });
+    setNewMember({ name: '', relationship: '', age: '', notes: '', email: '' });
     await loadData();
     setMessage('Family member added.');
   };
@@ -201,10 +210,29 @@ export default function ProfilePage() {
           )}
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white font-poppins">{profile.name}</h1>
-            <p className="text-sm text-white/80 mt-0.5">Manage your profile settings and family members</p>
+            <p className="text-sm text-white/80 mt-0.5">
+              {familyEnabled ? 'Manage your profile settings and family members' : 'Manage your profile settings'}
+            </p>
           </div>
         </div>
       </div>
+
+      {familyEnabled && session?.user?.pendingFamilyInvite && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+          <div className="max-w-6xl mx-auto flex items-center gap-3 text-sm text-amber-800">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+            </svg>
+            <span>You've been added as a family member.</span>
+            <Link
+              href={`/family/accept-invite?code=${session.user.pendingFamilyInvite}`}
+              className="font-semibold underline hover:text-amber-900"
+            >
+              Click here to link your account
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="bg-white rounded-2xl border border-background-gray shadow-sm p-6">
@@ -213,22 +241,57 @@ export default function ProfilePage() {
             <p className="text-sm text-text-medium mt-0.5">Update your contact and profile information.</p>
           </div>
 
-          {message && <p className="mt-3 text-sm text-primary-blue bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">{message}</p>}
+          {message && <p role="status" className="mt-3 text-sm text-primary-blue bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">{message}</p>}
 
           <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Full Name</span>
-              <input value={profile.name ?? ''} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              <span className="mb-1 block font-medium text-slate-700">Full Name<span className="text-red-700" aria-hidden="true"> *</span></span>
+              <input autoComplete="name" required value={profile.name ?? ''} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
             </label>
             <label className="text-sm">
               <span className="mb-1 block font-medium text-slate-700">Email</span>
               <input value={profile.email ?? ''} disabled className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-400 cursor-not-allowed" />
             </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Phone<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input type="tel" autoComplete="tel" required value={profile.phone ?? ''} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Residency Status in Canada<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <select required value={profile.residencyStatus ?? ''} onChange={(e) => setProfile({ ...profile, residencyStatus: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors">
+                  <option value="">Select residency status</option>
+                  {RESIDENCY_STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Street Address<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input autoComplete="address-line1" required value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Apartment, unit, etc.</span>
+                <input autoComplete="address-line2" value={profile.addressLine2 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine2: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">City<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input autoComplete="address-level2" required value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Province / Territory<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <select autoComplete="address-level1" required value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors">
+                  <option value="">Select province or territory</option>
+                  {PROVINCE_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Postal Code<span className="text-red-700" aria-hidden="true"> *</span></span>
+                <input autoComplete="postal-code" required value={profile.postalCode ?? ''} onChange={(e) => setProfile({ ...profile, postalCode: e.target.value.toUpperCase() })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+              </label>
           </div>
 
           <button
             type="button"
             onClick={() => setShowDetails((v) => !v)}
+            aria-expanded={showDetails}
             className="mt-4 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
           >
             <svg
@@ -242,33 +305,9 @@ export default function ProfilePage() {
 
           {showDetails && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Phone</span>
-                <input value={profile.phone ?? ''} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
+              <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Alternate Phone</span>
-                <input value={profile.altPhone ?? ''} onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm md:col-span-2">
-                <span className="mb-1 block font-medium text-slate-700">Address Line 1</span>
-                <input value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm md:col-span-2">
-                <span className="mb-1 block font-medium text-slate-700">Address Line 2</span>
-                <input value={profile.addressLine2 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine2: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">City</span>
-                <input value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Province/State</span>
-                <input value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Postal Code</span>
-                <input value={profile.postalCode ?? ''} onChange={(e) => setProfile({ ...profile, postalCode: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+                <input type="tel" value={profile.altPhone ?? ''} onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
               </label>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Education</span>
@@ -292,6 +331,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {familyEnabled && (
         <div className="bg-white rounded-2xl border border-background-gray shadow-sm p-6">
           <h2 className="text-xl font-bold text-text-dark">Family Members</h2>
           <p className="text-sm text-text-medium mt-1">Add and manage family members for registrations and planning.</p>
@@ -332,12 +372,18 @@ export default function ProfilePage() {
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
                 />
               </label>
-              <div className="flex items-end">
-                <button onClick={addFamilyMember} className="w-full px-4 py-2 bg-primary-blue text-white text-sm font-bold rounded-xl hover:bg-primary-blue/90 transition-colors">
-                  Add Member
-                </button>
-              </div>
-              <label className="text-sm md:col-span-4">
+              <label className="text-sm md:col-span-2">
+                <span className="mb-1 block font-medium text-slate-700">Email (Optional — sends a link invite)</span>
+                <input
+                  type="email"
+                  disabled={Boolean(newMember.age && Number(newMember.age) < 16)}
+                  value={newMember.email}
+                  onChange={(e) => setNewMember((prev) => ({ ...prev, email: e.target.value }))}
+                  placeholder="family.member@email.com"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                />
+              </label>
+              <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Notes (Optional)</span>
                 <input
                   value={newMember.notes}
@@ -345,12 +391,30 @@ export default function ProfilePage() {
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
                 />
               </label>
+              <div className="md:col-span-4 flex justify-end">
+                <button onClick={addFamilyMember} className="px-6 py-2.5 bg-primary-blue text-white text-sm font-bold rounded-xl hover:bg-primary-blue/90 transition-colors">
+                  Add Member
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="mt-5 space-y-3">
             {familyMembers.map((member, idx) => (
               <div key={member.id} className="border border-background-gray rounded-2xl p-4 bg-white">
+                <div className="flex items-center gap-2 mb-3">
+                  {member.linkedUserId && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      Linked
+                    </span>
+                  )}
+                  {!member.linkedUserId && member.inviteStatus === 'pending' && (
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                      Invite Sent
+                    </span>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <label className="text-sm">
                     <span className="mb-1 block font-medium text-slate-700">Full Name</span>
@@ -397,15 +461,22 @@ export default function ProfilePage() {
                       className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
                     />
                   </label>
-                  <div className="flex gap-2">
-                    <button onClick={() => saveFamilyMember(member)} className="flex-1 px-3 py-2 text-xs bg-primary-blue text-white rounded-xl font-semibold hover:bg-primary-blue/90 transition-colors">
-                      Save
-                    </button>
-                    <button onClick={() => removeFamilyMember(member.id)} className="flex-1 px-3 py-2 text-xs bg-red-50 text-red-600 border border-red-100 rounded-xl font-semibold hover:bg-red-100 transition-colors">
-                      Remove
-                    </button>
-                  </div>
-                  <label className="text-sm md:col-span-4">
+                  <label className="text-sm md:col-span-2">
+                    <span className="mb-1 block font-medium text-slate-700">Email (Optional — sends a link invite)</span>
+                    <input
+                      type="email"
+                      disabled={Boolean(member.age && member.age < 16)}
+                      value={member.email ?? ''}
+                      onChange={(e) =>
+                        setFamilyMembers((prev) =>
+                          prev.map((m, i) => (i === idx ? { ...m, email: e.target.value || null } : m)),
+                        )
+                      }
+                      placeholder="family.member@email.com"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                    />
+                  </label>
+                  <label className="text-sm md:col-span-2">
                     <span className="mb-1 block font-medium text-slate-700">Notes (Optional)</span>
                     <input
                       value={member.notes ?? ''}
@@ -417,12 +488,21 @@ export default function ProfilePage() {
                       className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
                     />
                   </label>
+                  <div className="md:col-span-4 flex gap-2 justify-end">
+                    <button onClick={() => saveFamilyMember(member)} className="px-6 py-2.5 text-sm bg-primary-blue text-white rounded-xl font-bold hover:bg-primary-blue/90 transition-colors">
+                      Save
+                    </button>
+                    <button onClick={() => removeFamilyMember(member.id)} className="px-6 py-2.5 text-sm bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold hover:bg-red-100 transition-colors">
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
             {familyMembers.length === 0 && <p className="text-sm text-slate-500">No family members added yet.</p>}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

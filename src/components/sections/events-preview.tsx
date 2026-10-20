@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useFeature } from '@/lib/use-feature'
 
 interface EventCard {
   id: string
@@ -59,6 +60,11 @@ function InfoIcon() {
 
 export function EventsPreview({ subtitle, title, description, events }: EventsPreviewProps) {
   const { status } = useSession()
+  const registrationEnabled = useFeature('eventRegistration')
+  // While the event registration switch is off, nothing about registration is shown
+  const showRegistration = registrationEnabled === true
+  const isRegistrationOpen = (event: EventCard) => event.registrationStatus === 'open' && showRegistration
+  const isComingSoon = (event: EventCard) => event.registrationStatus === 'not-started'
   const router = useRouter()
 
   const [infoEventId, setInfoEventId] = useState<string | null>(null)
@@ -135,6 +141,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                 </div>
 
                 {/* Event status chip */}
+                {(event.externalLink || event.status === 'past' || showRegistration) && (
                 <div className="mb-4">
                   {event.externalLink ? (
                     <span className="text-xs px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full font-medium">External Event</span>
@@ -142,16 +149,17 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                     <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full font-medium">Event Ended</span>
                   ) : (
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      event.registrationStatus === 'open'
+                      isRegistrationOpen(event)
                         ? 'bg-blue-50 text-blue-700 border border-blue-100'
                         : 'bg-slate-100 text-slate-500'
                     }`}>
-                      {event.registrationStatus === 'open' ? 'Registration Open' :
-                       event.registrationStatus === 'not-started' ? 'Registration Coming Soon' :
+                      {isRegistrationOpen(event) ? 'Registration Open' :
+                       isComingSoon(event) ? 'Registration Coming Soon' :
                        'Registration Closed'}
                     </span>
                   )}
                 </div>
+                )}
 
                 {/* Footer: Info + Action */}
                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
@@ -189,7 +197,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                             Manage
                           </Link>
                         )}
-                        {event.userRegistrationStatus ? (
+                        {!showRegistration ? null : event.userRegistrationStatus ? (
                           <>
                             <span className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
                               event.userRegistrationStatus === 'Confirmed' ? 'bg-green-100 text-green-700' :
@@ -200,7 +208,7 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                                event.userRegistrationStatus === 'Pending Registration' ? 'Pending' :
                                event.userRegistrationStatus}
                             </span>
-                            {event.registrationStatus === 'open' && (
+                            {isRegistrationOpen(event) && (
                               <Link
                                 href="/events"
                                 className="text-xs px-3 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
@@ -209,14 +217,14 @@ export function EventsPreview({ subtitle, title, description, events }: EventsPr
                               </Link>
                             )}
                           </>
-                        ) : event.registrationStatus === 'open' ? (
+                        ) : isRegistrationOpen(event) ? (
                           <button
                             onClick={handleRegisterClick}
                             className="text-xs px-4 py-2 bg-primary-blue text-white font-semibold rounded-lg hover:bg-primary-blue/90 transition-colors"
                           >
                             Register
                           </button>
-                        ) : event.registrationStatus === 'not-started' ? (
+                        ) : isComingSoon(event) ? (
                           <span className="text-xs text-text-light font-medium">Coming Soon</span>
                         ) : (
                           <span className="text-xs text-text-light font-medium">Closed</span>

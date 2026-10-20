@@ -1,0 +1,330 @@
+import { EMAIL_PURPOSES, isValidEmailAddress, type EmailPurpose } from '@/lib/email-senders';
+import { resolveSender, type ResolvedSender } from '@/lib/email-senders-server';
+import { escapeHtml } from '@/lib/email-templates';
+
+export type EmailMessage = {
+  to: string | string[];
+  subject: string;
+  html: string;
+  /** Where replies go (e.g. the person who wrote in), instead of the sender */
+  replyTo?: string;
+};
+
+const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.send';
+const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
+
+// Convert ArrayBuffer or Uint8Array to base64url string
+function toBase64Url(buffer: ArrayBuffer | Uint8Array): string {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  // Process in chunks to avoid "Maximum call stack size exceeded" on large buffers
+  const CHUNK = 8192;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+// base64url-encode a plain string (UTF-8 safe)
+function encodeBase64Url(str: string): string {
+  return toBase64Url(new TextEncoder().encode(str));
+}
+
+// Sign and return a JWT using the service account private key (RS256)
+async function buildServiceAccountJwt(
+  serviceAccountEmail: string,
+  privateKeyPem: string,
+  senderEmail: string,
+): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = encodeBase64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = encodeBase64Url(
+    JSON.stringify({
+      iss: serviceAccountEmail,
+      sub: senderEmail,
+      scope: GMAIL_SCOPE,
+      aud: TOKEN_URL,
+      iat: now,
+      exp: now + 3600,
+    }),
+  );
+
+  const signingInput = `${header}.${payload}`;
+
+  // Normalize PEM — Cloudflare secrets often store \n as literal backslash-n
+  const normalizedPem = privateKeyPem.replace(/\\n/g, '\n');
+  const pemBody = normalizedPem
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, '');
+
+  const keyBuffer = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    keyBuffer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    new TextEncoder().encode(signingInput),
+  );
+
+  return `${signingInput}.${toBase64Url(signature)}`;
+}
+
+// Exchange a signed JWT for a short-lived Gmail access token
+async function getAccessToken(
+  serviceAccountEmail: string,
+  privateKeyPem: string,
+  senderEmail: string,
+): Promise<string> {
+  const jwt = await buildServiceAccountJwt(serviceAccountEmail, privateKeyPem, senderEmail);
+
+  const res = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`[email] Failed to get Gmail access token: ${err}`);
+  }
+
+  const data = (await res.json()) as { access_token: string };
+  return data.access_token;
+}
+
+// Non-ASCII subjects (e.g. Marathi/Hindi names) must be RFC 2047 encoded
+function encodeHeader(value: string): string {
+  if (/^[\x00-\x7F]*$/.test(value)) return value;
+  return `=?UTF-8?B?${btoa(String.fromCharCode(...new TextEncoder().encode(value)))}?=`;
+}
+
+// Build a raw RFC 2822 message and send it via the Gmail API
+async function sendViaGmail(
+  accessToken: string,
+  sender: { address: string; name: string },
+  { to, subject, html, replyTo }: EmailMessage,
+): Promise<void> {
+  const recipients = (Array.isArray(to) ? to : [to]).map((address) => address.replace(/[\r\n,<>]/g, '').trim()).filter(Boolean);
+  if (recipients.length === 0) throw new Error('[email] No recipients');
+  const raw = [
+    `From: ${encodeHeader(sender.name.replace(/["\r\n]/g, ''))} <${sender.address}>`,
+    `To: ${recipients.join(', ')}`,
+    // Only a plain, valid address — anything else could inject headers
+    ...(replyTo && isValidEmailAddress(replyTo) ? [`Reply-To: ${replyTo}`] : []),
+    // Line breaks in a subject would start new headers
+    `Subject: ${encodeHeader(subject.replace(/[\r\n]+/g, ' '))}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=utf-8',
+    '',
+    html,
+  ].join('\r\n');
+
+  const encodedRaw = toBase64Url(new TextEncoder().encode(raw));
+
+  const res = await fetch(GMAIL_SEND_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ raw: encodedRaw }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`[email] Gmail API send failed: ${err}`);
+  }
+}
+
+function getGmailCredentials(): { serviceAccountEmail: string; privateKey: string } | null {
+  const serviceAccountEmail = process.env.GMAIL_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GMAIL_PRIVATE_KEY;
+
+  if (!serviceAccountEmail || !privateKey) {
+    console.warn('[email] GMAIL_SERVICE_ACCOUNT_EMAIL or GMAIL_PRIVATE_KEY not set — email will be skipped');
+    return null;
+  }
+
+  return { serviceAccountEmail, privateKey };
+}
+
+/**
+ * Sends an email from the sender configured for `purpose` (or the organization
+ * email). Returns false when email isn't configured; throws on delivery errors.
+ */
+export async function sendEmail(purpose: EmailPurpose, message: EmailMessage): Promise<boolean> {
+  const credentials = getGmailCredentials();
+  if (!credentials) return false;
+
+  const sender = await resolveSender(purpose);
+  const accessToken = await getAccessToken(credentials.serviceAccountEmail, credentials.privateKey, sender.address);
+  await sendViaGmail(accessToken, sender, message);
+  return true;
+}
+
+export async function sendFamilyInviteEmail({
+  to,
+  inviterName,
+  relationship,
+  inviteCode,
+}: {
+  to: string;
+  inviterName: string;
+  relationship: string;
+  inviteCode: string;
+}): Promise<void> {
+  const baseUrl = process.env.NEXTAUTH_URL ?? 'https://ambedkaritebuddhist.org';
+  const magicLink = `${baseUrl}/family/accept-invite?code=${inviteCode}`;
+
+  await sendEmail('familyInvites', {
+    to,
+    subject: `${inviterName} has added you as a family member`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1F2937">
+        <div style="background:#2D4D9B;padding:24px 32px;border-radius:12px 12px 0 0">
+          <h1 style="color:#E8B20E;margin:0;font-size:20px">Ambedkarite Buddhist Community of Canada</h1>
+        </div>
+        <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
+          <h2 style="margin:0 0 16px;font-size:18px">You've been added as a family member</h2>
+          <p style="margin:0 0 12px;color:#374151">
+            <strong>${inviterName}</strong> has added you as their <strong>${relationship}</strong>
+            in the Ambedkarite Buddhist Community of Canada.
+          </p>
+          <p style="margin:0 0 24px;color:#374151">
+            Click the button below to link your account and view your shared family profile.
+          </p>
+          <a href="${magicLink}"
+             style="display:inline-block;background:#E8B20E;color:#1F2937;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:15px">
+            Accept &amp; Link Account
+          </a>
+          <p style="margin:24px 0 0;font-size:13px;color:#6B7280">
+            Or enter this code manually on your profile page:<br/>
+            <code style="background:#f3f4f6;padding:4px 8px;border-radius:4px;font-size:13px">${inviteCode}</code>
+          </p>
+          <p style="margin:16px 0 0;font-size:12px;color:#9CA3AF">
+            This invite expires in 30 days. If you did not expect this email, you can safely ignore it.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export type EmailTestResult =
+  | { ok: true; from: string; to: string }
+  | {
+      ok: false;
+      stage: 'config' | 'key' | 'token' | 'send';
+      message: string;
+      hint: string;
+      missing?: string[];
+      from?: string;
+    };
+
+export type EmailTestTarget = { purpose?: EmailPurpose };
+
+function shorten(text: string, max = 400) {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  return clean.length > max ? `${clean.slice(0, max)}…` : clean;
+}
+
+
+/**
+ * Sends a test email and reports which step failed, so admins can verify the
+ * Gmail setup. Messages contain Google's error text but never secret values.
+ */
+export async function sendTestEmail(
+  to: string,
+  requestedBy: string,
+  { purpose }: EmailTestTarget = {},
+): Promise<EmailTestResult> {
+  const serviceAccountEmail = process.env.GMAIL_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GMAIL_PRIVATE_KEY;
+
+  const missing = [
+    !serviceAccountEmail && 'GMAIL_SERVICE_ACCOUNT_EMAIL',
+    !privateKey && 'GMAIL_PRIVATE_KEY',
+  ].filter(Boolean) as string[];
+  if (missing.length > 0 || !serviceAccountEmail || !privateKey) {
+    return {
+      ok: false,
+      stage: 'config',
+      missing,
+      message: `Email isn't configured: ${missing.join(' and ')} ${missing.length === 1 ? 'is' : 'are'} not set on this Worker.`,
+      hint: 'Add them in Cloudflare → Workers → this Worker → Settings → Variables and Secrets (type "Secret"), then try again.',
+    };
+  }
+
+  const sender: ResolvedSender = await resolveSender(purpose);
+  const from = sender.address;
+
+  let jwt: string;
+  try {
+    jwt = await buildServiceAccountJwt(serviceAccountEmail, privateKey, from);
+  } catch (error) {
+    return {
+      ok: false,
+      stage: 'key',
+      from,
+      message: `The private key could not be read (${shorten(error instanceof Error ? error.message : String(error), 120)}).`,
+      hint: 'Paste the "private_key" value from the service account JSON file into GMAIL_PRIVATE_KEY, including the BEGIN/END PRIVATE KEY lines.',
+    };
+  }
+
+  const tokenRes = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
+  });
+  if (!tokenRes.ok) {
+    const detail = shorten(await tokenRes.text());
+    return {
+      ok: false,
+      stage: 'token',
+      from,
+      message: `Google refused the sign-in for ${from}: ${detail}`,
+      hint: detail.includes('unauthorized_client')
+        ? 'Domain-wide delegation is missing: in Google Workspace Admin → Security → API controls → Domain-wide delegation, add the service account\'s client ID with the scope https://www.googleapis.com/auth/gmail.send.'
+        : `Check that ${from} is a real mailbox in your Google Workspace (not a group or alias) and that the service account key is still active.`,
+    };
+  }
+  const { access_token: accessToken } = (await tokenRes.json()) as { access_token: string };
+
+  try {
+    const sentAt = new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' });
+    await sendViaGmail(accessToken, sender, {
+      to,
+      subject: `Test email from the ABCC website${purpose ? ` (${EMAIL_PURPOSES[purpose].label})` : ''} ☸️`,
+      html: `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1F2937">
+          <h2 style="color:#2D4D9B">Email is working 🪷</h2>
+          <p>This test email was sent from the ABCC website by ${escapeHtml(requestedBy)} on ${escapeHtml(sentAt)} (Toronto time).</p>
+          <p style="color:#6B7280;font-size:13px">Sent from ${escapeHtml(from)}. No action is needed.</p>
+        </div>`,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      stage: 'send',
+      from,
+      message: shorten(error instanceof Error ? error.message : String(error)),
+      hint: 'Google accepted the sign-in but Gmail refused to send. Check that the sender mailbox exists and can send email.',
+    };
+  }
+
+  return { ok: true, from, to };
+}

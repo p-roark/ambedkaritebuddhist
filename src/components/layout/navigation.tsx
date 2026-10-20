@@ -5,6 +5,8 @@ import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { DonateModal } from './donate-modal'
+import { fetchOrgSettings } from '@/lib/org-settings-client'
+import { useFeature } from '@/lib/use-feature'
 
 export function Navigation() {
   const { data: session, status } = useSession()
@@ -14,10 +16,10 @@ export function Navigation() {
   const [orgLine2, setOrgLine2] = useState('Community Of Canada (ABCC)')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [donateOpen, setDonateOpen] = useState(false)
+  const donationsEnabled = useFeature('donations') === true
 
   useEffect(() => {
-    fetch('/api/events?resource=org-settings')
-      .then((r) => r.json() as Promise<{ settings?: { shortName?: string; orgName?: string } }>)
+    fetchOrgSettings<{ shortName?: string; orgName?: string }>()
       .then((data) => {
         const name = data.settings?.orgName ?? ''
         if (!name) return
@@ -39,11 +41,13 @@ export function Navigation() {
   }, [pathname])
 
   const isAdmin = sessionState?.user?.role === 'ADMIN'
+  const showSignIn = status === 'unauthenticated' && pathname !== '/auth/login'
+  const signInHref = `/auth/login?callbackUrl=${encodeURIComponent(pathname || '/')}`
 
   const isActive = (href: string) => pathname === href
 
   const navLinkClass = (href: string) =>
-    `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+    `px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
       isActive(href) ? 'text-primary-blue bg-blue-50' : 'text-gray-700 hover:text-primary-blue hover:bg-gray-50'
     }`
 
@@ -76,7 +80,7 @@ export function Navigation() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden xl:flex items-center space-x-1">
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className={navLinkClass(link.href)}>
                 {link.label}
@@ -93,13 +97,15 @@ export function Navigation() {
           </div>
 
           {/* Desktop actions */}
-          <div className="hidden md:flex items-center space-x-2">
-            <button
-              onClick={() => setDonateOpen(true)}
-              className="px-4 py-2 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
-            >
-              🪷 Donate
-            </button>
+          <div className="hidden xl:flex items-center space-x-2">
+            {donationsEnabled && (
+              <button
+                onClick={() => setDonateOpen(true)}
+                className="px-4 py-2 whitespace-nowrap text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors"
+              >
+                🪷 Donate
+              </button>
+            )}
             {sessionState && (
               <>
                 <span className="text-sm text-gray-700 max-w-[120px] truncate">
@@ -107,16 +113,24 @@ export function Navigation() {
                 </span>
                 <button
                   onClick={() => void signOut({ callbackUrl: '/' })}
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+                  className="px-4 py-2 whitespace-nowrap text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
                 >
                   Sign Out
                 </button>
               </>
             )}
+            {showSignIn && (
+              <Link
+                href={signInHref}
+                className="px-4 py-2 whitespace-nowrap text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Mobile: hamburger */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex xl:hidden items-center gap-2">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
@@ -139,7 +153,7 @@ export function Navigation() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1 shadow-lg">
+        <div className="xl:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1 shadow-lg">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={mobileNavLinkClass(link.href)}>
               {link.label}
@@ -154,12 +168,14 @@ export function Navigation() {
             </>
           )}
           <div className="pt-2 border-t border-gray-100 mt-2">
-            <button
-              onClick={() => { setMobileOpen(false); setDonateOpen(true) }}
-              className="block w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors mb-2"
-            >
-              🪷 Donate
-            </button>
+            {donationsEnabled && (
+              <button
+                onClick={() => { setMobileOpen(false); setDonateOpen(true) }}
+                className="block w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-primary-saffron hover:bg-primary-saffron/90 rounded-md transition-colors mb-2"
+              >
+                🪷 Donate
+              </button>
+            )}
             {sessionState && (
               <button
                 onClick={() => void signOut({ callbackUrl: '/' })}
@@ -168,11 +184,19 @@ export function Navigation() {
                 Sign Out
               </button>
             )}
+            {showSignIn && (
+              <Link
+                href={signInHref}
+                className="block w-full text-center px-4 py-2.5 text-sm font-medium text-white bg-primary-blue hover:bg-primary-blue/90 rounded-md transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}
     </nav>
-    <DonateModal open={donateOpen} onClose={() => setDonateOpen(false)} />
+    {donationsEnabled && <DonateModal open={donateOpen} onClose={() => setDonateOpen(false)} />}
   </>
   )
 }
