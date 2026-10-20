@@ -94,10 +94,28 @@ export async function PATCH(request: NextRequest) {
     import('@/db/schema'),
   ]);
   const db = getDb();
+
+  // A changed street address must come from the address search
+  const previousAddress = await db
+    .select({ addressLine1: users.addressLine1, city: users.city, province: users.province, addressVerifiedAt: users.addressVerifiedAt })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+    .then((rows) => rows[0] ?? null);
+  const { checkMemberAddress } = await import('@/lib/address-verification-server');
+  const addressCheck = await checkMemberAddress(parsed.value, previousAddress, { allowUnverifiedUnchanged: true });
+  if (!addressCheck.ok) {
+    return NextResponse.json(
+      { error: addressCheck.error, fieldErrors: { addressLine1: addressCheck.error } },
+      { status: 400 },
+    );
+  }
+
   await db
     .update(users)
     .set({
       ...parsed.value,
+      addressVerifiedAt: addressCheck.addressVerifiedAt,
       altPhone: String(body.altPhone ?? '').trim() || null,
       education: String(body.education ?? '').trim() || null,
       interests: String(body.interests ?? '').trim() || null,

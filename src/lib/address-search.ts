@@ -38,7 +38,7 @@ function cleanCity(value: string): string {
  * Geolocator's own address data, dropping lanes, intersections, places and
  * landmarks, and turns them into form values.
  */
-export function parseGeolocatorResults(results: unknown): AddressSuggestion[] {
+export function parseGeolocatorResults(results: unknown, limit = MAX_SUGGESTIONS): AddressSuggestion[] {
   if (!Array.isArray(results)) return [];
   const suggestions: AddressSuggestion[] = [];
   const seen = new Set<string>();
@@ -58,15 +58,30 @@ export function parseGeolocatorResults(results: unknown): AddressSuggestion[] {
     if (seen.has(label)) continue;
     seen.add(label);
     suggestions.push({ label, addressLine1, city, province });
-    if (suggestions.length >= MAX_SUGGESTIONS) break;
+    if (suggestions.length >= limit) break;
   }
   return suggestions;
 }
 
 /** Calls the Geolocator; throws on network errors or a non-OK reply. */
-export async function searchAddresses(query: string, fetchImpl: typeof fetch = fetch): Promise<AddressSuggestion[]> {
+export async function searchAddresses(
+  query: string,
+  fetchImpl: typeof fetch = fetch,
+  limit = MAX_SUGGESTIONS,
+): Promise<AddressSuggestion[]> {
   const url = `${GEOLOCATOR_URL}?q=${encodeURIComponent(query)}&lang=en`;
   const res = await fetchImpl(url, { signal: AbortSignal.timeout(5000), headers: { Accept: 'application/json' } });
   if (!res.ok) throw new Error(`Geolocator replied ${res.status}`);
-  return parseGeolocatorResults(await res.json());
+  return parseGeolocatorResults(await res.json(), limit);
+}
+
+export type AddressFields = { addressLine1: string; city: string; province: string };
+
+const normalize = (value: string) => value.toLowerCase().replace(/[.,']/g, '').replace(/\s+/g, ' ').trim();
+
+/** Same street, city and province, ignoring case, punctuation and spacing. */
+export function sameAddress(a: AddressFields, b: AddressFields): boolean {
+  return normalize(a.addressLine1) === normalize(b.addressLine1)
+    && normalize(a.city) === normalize(b.city)
+    && a.province === b.province;
 }

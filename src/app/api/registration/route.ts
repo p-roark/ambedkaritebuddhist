@@ -91,6 +91,24 @@ export async function POST(request: NextRequest) {
     ]);
     const db = getDb();
 
+    // The street address must come from the address search (checked before the invite is used)
+    const previousAddress = current.user
+      ? await db
+          .select({ addressLine1: users.addressLine1, city: users.city, province: users.province, addressVerifiedAt: users.addressVerifiedAt })
+          .from(users)
+          .where(eq(users.id, current.user.id))
+          .limit(1)
+          .then((rows) => rows[0] ?? null)
+      : null;
+    const { checkMemberAddress } = await import('@/lib/address-verification-server');
+    const addressCheck = await checkMemberAddress(parsed.value, previousAddress, { allowUnverifiedUnchanged: false });
+    if (!addressCheck.ok) {
+      return NextResponse.json(
+        { error: 'Please correct the highlighted fields.', fieldErrors: { addressLine1: addressCheck.error } },
+        { status: 400 },
+      );
+    }
+
     // New members must present a valid invite code. The use is counted with a
     // single conditional UPDATE so concurrent sign-ups cannot exceed maxUses.
     let consumedCodeId: string | null = null;
@@ -135,6 +153,7 @@ export async function POST(request: NextRequest) {
       disclaimerAcceptedAt: now,
       disclaimerVersion: DISCLAIMER_VERSION,
       ageConfirmedAt: now,
+      addressVerifiedAt: addressCheck.addressVerifiedAt,
       updatedAt: now,
     };
 

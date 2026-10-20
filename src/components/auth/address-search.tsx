@@ -7,6 +7,8 @@ import { useFeature } from '@/lib/use-feature';
 interface AddressSearchProps {
   /** Called with the chosen address; the form fills its own fields */
   onSelect: (address: AddressSuggestion) => void;
+  /** Called when the lookup service can't be reached, so the form can allow typing */
+  onUnavailable?: () => void;
   inputClassName?: string;
 }
 
@@ -19,7 +21,7 @@ const DEBOUNCE_MS = 350;
  * member types and fills street, city and province. Hidden when the
  * Address search feature switch is off. Postal code and unit are still typed.
  */
-export function AddressSearch({ onSelect, inputClassName = '' }: AddressSearchProps) {
+export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: AddressSearchProps) {
   const enabled = useFeature('addressLookup');
   const id = useId();
   const [query, setQuery] = useState('');
@@ -29,6 +31,11 @@ export function AddressSearch({ onSelect, inputClassName = '' }: AddressSearchPr
   const [active, setActive] = useState(-1);
   const [chosen, setChosen] = useState<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
+  // Latest callback without re-running the search when the parent re-renders
+  const onUnavailableRef = useRef(onUnavailable);
+  useEffect(() => {
+    onUnavailableRef.current = onUnavailable;
+  }, [onUnavailable]);
 
   useEffect(() => {
     const q = query.trim();
@@ -46,6 +53,7 @@ export function AddressSearch({ onSelect, inputClassName = '' }: AddressSearchPr
         .then((data) => {
           setSuggestions(data.suggestions);
           setState(data.unavailable ? 'unavailable' : 'done');
+          if (data.unavailable) onUnavailableRef.current?.();
           setActive(data.suggestions.length > 0 ? 0 : -1);
           setOpen(true);
         })
@@ -53,6 +61,7 @@ export function AddressSearch({ onSelect, inputClassName = '' }: AddressSearchPr
           if ((error as { name?: string })?.name === 'AbortError') return;
           setSuggestions([]);
           setState('unavailable');
+          onUnavailableRef.current?.();
         });
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -106,7 +115,7 @@ export function AddressSearch({ onSelect, inputClassName = '' }: AddressSearchPr
         : state === 'unavailable'
           ? 'Address search isn’t available right now. Please type your address below.'
           : state === 'done' && suggestions.length === 0
-            ? 'No matching street address found. Check the number and street name, or type your address below.'
+            ? 'No matching street address found. Check the number and street name. If your address isn’t listed, please contact us.'
             : '';
 
   return (
