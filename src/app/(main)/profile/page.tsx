@@ -61,6 +61,12 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const familyEnabled = useFeature('family');
+  // Street, city and province come from the address search (typing allowed only
+  // when it's switched off or its service can't be reached)
+  const addressSearchEnabled = useFeature('addressLookup');
+  const [addressSearchDown, setAddressSearchDown] = useState(false);
+  const addressLocked = addressSearchEnabled === true && !addressSearchDown;
+  const lockedClass = addressLocked ? ' bg-slate-50 text-slate-700 cursor-not-allowed' : '';
 
   const [newMember, setNewMember] = useState({
     name: '',
@@ -267,12 +273,14 @@ export default function ProfilePage() {
               <div className="text-sm md:col-span-2">
                 <AddressSearch
                   inputClassName="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
-                  onSelect={(address) => setProfile({ ...profile, addressLine1: address.addressLine1, city: address.city, province: address.province })}
+                  onUnavailable={() => setAddressSearchDown(true)}
+                  onSelect={(address) => setProfile((prev) => prev && { ...prev, addressLine1: address.addressLine1, city: address.city, province: address.province })}
                 />
+                {addressLocked && <p className="mt-1 text-text-medium">Street, city and province are filled in when you choose your address above.</p>}
               </div>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Street Address<span className="text-red-700" aria-hidden="true"> *</span></span>
-                <input autoComplete="address-line1" required value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+                <input autoComplete="address-line1" required readOnly={addressLocked} value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className={`w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors${lockedClass}`} />
               </label>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Apartment, unit, etc.</span>
@@ -280,11 +288,11 @@ export default function ProfilePage() {
               </label>
               <label className="text-sm">
                 <span className="mb-1 block font-medium text-slate-700">City<span className="text-red-700" aria-hidden="true"> *</span></span>
-                <input autoComplete="address-level2" required value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />
+                <input autoComplete="address-level2" required readOnly={addressLocked} value={profile.city ?? ''} onChange={(e) => setProfile({ ...profile, city: e.target.value })} className={`w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors${lockedClass}`} />
               </label>
               <label className="text-sm">
                 <span className="mb-1 block font-medium text-slate-700">Province / Territory<span className="text-red-700" aria-hidden="true"> *</span></span>
-                <select autoComplete="address-level1" required value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors">
+                <select autoComplete="address-level1" required disabled={addressLocked} value={profile.province ?? ''} onChange={(e) => setProfile({ ...profile, province: e.target.value })} className={`w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors${addressLocked ? lockedClass : ' bg-white'}`}>
                   <option value="">Select province or territory</option>
                   {PROVINCE_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
                 </select>

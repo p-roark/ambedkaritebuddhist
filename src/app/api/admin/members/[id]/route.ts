@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { requireFeature } from '@/lib/feature-flags-server';
+import { sameAddress } from '@/lib/address-search';
 import { validateProfileUpdate } from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,7 @@ async function loadMember(id: string) {
       disclaimerAcceptedAt: users.disclaimerAcceptedAt,
       disclaimerVersion: users.disclaimerVersion,
       ageConfirmedAt: users.ageConfirmedAt,
+      addressVerifiedAt: users.addressVerifiedAt,
       boardInterest: users.boardInterest,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
@@ -91,6 +93,16 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       education: optionalText('education'),
       interests: optionalText('interests'),
       notes: optionalText('notes'),
+      // An address typed by an admin isn't confirmed by the address search
+      addressVerifiedAt:
+        existing.addressLine1 && existing.city && existing.province &&
+        parsed.value.addressLine1 && parsed.value.city && parsed.value.province &&
+        sameAddress(
+          { addressLine1: parsed.value.addressLine1, city: parsed.value.city, province: parsed.value.province },
+          { addressLine1: existing.addressLine1, city: existing.city, province: existing.province },
+        )
+          ? existing.addressVerifiedAt
+          : null,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(users.id, id));

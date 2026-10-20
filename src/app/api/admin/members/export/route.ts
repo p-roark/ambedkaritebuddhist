@@ -28,13 +28,14 @@ export async function GET(request: NextRequest) {
 
   const header = [
     'Name', 'Email', 'Phone', 'Alternate phone', 'Address line 1', 'Address line 2', 'City', 'Province',
-    'Postal code', 'Residency status', 'Role', 'Account status', 'Registration completed', 'Consent given',
+    'Postal code', 'Address verified', 'Residency status', 'Role', 'Account status', 'Registration completed', 'Consent given',
     'Consent version', '18+ confirmed', 'Board / committee interest', 'Invite code', 'Joined', 'Education', 'Interests', 'Notes',
   ];
   const rows = members.map((m) => [
     m.name, m.email, m.phone, m.altPhone, m.addressLine1, m.addressLine2, m.city,
     m.province ? (PROVINCE_LABELS.get(m.province) ?? m.province) : null,
     m.postalCode,
+    m.addressVerifiedAt,
     m.residencyStatus ? (RESIDENCY_LABELS.get(m.residencyStatus) ?? m.residencyStatus) : null,
     m.role, m.status, m.registrationCompletedAt, m.disclaimerAcceptedAt, m.disclaimerVersion,
     m.ageConfirmedAt, m.boardInterest ? 'Yes' : 'No', m.referredBy, m.createdAt, m.education, m.interests, m.notes,

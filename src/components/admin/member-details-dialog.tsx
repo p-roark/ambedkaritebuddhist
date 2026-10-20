@@ -25,6 +25,7 @@ type MemberDetails = {
   disclaimerAcceptedAt: string | null;
   disclaimerVersion: string | null;
   ageConfirmedAt: string | null;
+  addressVerifiedAt: string | null;
   boardInterest: boolean;
   createdAt: string;
   updatedAt: string;
@@ -187,6 +188,7 @@ export function MemberDetailsDialog({ memberId, onClose, onSaved }: MemberDetail
                   ['Consent', member.disclaimerAcceptedAt ? `${formatDate(member.disclaimerAcceptedAt)} (${member.disclaimerVersion ?? '—'})` : 'Not given'],
                   ['18 or older', member.ageConfirmedAt ? `Confirmed ${formatDate(member.ageConfirmedAt)}` : 'Not confirmed'],
                   ['Board / committee interest', member.boardInterest ? 'Yes' : 'No'],
+                  ['Address', member.addressVerifiedAt ? `Verified ${formatDate(member.addressVerifiedAt)}` : member.addressLine1 ? 'Not verified' : '—'],
                   ['Invite code', member.referredBy ?? '—'],
                   ['Joined', formatDate(member.createdAt)],
                 ].map(([label, value]) => (
