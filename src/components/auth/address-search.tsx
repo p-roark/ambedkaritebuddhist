@@ -33,7 +33,9 @@ export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: 
   const requestRef = useRef<AbortController | null>(null);
   // Latest callback without re-running the search when the parent re-renders
   const onUnavailableRef = useRef(onUnavailable);
-  onUnavailableRef.current = onUnavailable;
+  useEffect(() => {
+    onUnavailableRef.current = onUnavailable;
+  }, [onUnavailable]);
 
   useEffect(() => {
     const q = query.trim();
