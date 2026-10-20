@@ -50,6 +50,13 @@ export const FEATURES = {
     description: 'Shows signed-in members the "Upload photos to Drive" link on event galleries.',
     defaultEnabled: true,
   },
+  addressLookup: {
+    label: 'Address search',
+    page: 'Membership',
+    description:
+      'Registration and profile forms suggest real Canadian street addresses as members type (Government of Canada Geolocator; fills street, city and province). When off, addresses are typed by hand.',
+    defaultEnabled: true,
+  },
   emailSignIn: {
     label: 'Email sign-in link',
     page: 'Membership',

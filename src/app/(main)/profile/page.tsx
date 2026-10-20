@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFeature } from '@/lib/use-feature';
 import { PROVINCE_OPTIONS, RESIDENCY_STATUS_OPTIONS } from '@/lib/registration-config';
+import { AddressSearch } from '@/components/auth/address-search';
 
 type Profile = {
   id: string;
@@ -263,6 +264,12 @@ export default function ProfilePage() {
                   {RESIDENCY_STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </label>
+              <div className="text-sm md:col-span-2">
+                <AddressSearch
+                  inputClassName="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
+                  onSelect={(address) => setProfile({ ...profile, addressLine1: address.addressLine1, city: address.city, province: address.province })}
+                />
+              </div>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Street Address<span className="text-red-700" aria-hidden="true"> *</span></span>
                 <input autoComplete="address-line1" required value={profile.addressLine1 ?? ''} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors" />

@@ -270,23 +270,23 @@ describe('registration emails', () => {
 
   it('welcomes new members and sends the notice to the organization email by default', async () => {
     seedCode('BHIM-ABC-1234');
-    expect((await post({ ...validForm, name: 'Ravi <b>Kamble</b>', boardInterest: true, code: 'BHIM-ABC-1234' })).status).toBe(200);
+    expect((await post({ ...validForm, name: "Ravi D'Souza-Kamble", boardInterest: true, code: 'BHIM-ABC-1234' })).status).toBe(200);
 
     await settleBackground();
     expect(sendEmailMock).toHaveBeenCalledTimes(2);
     const welcome = sent().find(([, m]) => m.to === 'new.member@example.com');
     const notice = sent().find(([, m]) => m.to !== 'new.member@example.com');
     expect(welcome?.[0]).toBe('registrations');
-    expect(welcome?.[1].html).toContain('Welcome, Ravi &lt;b&gt;Kamble&lt;/b&gt;!');
+    expect(welcome?.[1].html).toContain('Welcome, Ravi D&#39;Souza-Kamble!');
     expect(welcome?.[1].html).toContain('http://localhost/profile');
     expect(notice?.[0]).toBe('registrations');
     expect(notice?.[1].to).toBe(orgEmail());
-    expect(notice?.[1].subject).toBe('New member registered: Ravi <b>Kamble</b>');
+    expect(notice?.[1].subject).toBe("New member registered: Ravi D'Souza-Kamble");
     expect(notice?.[1].html).toContain('BHIM-ABC-1234');
     expect(notice?.[1].html).toContain('Canadian Citizen');
     expect(notice?.[1].html).toMatch(/Board \/ committee interest.*Yes/s);
     expect(userRow('new.member@example.com')?.boardInterest).toBe(1);
-    expect(notice?.[1].html).not.toContain('<b>Kamble');
+    expect(notice?.[1].html).not.toContain("D'Souza");
   });
 
   it('sends the notice to the Registrations address when one is set', async () => {

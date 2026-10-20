@@ -71,6 +71,57 @@ export function normalizePostalCode(value: unknown): string | null {
   return `${compact.slice(0, 3)} ${compact.slice(3)}`;
 }
 
+// Letters in any script (with accents/combining marks)
+const LETTER = /\p{L}/gu;
+const letterCount = (value: string) => (value.match(LETTER) ?? []).length;
+
+/** Person's name: letters, spaces, hyphens, apostrophes and periods; at least 2 letters. */
+export function isValidPersonName(value: unknown): boolean {
+  const input = text(value);
+  return /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u.test(input) && letterCount(input) >= 2;
+}
+
+/** City or town: letters, spaces, hyphens, apostrophes and periods (no digits); at least 2 letters. */
+export function isValidCity(value: unknown): boolean {
+  const input = text(value);
+  return /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u.test(input) && letterCount(input) >= 2;
+}
+
+// Characters that appear in Canadian addresses: letters, digits, spaces and . , ' ’ # / -
+const ADDRESS_CHARS = /^[\p{L}\p{M}\d .,'’#/-]+$/u;
+
+/** Street address: a civic number (or PO box / rural route number) plus a street name. */
+export function isValidStreetAddress(value: unknown): boolean {
+  const input = text(value);
+  return ADDRESS_CHARS.test(input) && /\d/.test(input) && letterCount(input) >= 2;
+}
+
+/** Apartment, unit, buzzer, etc. — same characters as an address. */
+export function isValidAddressLine2(value: unknown): boolean {
+  const input = text(value);
+  return ADDRESS_CHARS.test(input) && /[\p{L}\d]/u.test(input);
+}
+
+// First letter of a Canadian postal code → province/territory
+const POSTAL_PREFIX_PROVINCES: Record<string, string[]> = {
+  A: ['NL'], B: ['NS'], C: ['PE'], E: ['NB'], G: ['QC'], H: ['QC'], J: ['QC'],
+  K: ['ON'], L: ['ON'], M: ['ON'], N: ['ON'], P: ['ON'],
+  R: ['MB'], S: ['SK'], T: ['AB'], V: ['BC'], X: ['NT', 'NU'], Y: ['YT'],
+};
+
+/** Whether a (normalised) postal code belongs to the province, e.g. "M5H 2N2" is in ON. */
+export function postalCodeMatchesProvince(postalCode: string, province: string): boolean {
+  return POSTAL_PREFIX_PROVINCES[postalCode.charAt(0)]?.includes(province) ?? false;
+}
+
+const INVALID = {
+  name: 'Enter your name using letters (spaces, hyphens and apostrophes are fine).',
+  addressLine1: 'Enter a street address with a number and street name, e.g. 100 Queen St W.',
+  addressLine2: 'Use letters and numbers only, e.g. Unit 1203.',
+  city: 'Enter a city or town name using letters, e.g. Toronto.',
+  postalMismatch: 'This postal code isn’t in the selected province. Please check both.',
+} as const;
+
 /** Allows common formatting characters; requires 10–15 digits. */
 export function isValidPhone(value: unknown): boolean {
   const input = text(value);
@@ -91,6 +142,7 @@ export function validateProfileFields(raw: unknown): ValidationResult<ProfileFie
   const name = text(body.name);
   if (!name) errors.name = 'Full name is required.';
   else if (name.length > MAX_LENGTH) errors.name = 'Full name is too long.';
+  else if (!isValidPersonName(name)) errors.name = INVALID.name;
 
   const phone = text(body.phone);
   if (!phone) errors.phone = 'Phone number is required.';
@@ -99,19 +151,23 @@ export function validateProfileFields(raw: unknown): ValidationResult<ProfileFie
   const addressLine1 = text(body.addressLine1);
   if (!addressLine1) errors.addressLine1 = 'Street address is required.';
   else if (addressLine1.length > MAX_LENGTH) errors.addressLine1 = 'Street address is too long.';
+  else if (!isValidStreetAddress(addressLine1)) errors.addressLine1 = INVALID.addressLine1;
 
   const addressLine2 = text(body.addressLine2);
   if (addressLine2.length > MAX_LENGTH) errors.addressLine2 = 'Address line 2 is too long.';
+  else if (addressLine2 && !isValidAddressLine2(addressLine2)) errors.addressLine2 = INVALID.addressLine2;
 
   const city = text(body.city);
   if (!city) errors.city = 'City is required.';
   else if (city.length > MAX_LENGTH) errors.city = 'City is too long.';
+  else if (!isValidCity(city)) errors.city = INVALID.city;
 
   const province = normalizeProvince(body.province);
   if (!province) errors.province = 'Select your province or territory.';
 
   const postalCode = normalizePostalCode(body.postalCode);
   if (!postalCode) errors.postalCode = 'Enter a valid Canadian postal code, e.g. M5V 2T6.';
+  else if (province && !postalCodeMatchesProvince(postalCode, province)) errors.postalCode = INVALID.postalMismatch;
 
   const residencyStatus = body.residencyStatus;
   if (!isResidencyStatus(residencyStatus)) errors.residencyStatus = 'Select your residency status in Canada.';
@@ -154,12 +210,17 @@ export function validateProfileUpdate(
   const name = text(body.name);
   if (!name) errors.name = 'Full name is required.';
   else if (name.length > MAX_LENGTH) errors.name = 'Full name is too long.';
+  else if (!isValidPersonName(name)) errors.name = INVALID.name;
 
   const phone = optional('phone');
   if (phone && !isValidPhone(phone)) errors.phone = 'Enter a valid phone number, e.g. 416-555-0123.';
 
+  const formatChecks = { addressLine1: isValidStreetAddress, addressLine2: isValidAddressLine2, city: isValidCity } as const;
   for (const field of ['addressLine1', 'addressLine2', 'city'] as const) {
-    if ((optional(field) ?? '').length > MAX_LENGTH) errors[field] = 'This value is too long.';
+    const value = optional(field);
+    if (!value) continue;
+    if (value.length > MAX_LENGTH) errors[field] = 'This value is too long.';
+    else if (!formatChecks[field](value)) errors[field] = INVALID[field];
   }
 
   const provinceInput = optional('province');
@@ -169,6 +230,7 @@ export function validateProfileUpdate(
   const postalInput = optional('postalCode');
   const postalCode = postalInput ? normalizePostalCode(postalInput) : null;
   if (postalInput && !postalCode) errors.postalCode = 'Enter a valid Canadian postal code, e.g. M5V 2T6.';
+  else if (postalCode && province && !postalCodeMatchesProvince(postalCode, province)) errors.postalCode = INVALID.postalMismatch;
 
   const residencyInput = optional('residencyStatus');
   if (residencyInput && !isResidencyStatus(residencyInput)) errors.residencyStatus = 'Select a residency status.';

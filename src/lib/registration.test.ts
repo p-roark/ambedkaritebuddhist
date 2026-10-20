@@ -6,8 +6,10 @@ import {
   normalizeInviteCode,
   normalizePostalCode,
   normalizeProvince,
+  postalCodeMatchesProvince,
   safeCallbackUrl,
   validateProfileFields,
+  validateProfileUpdate,
   validateRegistration,
 } from './registration';
 
@@ -154,5 +156,51 @@ describe('links', () => {
     expect(safeCallbackUrl('//evil.example')).toBe('/');
     expect(safeCallbackUrl('/\\evil.example')).toBe('/');
     expect(safeCallbackUrl(null)).toBe('/');
+  });
+});
+
+describe('address and name checks', () => {
+  const errorsFor = (overrides: Record<string, string>) => {
+    const result = validateProfileFields({ ...validForm, ...overrides });
+    return result.ok ? {} : result.errors;
+  };
+
+  it('accepts real-world values', () => {
+    for (const [field, value] of [
+      ['name', "Savitri Phule"], ['name', "Ravi D'Souza-Kamble"], ['name', 'Dr. B. R. Ambedkar'], ['name', 'सावित्री फुले'],
+      ['addressLine1', '100 Queen St W'], ['addressLine1', '12-345 Rue Saint-Denis'], ['addressLine1', 'PO Box 123'],
+      ['addressLine1', 'RR 2'], ['addressLine1', '1203/45 King St. E.'],
+      ['city', 'Toronto'], ['city', 'St. Catharines'], ['city', 'Trois-Rivières'], ['city', "Niagara-on-the-Lake"],
+    ] as const) {
+      expect(errorsFor({ [field]: value }), `${field}: ${value}`).toEqual({});
+    }
+    expect(errorsFor({ addressLine2: 'Unit 1203' })).toEqual({});
+  });
+
+  it('rejects junk', () => {
+    expect(errorsFor({ addressLine1: ':)68' })).toHaveProperty('addressLine1');
+    expect(errorsFor({ addressLine1: 'Queen Street' })).toHaveProperty('addressLine1'); // no number
+    expect(errorsFor({ addressLine1: '12345' })).toHaveProperty('addressLine1'); // no street name
+    expect(errorsFor({ city: '123' })).toHaveProperty('city');
+    expect(errorsFor({ city: 'T' })).toHaveProperty('city');
+    expect(errorsFor({ city: 'Toronto!!' })).toHaveProperty('city');
+    expect(errorsFor({ name: 'R2D2' })).toHaveProperty('name');
+    expect(errorsFor({ name: '<b>Ravi</b>' })).toHaveProperty('name');
+    expect(errorsFor({ addressLine2: ':)' })).toHaveProperty('addressLine2');
+  });
+
+  it('checks the postal code belongs to the province', () => {
+    expect(postalCodeMatchesProvince('L1W 1C2', 'ON')).toBe(true);
+    expect(postalCodeMatchesProvince('V6B 1A1', 'ON')).toBe(false);
+    expect(postalCodeMatchesProvince('X1A 2B3', 'NU')).toBe(true);
+    expect(errorsFor({ province: 'BC', postalCode: 'M5H 2N2' })).toHaveProperty('postalCode');
+    expect(errorsFor({ province: 'BC', city: 'Vancouver', postalCode: 'V6B 1A1' })).toEqual({});
+  });
+
+  it('applies the same checks to admin edits of unregistered members', () => {
+    const result = validateProfileUpdate({ name: 'Ravi', city: '123', addressLine1: ':)68' }, { requireComplete: false });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(Object.keys(result.errors).sort()).toEqual(['addressLine1', 'city']);
+    expect(validateProfileUpdate({ name: 'Ravi' }, { requireComplete: false }).ok).toBe(true);
   });
 });
