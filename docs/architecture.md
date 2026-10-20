@@ -286,6 +286,12 @@ Admin status is determined by:
 
 ---
 
+## Address search
+
+Registration and profile forms have a "Find your address" box (`src/components/auth/address-search.tsx`), behind the **Address search** feature switch (on by default). It calls `GET /api/address-search?q=…` (signed-in users only), which asks the Government of Canada Geolocator (Natural Resources Canada, `https://geolocator.api.geo.ca`, free, no key) and keeps only house-number street addresses (`src/lib/address-search.ts`). Picking one fills street, city and province; the Geolocator has no postal codes, so members still type the postal code. If the service fails, the box says so and members type the address; every value still goes through the form checks in `src/lib/registration.ts`.
+
+---
+
 ## API Routes
 
 All routes in `src/app/api/` use `export const runtime = 'edge'` and `export const dynamic = 'force-dynamic'`.

@@ -10,6 +10,7 @@ import {
   RESIDENCY_STATUS_OPTIONS,
 } from '@/lib/registration-config';
 import { validateRegistration, type RegistrationFieldName } from '@/lib/registration';
+import { AddressSearch } from '@/components/auth/address-search';
 
 export type RegistrationFormValues = {
   name: string;
@@ -163,6 +164,15 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
           {label('phone', 'Phone number')}
           <input {...fieldProps('phone')} type="tel" autoComplete="tel" placeholder="416-555-0123" value={values.phone} onChange={(e) => setField('phone', e.target.value)} className={`${inputClass} ${borderClass('phone')}`} />
           {errorText('phone')}
+        </div>
+        <div className="md:col-span-2">
+          <AddressSearch
+            inputClassName={`${inputClass} border-slate-300`}
+            onSelect={(address) => {
+              setValues((prev) => ({ ...prev, addressLine1: address.addressLine1, city: address.city, province: address.province }));
+              setErrors((prev) => ({ ...prev, addressLine1: undefined, city: undefined, province: undefined, postalCode: undefined }));
+            }}
+          />
         </div>
         <div className="md:col-span-2">
           {label('addressLine1', 'Street address')}
