@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildInviteLink,
   getRegistrationStatus,
+  checkCanadianPhone,
   isValidPhone,
   normalizeInviteCode,
   normalizePostalCode,
@@ -60,7 +61,7 @@ describe('validateRegistration', () => {
       ok: true,
       value: {
         name: 'Savitri Phule',
-        phone: '(416) 555-0123',
+        phone: '416-555-0123', // normalised
         addressLine1: '100 Queen St W',
         addressLine2: null,
         city: 'Toronto',
@@ -131,11 +132,27 @@ describe('field normalisers', () => {
     expect(normalizePostalCode('12345')).toBeNull();
   });
 
-  it('validates phone numbers', () => {
-    expect(isValidPhone('416-555-0123')).toBe(true);
-    expect(isValidPhone('+91 98765 43210')).toBe(true);
-    expect(isValidPhone('555-0123')).toBe(false);
-    expect(isValidPhone('call me')).toBe(false);
+  it('accepts Canadian phone numbers in common formats and normalises them', () => {
+    for (const input of ['416-555-0123', '(416) 555-0123', '416.555.0123', '4165550123', '1-416-555-0123', '+1 416 555 0123', '+14165550123']) {
+      expect(checkCanadianPhone(input), input).toEqual({ ok: true, phone: '416-555-0123' });
+    }
+    expect(checkCanadianPhone('604 555 0199')).toEqual({ ok: true, phone: '604-555-0199' });
+  });
+
+  it('rejects numbers that are not 10-digit Canadian numbers', () => {
+    for (const input of ['555-0123', '416-555-012', '4165550123999', '416-555-01234', 'call me', '+91 98765 43210', '+44 20 7946 0958']) {
+      expect(isValidPhone(input), input).toBe(false);
+    }
+  });
+
+  it('rejects made-up numbers and non-Canadian area codes', () => {
+    expect(checkCanadianPhone('0000000000')).toMatchObject({ ok: false, error: expect.stringContaining('area code') });
+    expect(checkCanadianPhone('1234567890')).toMatchObject({ ok: false });
+    expect(checkCanadianPhone('212-555-0123')).toMatchObject({ ok: false, error: expect.stringContaining('area code') }); // New York
+    expect(checkCanadianPhone('999-999-9999')).toMatchObject({ ok: false });
+    expect(checkCanadianPhone('416-011-2345')).toMatchObject({ ok: false, error: expect.stringContaining('valid phone') }); // exchange starts with 0
+    expect(checkCanadianPhone('416-911-2345')).toMatchObject({ ok: false }); // N11 service code
+    expect(checkCanadianPhone('905-999-9999')).toMatchObject({ ok: false }); // placeholder
   });
 
   it('normalises invite codes, including digits in the middle segment', () => {

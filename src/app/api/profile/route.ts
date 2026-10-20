@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateProfileFields } from '@/lib/registration';
+import { checkCanadianPhone, validateProfileFields } from '@/lib/registration';
 import { requireRegisteredUser } from '@/lib/registration-server';
 
 export const dynamic = 'force-dynamic';
@@ -81,9 +81,12 @@ export async function PATCH(request: NextRequest) {
 
   // Registration fields stay mandatory after sign-up
   const parsed = validateProfileFields(body);
-  if (!parsed.ok) {
+  const altPhoneInput = String(body.altPhone ?? '').trim();
+  const altPhoneCheck = altPhoneInput ? checkCanadianPhone(altPhoneInput) : null;
+  if (!parsed.ok || (altPhoneCheck && !altPhoneCheck.ok)) {
+    const fieldErrors = { ...(parsed.ok ? {} : parsed.errors), ...(altPhoneCheck && !altPhoneCheck.ok ? { altPhone: altPhoneCheck.error } : {}) };
     return NextResponse.json(
-      { error: 'Please correct the highlighted fields.', fieldErrors: parsed.errors },
+      { error: 'Please correct the highlighted fields.', fieldErrors },
       { status: 400 },
     );
   }
@@ -116,7 +119,7 @@ export async function PATCH(request: NextRequest) {
     .set({
       ...parsed.value,
       addressVerifiedAt: addressCheck.addressVerifiedAt,
-      altPhone: String(body.altPhone ?? '').trim() || null,
+      altPhone: altPhoneCheck?.ok ? altPhoneCheck.phone : null,
       education: String(body.education ?? '').trim() || null,
       interests: String(body.interests ?? '').trim() || null,
       notes: String(body.notes ?? '').trim() || null,

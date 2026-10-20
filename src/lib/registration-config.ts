@@ -46,3 +46,31 @@ export const BOARD_INTEREST_LABEL = 'Interested in serving on ABCC board or comm
 
 /** Province pre-selected on the registration form when the member has none saved. */
 export const DEFAULT_PROVINCE = 'ON';
+
+/**
+ * Canadian telephone area codes accepted on member phone numbers (geographic
+ * codes from the Canadian Numbering Administrator, cnac.ca). When a new area
+ * code is introduced, add it here — numbers with an unlisted code are refused.
+ */
+export const CANADIAN_AREA_CODES = [
+  // Alberta
+  '368', '403', '587', '780', '825',
+  // British Columbia
+  '236', '250', '257', '604', '672', '778',
+  // Manitoba
+  '204', '431', '584',
+  // New Brunswick
+  '428', '506',
+  // Newfoundland and Labrador
+  '709', '879',
+  // Nova Scotia and Prince Edward Island
+  '782', '902',
+  // Ontario
+  '226', '249', '289', '343', '365', '382', '416', '437', '519', '548', '613', '647', '683', '705', '742', '753', '807', '905', '942',
+  // Quebec
+  '263', '354', '367', '418', '438', '450', '468', '514', '579', '581', '819', '873',
+  // Saskatchewan
+  '306', '474', '639',
+  // Yukon, Northwest Territories and Nunavut
+  '867',
+] as const;
