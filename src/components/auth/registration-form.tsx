@@ -9,6 +9,7 @@ import {
   PROVINCE_OPTIONS,
   RESIDENCY_STATUS_OPTIONS,
 } from '@/lib/registration-config';
+import { ABCC_PURPOSES_URL } from '@/lib/abcc-purposes';
 import { validateRegistration, type RegistrationFieldName } from '@/lib/registration';
 import { AddressSearch } from '@/components/auth/address-search';
 import { useFeature } from '@/lib/use-feature';
@@ -233,6 +234,14 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
 
       <fieldset className={`rounded-2xl border p-4 ${errors.disclaimerAccepted ? 'border-red-500' : 'border-slate-200'} bg-background-light`}>
         <legend className="px-1 text-base font-semibold text-text-dark">{DISCLAIMER_TITLE}</legend>
+        <p className="mb-3 text-sm text-text-medium">
+          Before you agree, please read{' '}
+          <a href={ABCC_PURPOSES_URL} target="_blank" rel="noopener" className="font-semibold text-primary-blue underline hover:text-primary-saffron">
+            ABCC&apos;s purposes from its Articles of Incorporation
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          {' '}<span aria-hidden="true">↗</span>
+        </p>
         {checkbox('disclaimerAccepted', DISCLAIMER_CHECKBOX_LABEL, true)}
       </fieldset>
 
