@@ -1,4 +1,4 @@
-import { PROVINCE_OPTIONS, RESIDENCY_STATUS_OPTIONS, type ResidencyStatus } from '@/lib/registration-config';
+import { CANADIAN_AREA_CODES, PROVINCE_OPTIONS, RESIDENCY_STATUS_OPTIONS, type ResidencyStatus } from '@/lib/registration-config';
 import { isValidReferralCodeFormat } from '@/lib/referral';
 
 /**
@@ -122,12 +122,41 @@ const INVALID = {
   postalMismatch: 'This postal code isn’t in the selected province. Please check both.',
 } as const;
 
-/** Allows common formatting characters; requires 10–15 digits. */
-export function isValidPhone(value: unknown): boolean {
+const AREA_CODES = new Set<string>(CANADIAN_AREA_CODES);
+
+export type PhoneCheck = { ok: true; phone: string } | { ok: false; error: string };
+
+const PHONE_ERRORS = {
+  format: 'Enter a 10-digit Canadian phone number, e.g. 416-555-0123.',
+  areaCode: 'This isn’t a Canadian area code. Please check the number (only Canadian numbers are accepted).',
+  number: 'This isn’t a valid phone number. Please check it.',
+} as const;
+
+/**
+ * Canadian phone numbers only: 10 digits (an optional leading 1 or +1 is
+ * dropped) with a Canadian area code and a valid exchange (not starting with
+ * 0 or 1, not an N11 service code like 911). Spaces, brackets, dots and
+ * dashes are allowed. Returns the number formatted as "416-555-0123".
+ */
+export function checkCanadianPhone(value: unknown): PhoneCheck {
   const input = text(value);
-  if (!/^\+?[\d\s().-]+$/.test(input)) return false;
-  const digits = input.replace(/\D/g, '');
-  return digits.length >= 10 && digits.length <= 15;
+  if (!/^(\+?1[\s.-]?)?[\d\s().-]+$/.test(input)) return { ok: false, error: PHONE_ERRORS.format };
+  let digits = input.replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+  if (digits.length !== 10) return { ok: false, error: PHONE_ERRORS.format };
+
+  const areaCode = digits.slice(0, 3);
+  const exchange = digits.slice(3, 6);
+  if (!AREA_CODES.has(areaCode)) return { ok: false, error: PHONE_ERRORS.areaCode };
+  if (!/^[2-9]\d\d$/.test(exchange) || /^[2-9]11$/.test(exchange)) return { ok: false, error: PHONE_ERRORS.number };
+  // Placeholder numbers like 905-999-9999 or 416-222-2222
+  if (/^(\d)\1{6}$/.test(digits.slice(3))) return { ok: false, error: PHONE_ERRORS.number };
+
+  return { ok: true, phone: `${areaCode}-${exchange}-${digits.slice(6)}` };
+}
+
+export function isValidPhone(value: unknown): boolean {
+  return checkCanadianPhone(value).ok;
 }
 
 export function isResidencyStatus(value: unknown): value is ResidencyStatus {
@@ -144,9 +173,11 @@ export function validateProfileFields(raw: unknown): ValidationResult<ProfileFie
   else if (name.length > MAX_LENGTH) errors.name = 'Full name is too long.';
   else if (!isValidPersonName(name)) errors.name = INVALID.name;
 
-  const phone = text(body.phone);
-  if (!phone) errors.phone = 'Phone number is required.';
-  else if (!isValidPhone(phone)) errors.phone = 'Enter a valid phone number, e.g. 416-555-0123.';
+  const phoneInput = text(body.phone);
+  const phoneCheck = checkCanadianPhone(phoneInput);
+  if (!phoneInput) errors.phone = 'Phone number is required.';
+  else if (!phoneCheck.ok) errors.phone = phoneCheck.error;
+  const phone = phoneCheck.ok ? phoneCheck.phone : phoneInput;
 
   const addressLine1 = text(body.addressLine1);
   if (!addressLine1) errors.addressLine1 = 'Street address is required.';
@@ -212,8 +243,10 @@ export function validateProfileUpdate(
   else if (name.length > MAX_LENGTH) errors.name = 'Full name is too long.';
   else if (!isValidPersonName(name)) errors.name = INVALID.name;
 
-  const phone = optional('phone');
-  if (phone && !isValidPhone(phone)) errors.phone = 'Enter a valid phone number, e.g. 416-555-0123.';
+  const phoneInput = optional('phone');
+  const phoneCheck = phoneInput ? checkCanadianPhone(phoneInput) : null;
+  if (phoneCheck && !phoneCheck.ok) errors.phone = phoneCheck.error;
+  const phone = phoneCheck?.ok ? phoneCheck.phone : phoneInput;
 
   const formatChecks = { addressLine1: isValidStreetAddress, addressLine2: isValidAddressLine2, city: isValidCity } as const;
   for (const field of ['addressLine1', 'addressLine2', 'city'] as const) {
