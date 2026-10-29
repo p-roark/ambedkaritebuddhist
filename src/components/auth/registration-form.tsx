@@ -232,8 +232,15 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
         {checkbox('boardInterest', BOARD_INTEREST_LABEL, false)}
       </div>
 
-      <fieldset className={`rounded-2xl border p-4 ${errors.disclaimerAccepted ? 'border-red-500' : 'border-slate-200'} bg-background-light`}>
-        <legend className="px-1 text-base font-semibold text-text-dark">{DISCLAIMER_TITLE}</legend>
+      {/* A plain box rather than <fieldset>/<legend>: browsers start a fieldset's
+          background at the border line under the legend and can let long text
+          overflow it on narrow screens */}
+      <div
+        role="group"
+        aria-labelledby="reg-consent-title"
+        className={`w-full min-w-0 rounded-2xl border p-4 sm:p-5 ${errors.disclaimerAccepted ? 'border-red-500' : 'border-slate-200'} bg-background-light`}
+      >
+        <h3 id="reg-consent-title" className="mb-2 text-base font-semibold text-text-dark">{DISCLAIMER_TITLE}</h3>
         <p className="mb-3 text-sm text-text-medium">
           Before you agree, please read{' '}
           <a href={ABCC_PURPOSES_URL} target="_blank" rel="noopener" className="font-semibold text-primary-blue underline hover:text-primary-saffron">
@@ -243,7 +250,7 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
           {' '}<span aria-hidden="true">↗</span>
         </p>
         {checkbox('disclaimerAccepted', DISCLAIMER_CHECKBOX_LABEL, true)}
-      </fieldset>
+      </div>
 
       <button
         type="submit"
