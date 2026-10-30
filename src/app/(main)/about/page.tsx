@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ABCC_PURPOSES, ABCC_PURPOSES_SOURCE } from '@/lib/abcc-purposes'
 
 interface LeadershipRole {
   id: string
@@ -85,6 +86,13 @@ export default function About() {
     void loadData()
   }, [])
 
+  // The page shows a spinner first, so the browser can't jump to a link like
+  // /about#purposes by itself; do it once the content is on screen
+  useEffect(() => {
+    if (loading || !window.location.hash) return
+    document.getElementById(decodeURIComponent(window.location.hash.slice(1)))?.scrollIntoView()
+  }, [loading])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -163,6 +171,17 @@ export default function About() {
                 <p className="text-text-medium leading-relaxed">{item.description}</p>
               </div>
             ))}
+          </div>
+
+          {/* Official wording — linked from the registration form's consent */}
+          <div id="purposes" className="mt-12 scroll-mt-28 rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm">
+            <h3 className="text-2xl font-bold text-text-dark font-poppins mb-2">ABCC&apos;s purposes</h3>
+            <p className="text-text-medium mb-6">{ABCC_PURPOSES_SOURCE}</p>
+            <ul className="space-y-3 list-disc pl-6 marker:text-primary-saffron">
+              {ABCC_PURPOSES.map((purpose) => (
+                <li key={purpose} className="text-text-dark leading-relaxed">{purpose}</li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>

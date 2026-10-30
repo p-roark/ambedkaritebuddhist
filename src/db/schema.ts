@@ -31,6 +31,7 @@ export const users = sqliteTable('User', {
   disclaimerVersion:       text('disclaimerVersion'),
   ageConfirmedAt:          text('ageConfirmedAt'),          // ISO date the member confirmed they are 18 or older
   boardInterest:           integer('boardInterest', { mode: 'boolean' }).notNull().default(false),
+  addressVerifiedAt:       text('addressVerifiedAt'),       // ISO date the address was confirmed by the address search; null = not verified
   createdAt:    text('createdAt').notNull().default(sql`(datetime('now'))`),
   updatedAt:    text('updatedAt').notNull().default(sql`(datetime('now'))`),
 });

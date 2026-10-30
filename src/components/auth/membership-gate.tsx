@@ -7,8 +7,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { readPendingInviteCode } from '@/lib/pending-invite';
 import type { RegistrationStatus } from '@/lib/registration';
 
-// Pages a signed-in but unregistered user may still visit
-const UNGATED_PATHS = ['/join', '/auth/login', '/contact', '/maintenance'];
+// Pages a signed-in but unregistered user may still visit. /about holds ABCC's
+// purposes, which the registration form links to before the consent.
+const UNGATED_PATHS = ['/join', '/auth/login', '/about', '/contact', '/maintenance'];
 
 export function MembershipGate() {
   const { data: session, status } = useSession();

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { requireFeature } from '@/lib/feature-flags-server';
-import { validateProfileUpdate } from '@/lib/registration';
+import { sameAddress } from '@/lib/address-search';
+import { checkCanadianPhone, validateProfileUpdate } from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,7 @@ async function loadMember(id: string) {
       disclaimerAcceptedAt: users.disclaimerAcceptedAt,
       disclaimerVersion: users.disclaimerVersion,
       ageConfirmedAt: users.ageConfirmedAt,
+      addressVerifiedAt: users.addressVerifiedAt,
       boardInterest: users.boardInterest,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
@@ -69,9 +71,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const parsed = validateProfileUpdate(body, { requireComplete: Boolean(existing.registrationCompletedAt) });
-  if (!parsed.ok) {
+  const altPhoneInput = typeof body.altPhone === 'string' ? body.altPhone.trim() : '';
+  const altPhoneCheck = altPhoneInput ? checkCanadianPhone(altPhoneInput) : null;
+  if (!parsed.ok || (altPhoneCheck && !altPhoneCheck.ok)) {
+    const fieldErrors = { ...(parsed.ok ? {} : parsed.errors), ...(altPhoneCheck && !altPhoneCheck.ok ? { altPhone: altPhoneCheck.error } : {}) };
     return NextResponse.json(
-      { error: 'Please correct the highlighted fields.', fieldErrors: parsed.errors },
+      { error: 'Please correct the highlighted fields.', fieldErrors },
       { status: 400 },
     );
   }
@@ -87,10 +92,20 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     .update(users)
     .set({
       ...parsed.value,
-      altPhone: optionalText('altPhone'),
+      altPhone: altPhoneCheck?.ok ? altPhoneCheck.phone : null,
       education: optionalText('education'),
       interests: optionalText('interests'),
       notes: optionalText('notes'),
+      // An address typed by an admin isn't confirmed by the address search
+      addressVerifiedAt:
+        existing.addressLine1 && existing.city && existing.province &&
+        parsed.value.addressLine1 && parsed.value.city && parsed.value.province &&
+        sameAddress(
+          { addressLine1: parsed.value.addressLine1, city: parsed.value.city, province: parsed.value.province },
+          { addressLine1: existing.addressLine1, city: existing.city, province: existing.province },
+        )
+          ? existing.addressVerifiedAt
+          : null,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(users.id, id));

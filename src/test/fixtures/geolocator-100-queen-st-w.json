@@ -1,0 +1,10 @@
+[{"key": "nominatim", "name": "Toronto City Hall, 100, Queen Street West", "province": "Ontario", "category": "Amenity", "lat": 43.6536032, "lng": -79.3840055, "tag": ["amenity"]},
+ {"key": "nominatim", "name": "100, Queen Street West, Yonge-Bay Corridor", "province": "Ontario", "category": "Amenity", "lat": 43.6537966, "lng": -79.3845745, "tag": ["amenity"]},
+ {"key": "locate", "name": "100 Queen Street West, City Of Toronto, Ontario", "province": "Ontario", "category": "Street", "lat": 43.65175429999999, "lng": -79.38241199999999, "bbox": null, "tag": ["INTERPOLATED_POSITION"]},
+ {"key": "locate", "name": "Saint-Roch-Ouest, Saint-Roch-Ouest; Montcalm, Quebec (Village)", "province": "Quebec", "category": "Village", "tag": ["LOCATION"]},
+ {"key": "locate", "name": "Lane West Ossington North Queen & Queen Street West, City Of Toronto, Ontario", "province": "Ontario", "category": "Intersection", "tag": ["LOCATION"]},
+ {"key": "locate", "name": "Queen Street East & Queen Street West & Yonge Street, City Of Toronto, Ontario", "province": "Ontario", "category": "Intersection", "tag": ["LOCATION"]},
+ {"key": "locate", "name": "100 Queen Street West, Saint John, New Brunswick", "province": "New Brunswick", "category": "Street", "tag": ["INTERPOLATED_POSITION"]},
+ {"key": "locate", "name": "100 South Avenue West & 100 West Street South, Raymond, Alberta", "province": "Alberta", "category": "Intersection", "tag": ["LOCATION"]},
+ {"key": "locate", "name": "Lane North Queen West Rainsford, City Of Toronto, Ontario", "province": "Ontario", "category": "Street", "tag": ["INTERPOLATED_CENTROID"]},
+ {"key": "locate", "name": "Lane South Queen West John, City Of Toronto, Ontario", "province": "Ontario", "category": "Street", "tag": ["INTERPOLATED_CENTROID"]}]

@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   buildInviteLink,
   getRegistrationStatus,
+  checkCanadianPhone,
   isValidPhone,
   normalizeInviteCode,
   normalizePostalCode,
   normalizeProvince,
+  postalCodeMatchesProvince,
   safeCallbackUrl,
   validateProfileFields,
+  validateProfileUpdate,
   validateRegistration,
 } from './registration';
 
@@ -58,7 +61,7 @@ describe('validateRegistration', () => {
       ok: true,
       value: {
         name: 'Savitri Phule',
-        phone: '(416) 555-0123',
+        phone: '416-555-0123', // normalised
         addressLine1: '100 Queen St W',
         addressLine2: null,
         city: 'Toronto',
@@ -129,11 +132,27 @@ describe('field normalisers', () => {
     expect(normalizePostalCode('12345')).toBeNull();
   });
 
-  it('validates phone numbers', () => {
-    expect(isValidPhone('416-555-0123')).toBe(true);
-    expect(isValidPhone('+91 98765 43210')).toBe(true);
-    expect(isValidPhone('555-0123')).toBe(false);
-    expect(isValidPhone('call me')).toBe(false);
+  it('accepts Canadian phone numbers in common formats and normalises them', () => {
+    for (const input of ['416-555-0123', '(416) 555-0123', '416.555.0123', '4165550123', '1-416-555-0123', '+1 416 555 0123', '+14165550123']) {
+      expect(checkCanadianPhone(input), input).toEqual({ ok: true, phone: '416-555-0123' });
+    }
+    expect(checkCanadianPhone('604 555 0199')).toEqual({ ok: true, phone: '604-555-0199' });
+  });
+
+  it('rejects numbers that are not 10-digit Canadian numbers', () => {
+    for (const input of ['555-0123', '416-555-012', '4165550123999', '416-555-01234', 'call me', '+91 98765 43210', '+44 20 7946 0958']) {
+      expect(isValidPhone(input), input).toBe(false);
+    }
+  });
+
+  it('rejects made-up numbers and non-Canadian area codes', () => {
+    expect(checkCanadianPhone('0000000000')).toMatchObject({ ok: false, error: expect.stringContaining('area code') });
+    expect(checkCanadianPhone('1234567890')).toMatchObject({ ok: false });
+    expect(checkCanadianPhone('212-555-0123')).toMatchObject({ ok: false, error: expect.stringContaining('area code') }); // New York
+    expect(checkCanadianPhone('999-999-9999')).toMatchObject({ ok: false });
+    expect(checkCanadianPhone('416-011-2345')).toMatchObject({ ok: false, error: expect.stringContaining('valid phone') }); // exchange starts with 0
+    expect(checkCanadianPhone('416-911-2345')).toMatchObject({ ok: false }); // N11 service code
+    expect(checkCanadianPhone('905-999-9999')).toMatchObject({ ok: false }); // placeholder
   });
 
   it('normalises invite codes, including digits in the middle segment', () => {
@@ -154,5 +173,51 @@ describe('links', () => {
     expect(safeCallbackUrl('//evil.example')).toBe('/');
     expect(safeCallbackUrl('/\\evil.example')).toBe('/');
     expect(safeCallbackUrl(null)).toBe('/');
+  });
+});
+
+describe('address and name checks', () => {
+  const errorsFor = (overrides: Record<string, string>) => {
+    const result = validateProfileFields({ ...validForm, ...overrides });
+    return result.ok ? {} : result.errors;
+  };
+
+  it('accepts real-world values', () => {
+    for (const [field, value] of [
+      ['name', "Savitri Phule"], ['name', "Ravi D'Souza-Kamble"], ['name', 'Dr. B. R. Ambedkar'], ['name', 'सावित्री फुले'],
+      ['addressLine1', '100 Queen St W'], ['addressLine1', '12-345 Rue Saint-Denis'], ['addressLine1', 'PO Box 123'],
+      ['addressLine1', 'RR 2'], ['addressLine1', '1203/45 King St. E.'],
+      ['city', 'Toronto'], ['city', 'St. Catharines'], ['city', 'Trois-Rivières'], ['city', "Niagara-on-the-Lake"],
+    ] as const) {
+      expect(errorsFor({ [field]: value }), `${field}: ${value}`).toEqual({});
+    }
+    expect(errorsFor({ addressLine2: 'Unit 1203' })).toEqual({});
+  });
+
+  it('rejects junk', () => {
+    expect(errorsFor({ addressLine1: ':)68' })).toHaveProperty('addressLine1');
+    expect(errorsFor({ addressLine1: 'Queen Street' })).toHaveProperty('addressLine1'); // no number
+    expect(errorsFor({ addressLine1: '12345' })).toHaveProperty('addressLine1'); // no street name
+    expect(errorsFor({ city: '123' })).toHaveProperty('city');
+    expect(errorsFor({ city: 'T' })).toHaveProperty('city');
+    expect(errorsFor({ city: 'Toronto!!' })).toHaveProperty('city');
+    expect(errorsFor({ name: 'R2D2' })).toHaveProperty('name');
+    expect(errorsFor({ name: '<b>Ravi</b>' })).toHaveProperty('name');
+    expect(errorsFor({ addressLine2: ':)' })).toHaveProperty('addressLine2');
+  });
+
+  it('checks the postal code belongs to the province', () => {
+    expect(postalCodeMatchesProvince('L1W 1C2', 'ON')).toBe(true);
+    expect(postalCodeMatchesProvince('V6B 1A1', 'ON')).toBe(false);
+    expect(postalCodeMatchesProvince('X1A 2B3', 'NU')).toBe(true);
+    expect(errorsFor({ province: 'BC', postalCode: 'M5H 2N2' })).toHaveProperty('postalCode');
+    expect(errorsFor({ province: 'BC', city: 'Vancouver', postalCode: 'V6B 1A1' })).toEqual({});
+  });
+
+  it('applies the same checks to admin edits of unregistered members', () => {
+    const result = validateProfileUpdate({ name: 'Ravi', city: '123', addressLine1: ':)68' }, { requireComplete: false });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(Object.keys(result.errors).sort()).toEqual(['addressLine1', 'city']);
+    expect(validateProfileUpdate({ name: 'Ravi' }, { requireComplete: false }).ok).toBe(true);
   });
 });

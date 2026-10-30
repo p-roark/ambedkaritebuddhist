@@ -9,7 +9,10 @@ import {
   PROVINCE_OPTIONS,
   RESIDENCY_STATUS_OPTIONS,
 } from '@/lib/registration-config';
+import { ABCC_PURPOSES_URL } from '@/lib/abcc-purposes';
 import { validateRegistration, type RegistrationFieldName } from '@/lib/registration';
+import { AddressSearch } from '@/components/auth/address-search';
+import { useFeature } from '@/lib/use-feature';
 
 export type RegistrationFormValues = {
   name: string;
@@ -37,6 +40,11 @@ const inputClass =
 
 export function RegistrationForm({ initialValues, inviteCode, onSuccess }: RegistrationFormProps) {
   const [values, setValues] = useState(initialValues);
+  // Street, city and province come from the address search; typing is allowed
+  // only when the search is switched off or its service can't be reached
+  const addressSearchEnabled = useFeature('addressLookup');
+  const [addressSearchDown, setAddressSearchDown] = useState(false);
+  const addressLocked = addressSearchEnabled === true && !addressSearchDown;
   const [checks, setChecks] = useState<Checkboxes>({ ageConfirmed: false, boardInterest: false, disclaimerAccepted: false });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
@@ -137,6 +145,10 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
     );
   };
 
+  // Locked address fields: read-only, greyed, and explained to screen readers
+  const lockedProps = addressLocked ? { readOnly: true, title: 'Filled in from “Find your address”' } : {};
+  const lockedClass = addressLocked ? 'bg-slate-50 text-slate-700 cursor-not-allowed' : '';
+
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
       {formError && (
@@ -165,9 +177,22 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
           {errorText('phone')}
         </div>
         <div className="md:col-span-2">
+          <AddressSearch
+            inputClassName={`${inputClass} border-slate-300`}
+            onUnavailable={() => setAddressSearchDown(true)}
+            onSelect={(address) => {
+              setValues((prev) => ({ ...prev, addressLine1: address.addressLine1, city: address.city, province: address.province }));
+              setErrors((prev) => ({ ...prev, addressLine1: undefined, city: undefined, province: undefined, postalCode: undefined }));
+            }}
+          />
+        </div>
+        <div className="md:col-span-2">
           {label('addressLine1', 'Street address')}
-          <input {...fieldProps('addressLine1')} autoComplete="address-line1" value={values.addressLine1} onChange={(e) => setField('addressLine1', e.target.value)} className={`${inputClass} ${borderClass('addressLine1')}`} />
+          <input {...fieldProps('addressLine1')} {...lockedProps} autoComplete="address-line1" value={values.addressLine1} onChange={(e) => setField('addressLine1', e.target.value)} className={`${inputClass} ${lockedClass} ${borderClass('addressLine1')}`} />
           {errorText('addressLine1')}
+          {addressLocked && !errors.addressLine1 && (
+            <p className="mt-1 text-sm text-text-medium">Street, city and province are filled in when you choose your address above.</p>
+          )}
         </div>
         <div className="md:col-span-2">
           {label('addressLine2', 'Apartment, unit, etc.', false)}
@@ -176,12 +201,12 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
         </div>
         <div>
           {label('city', 'City')}
-          <input {...fieldProps('city')} autoComplete="address-level2" value={values.city} onChange={(e) => setField('city', e.target.value)} className={`${inputClass} ${borderClass('city')}`} />
+          <input {...fieldProps('city')} {...lockedProps} autoComplete="address-level2" value={values.city} onChange={(e) => setField('city', e.target.value)} className={`${inputClass} ${lockedClass} ${borderClass('city')}`} />
           {errorText('city')}
         </div>
         <div>
           {label('province', 'Province / territory')}
-          <select {...fieldProps('province')} autoComplete="address-level1" value={values.province} onChange={(e) => setField('province', e.target.value)} className={`${inputClass} bg-white ${borderClass('province')}`}>
+          <select {...fieldProps('province')} disabled={addressLocked} autoComplete="address-level1" value={values.province} onChange={(e) => setField('province', e.target.value)} className={`${inputClass} ${addressLocked ? lockedClass : 'bg-white'} ${borderClass('province')}`}>
             <option value="">Select province or territory</option>
             {PROVINCE_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
@@ -207,10 +232,25 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
         {checkbox('boardInterest', BOARD_INTEREST_LABEL, false)}
       </div>
 
-      <fieldset className={`rounded-2xl border p-4 ${errors.disclaimerAccepted ? 'border-red-500' : 'border-slate-200'} bg-background-light`}>
-        <legend className="px-1 text-base font-semibold text-text-dark">{DISCLAIMER_TITLE}</legend>
+      {/* A plain box rather than <fieldset>/<legend>: browsers start a fieldset's
+          background at the border line under the legend and can let long text
+          overflow it on narrow screens */}
+      <div
+        role="group"
+        aria-labelledby="reg-consent-title"
+        className={`w-full min-w-0 rounded-2xl border p-4 sm:p-5 ${errors.disclaimerAccepted ? 'border-red-500' : 'border-slate-200'} bg-background-light`}
+      >
+        <h3 id="reg-consent-title" className="mb-2 text-base font-semibold text-text-dark">{DISCLAIMER_TITLE}</h3>
+        <p className="mb-3 text-sm text-text-medium">
+          Before you agree, please read{' '}
+          <a href={ABCC_PURPOSES_URL} target="_blank" rel="noopener" className="font-semibold text-primary-blue underline hover:text-primary-saffron">
+            ABCC&apos;s purposes from its Articles of Incorporation
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          {' '}<span aria-hidden="true">↗</span>
+        </p>
         {checkbox('disclaimerAccepted', DISCLAIMER_CHECKBOX_LABEL, true)}
-      </fieldset>
+      </div>
 
       <button
         type="submit"

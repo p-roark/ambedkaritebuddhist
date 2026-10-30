@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateProfileFields } from '@/lib/registration';
+import { checkCanadianPhone, validateProfileFields } from '@/lib/registration';
 import { requireRegisteredUser } from '@/lib/registration-server';
 
 export const dynamic = 'force-dynamic';
@@ -81,9 +81,12 @@ export async function PATCH(request: NextRequest) {
 
   // Registration fields stay mandatory after sign-up
   const parsed = validateProfileFields(body);
-  if (!parsed.ok) {
+  const altPhoneInput = String(body.altPhone ?? '').trim();
+  const altPhoneCheck = altPhoneInput ? checkCanadianPhone(altPhoneInput) : null;
+  if (!parsed.ok || (altPhoneCheck && !altPhoneCheck.ok)) {
+    const fieldErrors = { ...(parsed.ok ? {} : parsed.errors), ...(altPhoneCheck && !altPhoneCheck.ok ? { altPhone: altPhoneCheck.error } : {}) };
     return NextResponse.json(
-      { error: 'Please correct the highlighted fields.', fieldErrors: parsed.errors },
+      { error: 'Please correct the highlighted fields.', fieldErrors },
       { status: 400 },
     );
   }
@@ -94,11 +97,29 @@ export async function PATCH(request: NextRequest) {
     import('@/db/schema'),
   ]);
   const db = getDb();
+
+  // A changed street address must come from the address search
+  const previousAddress = await db
+    .select({ addressLine1: users.addressLine1, city: users.city, province: users.province, addressVerifiedAt: users.addressVerifiedAt })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+    .then((rows) => rows[0] ?? null);
+  const { checkMemberAddress } = await import('@/lib/address-verification-server');
+  const addressCheck = await checkMemberAddress(parsed.value, previousAddress, { allowUnverifiedUnchanged: true });
+  if (!addressCheck.ok) {
+    return NextResponse.json(
+      { error: addressCheck.error, fieldErrors: { addressLine1: addressCheck.error } },
+      { status: 400 },
+    );
+  }
+
   await db
     .update(users)
     .set({
       ...parsed.value,
-      altPhone: String(body.altPhone ?? '').trim() || null,
+      addressVerifiedAt: addressCheck.addressVerifiedAt,
+      altPhone: altPhoneCheck?.ok ? altPhoneCheck.phone : null,
       education: String(body.education ?? '').trim() || null,
       interests: String(body.interests ?? '').trim() || null,
       notes: String(body.notes ?? '').trim() || null,

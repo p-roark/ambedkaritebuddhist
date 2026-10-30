@@ -68,6 +68,16 @@ describe('GET /api/admin/members/:id', () => {
 });
 
 describe('PATCH /api/admin/members/:id', () => {
+  it('checks and normalises phone numbers, including the alternate phone', async () => {
+    asAdmin();
+    const bad = await patch('u1', { ...completeProfile, altPhone: '212-555-0123' });
+    expect(bad.status).toBe(400);
+    expect((await body(bad)).fieldErrors).toHaveProperty('altPhone');
+    const ok = await patch('u1', { ...completeProfile, phone: '+1 (416) 555 0123', altPhone: '6045550199' });
+    expect(ok.status).toBe(200);
+    expect((await body(ok)).member).toMatchObject({ phone: '416-555-0123', altPhone: '604-555-0199' });
+  });
+
   it('lets admins edit details, normalising values', async () => {
     asAdmin();
     const res = await patch('u1', { ...completeProfile, city: 'Mississauga', postalCode: 'l5b1m2', notes: 'Volunteer' });
