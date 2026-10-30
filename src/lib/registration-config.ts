@@ -33,12 +33,12 @@ export const PROVINCE_OPTIONS = [
   { value: 'YT', label: 'Yukon' },
 ] as const;
 
-export const DISCLAIMER_VERSION = 'consent-2026-10';
+export const DISCLAIMER_VERSION = 'consent-2026-10-29';
 
 export const DISCLAIMER_TITLE = 'Consent';
 
 export const DISCLAIMER_CHECKBOX_LABEL =
-  "I support the purposes of the Ambedkarite Buddhist Community of Canada (ABCC) as set out in its Articles of Incorporation, and confirm the information I've provided is true. I consent to ABCC using my information to process my application, manage my membership, keep its register of members, and contact me about meetings, elections and events. ABCC will not sell my information, and members may be entitled by law to request the list of members' names and details.";
+  "I support the purposes of the Ambedkarite Buddhist Community of Canada (ABCC) as set out in its Articles of Incorporation, and confirm the information I've provided is true. I consent to ABCC using my information to process my application, manage my membership, keep its register of members, and contact me about meetings, elections and events.";
 
 export const AGE_CONFIRMATION_LABEL = 'I confirm I am 18 years of age or older.';
 
