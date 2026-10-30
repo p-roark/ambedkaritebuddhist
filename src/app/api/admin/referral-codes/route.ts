@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json()) as { maxUses?: number; code?: string };
   const maxUses = Number(body.maxUses ?? 10);
-  if (!Number.isFinite(maxUses) || maxUses < 1 || maxUses > 1000) {
+  if (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 1000) {
     return NextResponse.json({ error: 'Invalid maxUses' }, { status: 400 });
   }
 

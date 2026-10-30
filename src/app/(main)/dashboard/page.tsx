@@ -140,6 +140,9 @@ const EVENT_STATUS_COLORS: Record<EventStatus, string> = {
   'Event Ended': 'bg-gray-200 text-gray-700',
 };
 
+/** Choices for how many people can register with one invite code (the API allows up to 1000) */
+const INVITE_MAX_USES_OPTIONS = [1, 3, 5, 10, 20, 50, 100, 150, 200, 250, 300];
+
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const seg = (n: number) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -2480,13 +2483,14 @@ export default function DashboardPage() {
 
             <div className="px-6 py-5 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Uses</label>
+                <label htmlFor="invite-max-uses" className="block text-sm font-medium text-gray-700 mb-1">Max Uses</label>
                 <select
+                  id="invite-max-uses"
                   value={maxUses}
                   onChange={e => setMaxUses(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {[1, 3, 5, 10, 20, 50].map(n => (
+                  {INVITE_MAX_USES_OPTIONS.map(n => (
                     <option key={n} value={n}>{n} {n === 1 ? 'person' : 'people'}</option>
                   ))}
                 </select>
