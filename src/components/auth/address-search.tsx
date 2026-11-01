@@ -7,8 +7,13 @@ import { useFeature } from '@/lib/use-feature';
 interface AddressSearchProps {
   /** Called with the chosen address; the form fills its own fields */
   onSelect: (address: AddressSuggestion) => void;
-  /** Called when the lookup service can't be reached, so the form can allow typing */
-  onUnavailable?: () => void;
+  /**
+   * Called when the member chooses to type their address (or the lookup
+   * service can't be reached), so the form unlocks its address fields
+   */
+  onManualEntry?: () => void;
+  /** The form's address fields are already unlocked for typing */
+  manualEntry?: boolean;
   inputClassName?: string;
 }
 
@@ -21,7 +26,7 @@ const DEBOUNCE_MS = 350;
  * member types and fills street, city and province. Hidden when the
  * Address search feature switch is off. Postal code and unit are still typed.
  */
-export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: AddressSearchProps) {
+export function AddressSearch({ onSelect, onManualEntry, manualEntry = false, inputClassName = '' }: AddressSearchProps) {
   const enabled = useFeature('addressLookup');
   const id = useId();
   const [query, setQuery] = useState('');
@@ -32,10 +37,10 @@ export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: 
   const [chosen, setChosen] = useState<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   // Latest callback without re-running the search when the parent re-renders
-  const onUnavailableRef = useRef(onUnavailable);
+  const onManualEntryRef = useRef(onManualEntry);
   useEffect(() => {
-    onUnavailableRef.current = onUnavailable;
-  }, [onUnavailable]);
+    onManualEntryRef.current = onManualEntry;
+  }, [onManualEntry]);
 
   useEffect(() => {
     const q = query.trim();
@@ -53,7 +58,7 @@ export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: 
         .then((data) => {
           setSuggestions(data.suggestions);
           setState(data.unavailable ? 'unavailable' : 'done');
-          if (data.unavailable) onUnavailableRef.current?.();
+          if (data.unavailable) onManualEntryRef.current?.();
           setActive(data.suggestions.length > 0 ? 0 : -1);
           setOpen(true);
         })
@@ -61,7 +66,7 @@ export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: 
           if ((error as { name?: string })?.name === 'AbortError') return;
           setSuggestions([]);
           setState('unavailable');
-          onUnavailableRef.current?.();
+          onManualEntryRef.current?.();
         });
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -115,7 +120,9 @@ export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: 
         : state === 'unavailable'
           ? 'Address search isn’t available right now. Please type your address below.'
           : state === 'done' && suggestions.length === 0
-            ? 'No matching street address found. Check the number and street name. If your address isn’t listed, please contact us.'
+            ? manualEntry
+              ? 'No matching street address found. Please type your address below.'
+              : 'No matching street address found. Check the number and street name, or type your address instead.'
             : '';
 
   return (
@@ -167,6 +174,15 @@ export function AddressSearch({ onSelect, onUnavailable, inputClassName = '' }: 
       <p id={`${id}-status`} aria-live="polite" className="mt-1 min-h-[1.25rem] text-sm text-text-medium">
         {status}
       </p>
+      {!manualEntry && onManualEntry && (
+        <button
+          type="button"
+          onClick={onManualEntry}
+          className="mt-1 text-sm font-semibold text-primary-blue underline hover:text-primary-saffron"
+        >
+          Can’t find your address? Type it in instead
+        </button>
+      )}
     </div>
   );
 }

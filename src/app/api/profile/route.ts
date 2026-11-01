@@ -98,7 +98,7 @@ export async function PATCH(request: NextRequest) {
   ]);
   const db = getDb();
 
-  // A changed street address must come from the address search
+  // Note whether a changed street address is one the address search knows
   const previousAddress = await db
     .select({ addressLine1: users.addressLine1, city: users.city, province: users.province, addressVerifiedAt: users.addressVerifiedAt })
     .from(users)
@@ -106,13 +106,7 @@ export async function PATCH(request: NextRequest) {
     .limit(1)
     .then((rows) => rows[0] ?? null);
   const { checkMemberAddress } = await import('@/lib/address-verification-server');
-  const addressCheck = await checkMemberAddress(parsed.value, previousAddress, { allowUnverifiedUnchanged: true });
-  if (!addressCheck.ok) {
-    return NextResponse.json(
-      { error: addressCheck.error, fieldErrors: { addressLine1: addressCheck.error } },
-      { status: 400 },
-    );
-  }
+  const addressCheck = await checkMemberAddress(parsed.value, previousAddress, { recheckUnverifiedUnchanged: false });
 
   await db
     .update(users)
