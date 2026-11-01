@@ -20,7 +20,7 @@ const sendEmailMock = vi.hoisted(() => vi.fn(async () => true));
 vi.mock('@/lib/email', () => ({ sendEmail: sendEmailMock }));
 // Address check (normally asks the Government of Canada Geolocator): verified unless a test says otherwise
 const addressCheckMock = vi.hoisted(() =>
-  vi.fn(async (): Promise<{ ok: true; addressVerifiedAt: string | null } | { ok: false; error: string }> => ({ ok: true, addressVerifiedAt: '2026-10-20T00:00:00.000Z' })),
+  vi.fn(async (): Promise<{ addressVerifiedAt: string | null }> => ({ addressVerifiedAt: '2026-10-20T00:00:00.000Z' })),
 );
 vi.mock('@/lib/address-verification-server', () => ({ checkMemberAddress: addressCheckMock }));
 // Collect background work so each test can wait for it (no leaking into the next test)
@@ -323,24 +323,22 @@ describe('registration emails', () => {
 });
 
 describe('address check', () => {
-  it('saves the verification date and requires a verified address at registration', async () => {
+  it('saves the verification date, re-checking older unverified addresses at registration', async () => {
     seedCode('BHIM-ABC-1234');
     expect((await post({ ...validForm, code: 'BHIM-ABC-1234' })).status).toBe(200);
     expect(userRow('new.member@example.com')?.addressVerifiedAt).toBe('2026-10-20T00:00:00.000Z');
     expect(addressCheckMock).toHaveBeenCalledWith(
       expect.objectContaining({ addressLine1: '100 Queen St W', city: 'Toronto', province: 'ON' }),
       null,
-      { allowUnverifiedUnchanged: false },
+      { recheckUnverifiedUnchanged: true },
     );
   });
 
-  it('rejects an address the search does not know, without using the invite', async () => {
+  it('registers with an address the search does not know, saved as not verified', async () => {
     seedCode('BHIM-ABC-1234');
-    addressCheckMock.mockResolvedValueOnce({ ok: false, error: 'Please choose your address from the list.' });
-    const res = await post({ ...validForm, code: 'BHIM-ABC-1234' });
-    expect(res.status).toBe(400);
-    expect(((await res.json()) as { fieldErrors: Record<string, string> }).fieldErrors).toEqual({ addressLine1: 'Please choose your address from the list.' });
-    expect(codeUses('BHIM-ABC-1234')).toBe(0);
-    expect(userRow('new.member@example.com')).toBeUndefined();
+    addressCheckMock.mockResolvedValueOnce({ addressVerifiedAt: null });
+    expect((await post({ ...validForm, code: 'BHIM-ABC-1234' })).status).toBe(200);
+    expect(userRow('new.member@example.com')).toMatchObject({ addressLine1: '100 Queen St W', addressVerifiedAt: null });
+    expect(codeUses('BHIM-ABC-1234')).toBe(1);
   });
 });
