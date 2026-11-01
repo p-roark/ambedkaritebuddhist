@@ -40,11 +40,11 @@ const inputClass =
 
 export function RegistrationForm({ initialValues, inviteCode, onSuccess }: RegistrationFormProps) {
   const [values, setValues] = useState(initialValues);
-  // Street, city and province come from the address search; typing is allowed
-  // only when the search is switched off or its service can't be reached
+  // Street, city and province are filled from the address search; members whose
+  // address isn't found can type it instead (it's then saved as not verified)
   const addressSearchEnabled = useFeature('addressLookup');
-  const [addressSearchDown, setAddressSearchDown] = useState(false);
-  const addressLocked = addressSearchEnabled === true && !addressSearchDown;
+  const [manualAddress, setManualAddress] = useState(false);
+  const addressLocked = addressSearchEnabled === true && !manualAddress;
   const [checks, setChecks] = useState<Checkboxes>({ ageConfirmed: false, boardInterest: false, disclaimerAccepted: false });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
@@ -179,7 +179,8 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
         <div className="md:col-span-2">
           <AddressSearch
             inputClassName={`${inputClass} border-slate-300`}
-            onUnavailable={() => setAddressSearchDown(true)}
+            manualEntry={manualAddress}
+            onManualEntry={() => setManualAddress(true)}
             onSelect={(address) => {
               setValues((prev) => ({ ...prev, addressLine1: address.addressLine1, city: address.city, province: address.province }));
               setErrors((prev) => ({ ...prev, addressLine1: undefined, city: undefined, province: undefined, postalCode: undefined }));
@@ -191,7 +192,7 @@ export function RegistrationForm({ initialValues, inviteCode, onSuccess }: Regis
           <input {...fieldProps('addressLine1')} {...lockedProps} autoComplete="address-line1" value={values.addressLine1} onChange={(e) => setField('addressLine1', e.target.value)} className={`${inputClass} ${lockedClass} ${borderClass('addressLine1')}`} />
           {errorText('addressLine1')}
           {addressLocked && !errors.addressLine1 && (
-            <p className="mt-1 text-sm text-text-medium">Street, city and province are filled in when you choose your address above.</p>
+            <p className="mt-1 text-sm text-text-medium">Street, city and province are filled in when you choose your address above, or type them after choosing “Type it in instead”.</p>
           )}
         </div>
         <div className="md:col-span-2">

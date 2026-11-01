@@ -61,11 +61,11 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const familyEnabled = useFeature('family');
-  // Street, city and province come from the address search (typing allowed only
-  // when it's switched off or its service can't be reached)
+  // Street, city and province are filled from the address search; members whose
+  // address isn't found can type it instead (it's then saved as not verified)
   const addressSearchEnabled = useFeature('addressLookup');
-  const [addressSearchDown, setAddressSearchDown] = useState(false);
-  const addressLocked = addressSearchEnabled === true && !addressSearchDown;
+  const [manualAddress, setManualAddress] = useState(false);
+  const addressLocked = addressSearchEnabled === true && !manualAddress;
   const lockedClass = addressLocked ? ' bg-slate-50 text-slate-700 cursor-not-allowed' : '';
 
   const [newMember, setNewMember] = useState({
@@ -273,10 +273,11 @@ export default function ProfilePage() {
               <div className="text-sm md:col-span-2">
                 <AddressSearch
                   inputClassName="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-colors"
-                  onUnavailable={() => setAddressSearchDown(true)}
+                  manualEntry={manualAddress}
+                  onManualEntry={() => setManualAddress(true)}
                   onSelect={(address) => setProfile((prev) => prev && { ...prev, addressLine1: address.addressLine1, city: address.city, province: address.province })}
                 />
-                {addressLocked && <p className="mt-1 text-text-medium">Street, city and province are filled in when you choose your address above.</p>}
+                {addressLocked && <p className="mt-1 text-text-medium">Street, city and province are filled in when you choose your address above, or type them after choosing “Type it in instead”.</p>}
               </div>
               <label className="text-sm md:col-span-2">
                 <span className="mb-1 block font-medium text-slate-700">Street Address<span className="text-red-700" aria-hidden="true"> *</span></span>
