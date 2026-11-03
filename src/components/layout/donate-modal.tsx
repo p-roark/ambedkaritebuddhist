@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
-const INTERAC_EMAIL = 'ambedkaritebuddhist@outlook.com'
+import { DONATION_INTERAC_EMAIL as INTERAC_EMAIL } from '@/lib/donation-config'
 
 interface DonationObjective {
   id: string

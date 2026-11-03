@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { FeatureGate } from '@/lib/use-feature'
+import { DONATION_INTERAC_EMAIL } from '@/lib/donation-config'
 
 export const metadata: Metadata = {
   title: 'Donate | ABCC',
@@ -30,7 +31,7 @@ export default function Page() {
               We accept donations via <strong>Interac e-Transfer</strong> — secure, instant, and direct.
             </p>
             <p className="text-lg text-gray-700 mb-4">
-              Send your e-transfers to <strong>ambedkaritebuddhist@outlook.com</strong> - instructions will follow after you submit.
+              Send your e-transfers to <strong>{DONATION_INTERAC_EMAIL}</strong> - instructions will follow after you submit.
             </p>
             <p className="text-base text-gray-600">
               ABCC is a registered non-profit in Ontario. A donation acknowledgment will be provided by email. Please note: as a non-profit corporation, ABCC is not currently a registered charity with CRA and cannot issue official tax receipts at this time. We are working toward registered charity status.
@@ -53,7 +54,7 @@ export default function Page() {
                 2
               </span>
               <span className="text-lg text-gray-700 pt-1">
-                Open your banking app and send an Interac e-Transfer to: <strong>ambedkaritebuddhist@outlook.com</strong>
+                Open your banking app and send an Interac e-Transfer to: <strong>{DONATION_INTERAC_EMAIL}</strong>
               </span>
             </li>
             <li className="flex gap-4">
