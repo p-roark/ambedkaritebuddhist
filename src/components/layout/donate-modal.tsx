@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DONATION_INTERAC_EMAIL as INTERAC_EMAIL } from '@/lib/donation-config'
+import { useDonationEmail } from './donation-email'
 
 interface DonationObjective {
   id: string
@@ -43,6 +43,7 @@ function ProgressBar({ current, target }: { current: number; target: number }) {
 }
 
 export function DonateModal({ open, onClose }: DonateModalProps) {
+  const interacEmail = useDonationEmail() ?? '…'
   const [objectives, setObjectives] = useState<DonationObjective[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [step, setStep] = useState<'select' | 'form' | 'success'>('select')
@@ -162,7 +163,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                   </p>
                 </div>
                 <p className="text-sm text-amber-900">
-                  Send your e-transfers to <span className="font-bold">{INTERAC_EMAIL}</span> - instructions will
+                  Send your e-transfers to <span className="font-bold">{interacEmail}</span> - instructions will
                   follow after you submit.
                 </p>
                 <p className="text-sm text-amber-900">
@@ -250,7 +251,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
                   </li>
                   <li className="flex gap-3">
                     <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-saffron text-white flex items-center justify-center text-xs font-bold">2</span>
-                    <span className="text-sm text-gray-700 pt-0.5">Open your banking app and send an Interac e-Transfer to: <strong>{INTERAC_EMAIL}</strong></span>
+                    <span className="text-sm text-gray-700 pt-0.5">Open your banking app and send an Interac e-Transfer to: <strong>{interacEmail}</strong></span>
                   </li>
                   <li className="flex gap-3">
                     <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-saffron text-white flex items-center justify-center text-xs font-bold">3</span>
@@ -373,7 +374,7 @@ export function DonateModal({ open, onClose }: DonateModalProps) {
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 mb-4">
                 <p className="text-sm font-semibold text-amber-800 mb-2">Next Step — Send your Interac e-Transfer</p>
                 <p className="text-sm text-amber-900 mb-2">Transfer your donation to:</p>
-                <p className="font-bold text-amber-900 text-base break-all mb-2">{INTERAC_EMAIL}</p>
+                <p className="font-bold text-amber-900 text-base break-all mb-2">{interacEmail}</p>
                 <p className="text-xs text-amber-700">Use your full name as the message/note in the transfer so we can match it.</p>
               </div>
               {selectedObjective && (
