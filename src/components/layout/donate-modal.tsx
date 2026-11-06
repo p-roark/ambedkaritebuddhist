@@ -43,7 +43,7 @@ function ProgressBar({ current, target }: { current: number; target: number }) {
 }
 
 export function DonateModal({ open, onClose }: DonateModalProps) {
-  const interacEmail = useDonationEmail() ?? '…'
+  const interacEmail = useDonationEmail()
   const [objectives, setObjectives] = useState<DonationObjective[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [step, setStep] = useState<'select' | 'form' | 'success'>('select')
