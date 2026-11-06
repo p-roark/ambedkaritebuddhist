@@ -20,7 +20,12 @@ export async function GET(request: NextRequest) {
       .where(eq(organizationSettings.id, 'main'))
       .limit(1)
       .then((rows) => rows[0]);
+    // Interac e-Transfer address on the donate forms: the Donations address in
+    // Settings → Email, or the organization email when that is blank
+    const { resolveSender } = await import('@/lib/email-senders-server');
+    const donationEmail = (await resolveSender('donations')).address;
     return NextResponse.json({
+      donationEmail,
       settings: row ?? {
         id: 'main',
         orgName: 'Ambedkarite Buddhist Community of Canada',

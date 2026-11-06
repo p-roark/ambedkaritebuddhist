@@ -20,7 +20,7 @@ export const EMAIL_PURPOSES = {
   },
   donations: {
     label: 'Donations',
-    description: 'Donation acknowledgements and receipts.',
+    description: 'Donation acknowledgements and receipts. Also shown on the donate form and Donations page as the Interac e-Transfer address.',
   },
   events: {
     label: 'Events',
