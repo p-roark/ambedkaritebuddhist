@@ -309,6 +309,40 @@ export const signInLinks = sqliteTable('SignInLink', {
   createdAt: text('createdAt').notNull(),
 });
 
+// ─── Member emails (Dashboard → Email Members) ──────────────────────────────
+
+export const emailTemplates = sqliteTable('EmailTemplate', {
+  id:        text('id').primaryKey(),
+  name:      text('name').notNull(),
+  subject:   text('subject').notNull(),
+  body:      text('body').notNull(),
+  updatedBy: text('updatedBy'),
+  createdAt: text('createdAt').notNull(),
+  updatedAt: text('updatedAt').notNull(),
+});
+
+export const memberEmails = sqliteTable('MemberEmail', {
+  id:             text('id').primaryKey(),
+  subject:        text('subject').notNull(),
+  body:           text('body').notNull(),
+  templateId:     text('templateId'),
+  sentBy:         text('sentBy').notNull(),
+  recipientCount: integer('recipientCount').notNull(),
+  createdAt:      text('createdAt').notNull(),
+});
+
+export const memberEmailRecipients = sqliteTable('MemberEmailRecipient', {
+  emailId: text('emailId').notNull().references(() => memberEmails.id, { onDelete: 'cascade' }),
+  userId:  text('userId'),
+  email:   text('email').notNull(),
+  name:    text('name').notNull(),
+  status:  text('status').notNull().default('pending'), // pending | sent | failed
+  error:   text('error'),
+  sentAt:  text('sentAt'),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.emailId, t.email] }),
+}));
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User           = typeof users.$inferSelect;

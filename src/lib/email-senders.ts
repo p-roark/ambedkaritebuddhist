@@ -14,13 +14,17 @@ export const EMAIL_PURPOSES = {
     label: 'Contact messages',
     description: 'Messages sent from the Contact Us page are emailed to this address (and sent from it).',
   },
+  announcements: {
+    label: 'Member announcements',
+    description: 'Emails sent to members from Dashboard → Email Members (elections, community updates, events).',
+  },
   signIn: {
     label: 'Sign-in links',
     description: 'One-time email sign-in links (when the "Email sign-in link" feature is on).',
   },
   donations: {
     label: 'Donations',
-    description: 'Donation acknowledgements and receipts.',
+    description: 'Donation acknowledgements and receipts. Also shown on the donate form and Donations page as the Interac e-Transfer address.',
   },
   events: {
     label: 'Events',
