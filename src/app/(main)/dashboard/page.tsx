@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { buildInviteLink } from '@/lib/registration';
 import { FeatureSwitchesPanel } from '@/components/admin/feature-switches-panel';
+import { EmailMembersPanel } from '@/components/admin/member-emails/email-members-panel';
 import { MemberDetailsDialog } from '@/components/admin/member-details-dialog';
 import { EmailTestPanel } from '@/components/admin/email-test-panel';
 import { DeleteMemberDialog } from '@/components/admin/delete-member-dialog';
@@ -13,7 +14,7 @@ import { useFeature } from '@/lib/use-feature';
 
 type Role = 'ADMIN' | 'MEMBER';
 type EventStatus = 'Upcoming' | 'Registration Started' | 'Event Ended';
-const TABS = ['leadership', 'members', 'events', 'cover-images', 'referrals', 'messages', 'settings', 'donations', 'features'] as const;
+const TABS = ['leadership', 'members', 'events', 'cover-images', 'referrals', 'messages', 'email-members', 'settings', 'donations', 'features'] as const;
 type Tab = (typeof TABS)[number];
 
 type OrgSettings = {
@@ -54,6 +55,9 @@ type Member = {
   status: string;
   joinedAt: string;
   registrationCompletedAt: string | null;
+  boardInterest?: boolean | null;
+  city?: string | null;
+  province?: string | null;
 };
 
 type EventItem = {
@@ -399,6 +403,7 @@ export default function DashboardPage() {
         { id: 'cover-images', label: `Cover Images (${coverImages.length})` },
         { id: 'referrals', label: 'Referral Codes' },
         { id: 'messages', label: 'Messages', badge: pendingCount },
+        { id: 'email-members', label: 'Email Members' },
         { id: 'donations', label: `Donations (${donationRecords.length})` },
         { id: 'features', label: 'Features' },
         { id: 'settings', label: 'Settings' },
@@ -1346,6 +1351,8 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'features' && <FeatureSwitchesPanel />}
+
+        {activeTab === 'email-members' && <EmailMembersPanel members={members} adminEmail={session.user.email ?? ''} />}
 
         {activeTab === 'referrals' && (
           <div>

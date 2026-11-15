@@ -292,6 +292,14 @@ Registration and profile forms have a "Find your address" box (`src/components/a
 
 ---
 
+## Emailing members
+
+Dashboard → **Email Members** (admins only, `src/components/admin/member-emails/`): pick a template, edit the subject and message, choose active members (filters: all, registered, board/committee interest; search), preview as the first chosen member, send a test to yourself, then send. Templates live in `EmailTemplate` (four starters seeded by migration 0033) and are edited in the same tab. Messages are plain text with `{{first_name}}`, `{{name}}` and `{{org_name}}` filled per member; `[CAPITALS IN BRACKETS]` blanks are flagged before sending (`src/lib/member-email.ts`).
+
+Sending (`src/lib/member-emails-server.ts`) copies the recipients into `MemberEmailRecipient` when the email is created, then `POST /api/admin/member-emails/:id/send` sends the next batch of 15 (a free-plan Worker may make 50 outgoing requests and 50 database queries per request); the dashboard calls it until nothing is pending. Each batch first claims its recipients, so two windows never email the same person; claims left by an interrupted request are retried after 10 minutes. Failed recipients keep their error and can be retried; interrupted emails can be resumed from **Sent emails**. Emails go from the **Member announcements** address in Settings → Email. Gmail access tokens are reused per sender for 45 minutes (`src/lib/email.ts`).
+
+---
+
 ## API Routes
 
 All routes in `src/app/api/` use `export const runtime = 'edge'` and `export const dynamic = 'force-dynamic'`.

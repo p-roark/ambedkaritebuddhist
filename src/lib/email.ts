@@ -80,12 +80,22 @@ async function buildServiceAccountJwt(
   return `${signingInput}.${toBase64Url(signature)}`;
 }
 
+// Access tokens last an hour; reuse them per sender for a while, so sending
+// many emails costs one token request rather than one per email (Workers cap
+// the outgoing requests a single request may make)
+const TOKEN_REUSE_MS = 45 * 60_000;
+const tokenCache = new Map<string, { token: string; until: number }>();
+
 // Exchange a signed JWT for a short-lived Gmail access token
 async function getAccessToken(
   serviceAccountEmail: string,
   privateKeyPem: string,
   senderEmail: string,
 ): Promise<string> {
+  const cacheKey = `${serviceAccountEmail} ${senderEmail}`;
+  const cached = tokenCache.get(cacheKey);
+  if (cached && cached.until > Date.now()) return cached.token;
+
   const jwt = await buildServiceAccountJwt(serviceAccountEmail, privateKeyPem, senderEmail);
 
   const res = await fetch(TOKEN_URL, {
@@ -103,7 +113,13 @@ async function getAccessToken(
   }
 
   const data = (await res.json()) as { access_token: string };
+  tokenCache.set(cacheKey, { token: data.access_token, until: Date.now() + TOKEN_REUSE_MS });
   return data.access_token;
+}
+
+/** Forget cached access tokens (tests, and after a sender's token is rejected). */
+export function clearAccessTokenCache() {
+  tokenCache.clear();
 }
 
 // Non-ASCII subjects (e.g. Marathi/Hindi names) must be RFC 2047 encoded
@@ -146,8 +162,19 @@ async function sendViaGmail(
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`[email] Gmail API send failed: ${err}`);
+    throw new GmailSendError(res.status, `[email] Gmail API send failed: ${err}`);
   }
+}
+
+class GmailSendError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message);
+  }
+}
+
+/** Whether the Gmail secrets are set, i.e. this site can send email. */
+export function isEmailConfigured(): boolean {
+  return Boolean(process.env.GMAIL_SERVICE_ACCOUNT_EMAIL && process.env.GMAIL_PRIVATE_KEY);
 }
 
 function getGmailCredentials(): { serviceAccountEmail: string; privateKey: string } | null {
@@ -167,12 +194,28 @@ function getGmailCredentials(): { serviceAccountEmail: string; privateKey: strin
  * email). Returns false when email isn't configured; throws on delivery errors.
  */
 export async function sendEmail(purpose: EmailPurpose, message: EmailMessage): Promise<boolean> {
+  if (!getGmailCredentials()) return false;
+  return sendEmailAs(await resolveSender(purpose), message);
+}
+
+/**
+ * Like sendEmail, with the sender already looked up — for sending many emails
+ * from one request without a database lookup per email.
+ */
+export async function sendEmailAs(sender: ResolvedSender, message: EmailMessage): Promise<boolean> {
   const credentials = getGmailCredentials();
   if (!credentials) return false;
 
-  const sender = await resolveSender(purpose);
   const accessToken = await getAccessToken(credentials.serviceAccountEmail, credentials.privateKey, sender.address);
-  await sendViaGmail(accessToken, sender, message);
+  try {
+    await sendViaGmail(accessToken, sender, message);
+  } catch (error) {
+    // A cached token Google no longer accepts: get a fresh one and try once more
+    if (!(error instanceof GmailSendError && error.status === 401)) throw error;
+    tokenCache.delete(`${credentials.serviceAccountEmail} ${sender.address}`);
+    const freshToken = await getAccessToken(credentials.serviceAccountEmail, credentials.privateKey, sender.address);
+    await sendViaGmail(freshToken, sender, message);
+  }
   return true;
 }
 

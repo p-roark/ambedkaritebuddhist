@@ -5,7 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 const resolveSenderMock = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/email-senders-server', () => ({ resolveSender: resolveSenderMock }));
 
-const { sendTestEmail } = await import('./email');
+const { clearAccessTokenCache, sendTestEmail } = await import('./email');
 
 // Throwaway RSA key generated per test run — never a real credential
 let testKeyPem = '';
@@ -24,6 +24,7 @@ const fetchMock = vi.fn();
 beforeEach(() => {
   vi.stubGlobal('fetch', fetchMock);
   fetchMock.mockReset();
+  clearAccessTokenCache();
   vi.stubEnv('GMAIL_SERVICE_ACCOUNT_EMAIL', 'sender@project.iam.gserviceaccount.com');
   vi.stubEnv('GMAIL_PRIVATE_KEY', testKeyPem);
   resolveSenderMock.mockReset();
@@ -128,8 +129,36 @@ describe('message headers', () => {
     await sendEmail('contact', { to: 'inbox@example.org', subject: 'S', html: 'x', replyTo: 'writer@example.com' });
     expect(rawOf(1)).toMatch(/^Reply-To: writer@example\.com\r$/m);
 
-    fetchMock.mockResolvedValueOnce(tokenOk()).mockResolvedValueOnce(new Response('{"id":"m2"}', { status: 200 }));
+    // Same sender: the access token from the first send is reused
+    fetchMock.mockResolvedValueOnce(new Response('{"id":"m2"}', { status: 200 }));
     await sendEmail('contact', { to: 'inbox@example.org', subject: 'S', html: 'x', replyTo: 'a@example.com\r\nBcc: victim@example.org' });
-    expect(rawOf(3)).not.toMatch(/^(Reply-To|Bcc):/m);
+    expect(rawOf(2)).not.toMatch(/^(Reply-To|Bcc):/m);
+  });
+});
+
+describe('access tokens', () => {
+  it('reuses the token for the same sender, and fetches a new one if Gmail rejects it', async () => {
+    const { sendEmail } = await import('./email');
+    const message = { to: 'member@example.org', subject: 'S', html: 'x' };
+    fetchMock.mockImplementation(async (url: string) =>
+      String(url).includes('oauth2') ? tokenOk() : new Response('{"id":"m"}', { status: 200 }),
+    );
+    await sendEmail('registrations', message);
+    await sendEmail('registrations', message);
+    const tokenCalls = () => fetchMock.mock.calls.filter(([url]) => String(url).includes('oauth2')).length;
+    expect(tokenCalls()).toBe(1);
+
+    // Cached token rejected once: a fresh token is fetched and the email is sent
+    let rejected = false;
+    fetchMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('oauth2')) return tokenOk();
+      if (!rejected) {
+        rejected = true;
+        return new Response('{"error":{"code":401}}', { status: 401 });
+      }
+      return new Response('{"id":"m"}', { status: 200 });
+    });
+    await sendEmail('registrations', message);
+    expect(tokenCalls()).toBe(2);
   });
 });

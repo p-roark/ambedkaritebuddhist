@@ -92,6 +92,9 @@ export async function GET(request: NextRequest) {
       status: users.status,
       joinedAt: users.createdAt,
       registrationCompletedAt: users.registrationCompletedAt,
+      boardInterest: users.boardInterest,
+      city: users.city,
+      province: users.province,
     })
     .from(users)
     .where(
